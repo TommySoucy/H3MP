@@ -285,15 +285,7 @@ namespace H3MP.Networking
 
                 Packet packet = new Packet(packetBytes);
                 int packetID = packet.ReadInt();
-                if(packetID == 9 /*ClientPackets.trackedObjects*/)
-                {
-                    HandleTrackedObjectUpdate(packet, false);
-                }
-                else if(packetID == 2 /*ClientPackets.playerState*/)
-                {
-                    HandlePlayerStateUpdate(packet);
-                }
-                else // Not a specifically handled UDP packet type
+                if (ThreadManager.PreprocessPacket(packet, packetID, ID))
                 {
                     ThreadManager.ExecuteOnMainThread(() =>
                     {
@@ -344,66 +336,6 @@ namespace H3MP.Networking
             public void Disconnect()
             {
                 endPoint = null;
-            }
-
-            public void HandleTrackedObjectUpdate(Packet packet, bool full)
-            {
-                byte order = packet.ReadByte();
-                int trackedID = packet.ReadInt();
-
-                if (trackedID < 0)
-                {
-                    if (trackedID == -2)
-                    {
-                        Mod.LogWarning("Got update packet for object with trackedID -2");
-                    }
-                    return;
-                }
-
-                if (Server.objects.Length < trackedID)
-                {
-                    Mod.LogError("Server got update for object at " + trackedID + " which is out of range of objects array");
-                    return;
-                }
-
-                TrackedObjectData trackedObjectData = Server.objects[trackedID];
-                if(trackedObjectData != null)
-                {
-                    if (trackedObjectData.controller != GameManager.ID)
-                    {
-                        if(trackedObjectData.latestUpdate == null)
-                        {
-                            ThreadManager.objectsToUpdate.Enqueue(new KeyValuePair<int, int>(trackedID, ID));
-                            trackedObjectData.latestOrder = order;
-                            trackedObjectData.latestFull = full;
-                            trackedObjectData.latestUpdate = packet;
-                        }
-                        else if(full || (order > trackedObjectData.latestOrder || trackedObjectData.latestOrder - order > 128))
-                        {
-                            trackedObjectData.latestOrder = order;
-                            trackedObjectData.latestFull = full;
-                            trackedObjectData.latestUpdate = packet;
-                        }
-                    }
-                }
-            }
-
-            public void HandlePlayerStateUpdate(Packet packet)
-            {
-                byte order = packet.ReadByte();
-
-                PlayerManager playerManager = GameManager.players[ID];
-                if (playerManager.latestUpdate == null)
-                {
-                    ThreadManager.playersToUpdate.Enqueue(ID);
-                    playerManager.latestOrder = order;
-                    playerManager.latestUpdate = packet;
-                }
-                else if (order > playerManager.latestOrder || playerManager.latestOrder - order > 128)
-                {
-                    playerManager.latestOrder = order;
-                    playerManager.latestUpdate = packet;
-                }
             }
         }
 
@@ -511,10 +443,12 @@ namespace H3MP.Networking
             if (GameManager.objectsByInstanceByScene.TryGetValue(player.scene, out Dictionary<int, List<int>> objectInstances) &&
                 objectInstances.TryGetValue(player.instance, out List<int> objects))
             {
-                for(int i=0; i < objects.Count; ++i)
+                Mod.LogInfo("\tGot "+objects.Count+" objects to send");
+                for (int i=0; i < objects.Count; ++i)
                 {
                     TrackedObjectData trackedObjectData = Server.objects[objects[i]];
-                    if(trackedObjectData != null && (fromClient == -1 || trackedObjectData.controller == fromClient))
+                    Mod.LogInfo("\t\tObject "+i+" null: "+(trackedObjectData == null));
+                    if (trackedObjectData != null && (fromClient == -1 || trackedObjectData.controller == fromClient))
                     {
                         // If this is ours
                         if(trackedObjectData.controller == 0)
@@ -527,9 +461,10 @@ namespace H3MP.Networking
                                 continue;
                             }
 
-                            // If sending, make sure it init otherwise we might be missing data
+                            // If sending, make sure it is init otherwise we might be missing data
                             trackedObjectData.Update();
                         }
+                        Mod.LogInfo("\t\t\tSending");
                         ServerSend.TrackedObjectSpecific(trackedObjectData, ID);
                     }
                 }

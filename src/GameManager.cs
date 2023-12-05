@@ -64,7 +64,12 @@ namespace H3MP
         public static bool resetSpectatorHost;
         public static bool instanceBringItems;
         public static long ping = -1;
-        public static int reconnectionInstance;
+        private static int _reconnectionInstance = -1;
+        public static int reconnectionInstance
+        {
+            get { return _reconnectionInstance; } 
+            set { Mod.LogInfo("Setting reconnectionInstance:\n" + Environment.StackTrace); _reconnectionInstance = value; }
+        }
 
         /// <summary>
         /// CUSTOMIZATION
@@ -87,6 +92,7 @@ namespace H3MP
         public static int playerStateAddtionalDataSize = -1;
         public static int instance = 0;
         public static string scene = "MainMenu3";
+        public static byte playerOrder = 0;
         public static bool sceneLoading;
         public static int instanceAtSceneLoadStart;
         public static string sceneAtSceneLoadStart;
@@ -1214,7 +1220,7 @@ namespace H3MP
 
         public static void SetInstance(int instance)
         {
-            Mod.LogInfo("Changing instance from " + GameManager.instance + " to " + instance, false);
+            Mod.LogInfo("Changing instance from " + GameManager.instance + " to " + instance+":\n"+Environment.StackTrace, false);
             // Remove ourselves from the previous instance and manage dicts accordingly
             if (activeInstances.ContainsKey(GameManager.instance))
             {

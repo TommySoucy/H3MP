@@ -7,10 +7,6 @@ namespace H3MP.Scripts
 {
     public class PlayerManager : MonoBehaviour
     {
-        public byte order;
-        public byte latestOrder;
-        public Packet latestUpdate;
-
         public int ID;
         public string username;
 

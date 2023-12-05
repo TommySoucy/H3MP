@@ -4,6 +4,7 @@ using H3MP.Tracking;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Threading;
 using UnityEngine;
 
 namespace H3MP.Networking
@@ -15,22 +16,327 @@ namespace H3MP.Networking
         private static readonly List<Action> executeOnMainThread = new List<Action>();
         private static readonly List<Action> executeCopiedOnMainThread = new List<Action>();
         private static bool actionToExecuteOnMainThread = false;
-        public static Queue<KeyValuePair<int, int>> objectsToUpdate = new Queue<KeyValuePair<int, int>>();
-        public static Queue<int> playersToUpdate = new Queue<int>();
-        public static byte playerOrder = 0;
 
         public static float tickRate = 20; // How many times a second we will send updates
         public static float time = 1 / tickRate; // Period between sending updates
         public static float timer = 0; // Amount of time left until next tick
 
-        public static int updateLimit = 10; // Time limit (ms) we have to apply received updates before leaving it to the next frame
-        public static int updateState = 0; // The packet ID we are currently at in updates. 0: Main queue, 1: TrackedObjects, 2: Player state
-        public static int updateStateIndex = 0; // A generic index that can be used if updates have a sub state (Like in trackedObjects packet ID, we will have the index of the object we are at)
-        public static int updateStateLimit = 0; // Limit of how may elements we can process this iteration, in case number of elements grew in between frames
+        public static int updateTimeLimit = 10; // Time limit (ms) we have to apply received updates before leaving it to the next frame
+        public static int updateState = -1; // The packet ID we are currently at in updates. -1 is Main queue
+        public static int updateStateIndex = 0; // Count of how many elements we've gone through this iteration 
+        //public static int updateStateLimit = 0; // Limit of how many elements we can process this iteration, in case number of elements grew in between frames
+        public static int updateSubStateIndex = -1; // Count of how many elements we've gone through this iteration 
+        //public static int updateSubStateLimit = 0; // Limit of how many elements we can process this iteration, in case number of elements grew in between frames
 
         public static readonly DateTime epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
         public static readonly float pingTime = 1;
         public static float pingTimer = pingTime;
+
+        #region Packet preprocessing
+        // CUSTOMIZATION:
+        // Packet preprocessing is a system made to prevent packet build up.
+        // Consider a server with a queue of packets it must process.
+        // Client sends it a packet.
+        // Server adds it to its queue and in the next main update, processes it.
+        // The client sends another packet.
+        // For wtv reason the server is a little slower, and by the time it processes the packet, the client had time to send 2 more.
+        // Next frame, the server has to process 2 packets instead of 1.
+        // By the time it does, client had time to send 3.
+        // This number keeps growing, and if server doesn't recover, it just gets slower until it comes to a stop.
+        // Preprocessors are meant to prevent update packets from piling by replacing the old packets with the new one.
+        // This way, for 1 updated entity, like a TrackedObject, we only have to process a single packet per main update, instead of however many piled up in between updates.
+        // The way a preprocessor does this depends on the type of packet 
+        // Check out the H3MP specific PlayerStatePreprocessor and TrackedObjectsPreprocessor for examples
+        // Packet preprocessing is handled differently in the updates as well, that is when we receive
+        // a packet and preprocess it, it won't be added to the main queue like other packets, and as such, will need
+        // a PreprocessedPacketHandler
+        // This PreprocessedPacketHandler should handle it the same way as it would a normal packet
+        // but should take progress into account, and return the index of its progress if it did not complete.
+        // See PlayerStatePacketHandler to see an example of how this is done
+
+        TODO: // Make sure we clear and nullify these properly on reset
+        /// <summary>
+        /// CUSTOMIZATION
+        /// Delegate for the OnSpectatorHostsChanged event
+        /// </summary>
+        /// <param name="host">Whether we are host</param>
+        public delegate void OnPacketPreprocessorsInitilizationDelegate(bool host);
+
+        /// <summary>
+        /// CUSTOMIZATION
+        /// Note that when a custom preprocessor gets called by PreprocessPacket, 
+        /// customPreprocessedPackets is already locked, meaning you don't need to do it inside your preprocessor
+        /// like I do in H3MP's.
+        /// Note in H3MP preprocessors, I lock the queues.
+        /// You will need to do that too, but on the custom queues, when you want to enqueue new stuff.
+        /// Unless you know what you're doing and you know the implications of a deadlock, don't do inner locks.
+        /// Only lock one thing at a time and unlock it before locking something else, don't lock inside another lock.
+        /// This is specific to the custom packet system due to having to increase the amount of packet types at runtime,
+        /// I also lock these in the main thread when I increase their size in ClientHandle.RegisterCustomPacketType and Server.RegisterCustomPacketType
+        /// and those locks are done in a specific order which I respect here in threadmanager to prevent deadlocks.
+        /// </summary>
+        /// <param name="packet">The packet to preprocess</param>
+        /// <param name="clientID">The client the packet comes from</param>
+        /// <returns>True if we want to put this packet in main queue instead of preprocessing it</returns>
+        public delegate bool PacketPreprocessor(Packet packet, int clientID);
+        public static PacketPreprocessor[] packetPreprocessors;
+        public static PacketPreprocessor[] customPacketPreprocessors;
+
+        /// <summary>
+        /// CUSTOMIZATION
+        /// Note that once your handler is called customPreprocessedPackets is already locked, so you don't have to in the handler.
+        /// 
+        /// </summary>
+        /// <param name="index">Current substate index. Indicates the progress that has already been done on this handler this iteration.</param>
+        /// <param name="data">The data relevant for this handler</param>
+        /// <returns>True if completed</returns>
+        public delegate bool PreprocessedPacketHandler(ref int index, object data);
+        public static PreprocessedPacketHandler[] preprocessedPacketHandlers;
+        public static PreprocessedPacketHandler[] customPreprocessedPacketHandlers;
+
+        public static object[] preprocessedPackets;
+        public static Queue<int> packetProcessQueue = new Queue<int>();
+        public static Queue<int>[] packetSubProcessQueues;
+        public static object[] customPreprocessedPackets;
+        public static Queue<int> customPacketProcessQueue = new Queue<int>();
+        public static Queue<int>[] customPacketSubProcessQueues;
+
+        public static Queue<int> copiedPacketProcessQueue = new Queue<int>();
+        public static Queue<int> copiedPacketSubProcessQueue = new Queue<int>();
+
+        public void InitializePacketPreprocessing()
+        {
+            customPacketPreprocessors = new PacketPreprocessor[10];
+            customPreprocessedPackets = new object[10];
+            customPreprocessedPacketHandlers = new PreprocessedPacketHandler[10];
+            customPacketSubProcessQueues = new Queue<int>[10];
+            if (host)
+            {
+                int count = Enum.GetValues(typeof(ClientPackets)).Length;
+                packetPreprocessors = new PacketPreprocessor[count];
+                preprocessedPackets = new object[count];
+                preprocessedPacketHandlers = new PreprocessedPacketHandler[count];
+                packetSubProcessQueues = new Queue<int>[count];
+            }
+            else
+            {
+                int count = Enum.GetValues(typeof(ServerPackets)).Length;
+                packetPreprocessors = new PacketPreprocessor[count];
+                preprocessedPackets = new object[count];
+                preprocessedPacketHandlers = new PreprocessedPacketHandler[count];
+            }
+
+            // Setup for H3MP
+            if (host)
+            {
+                packetPreprocessors[2] = PlayerStatePreprocessor;
+                packetPreprocessors[9] = TrackedObjectsPreprocessor;
+
+                preprocessedPacketHandlers[2] = PlayerStatePacketHandler;
+                preprocessedPacketHandlers[9] = TrackedObjectsPacketHandler;
+
+                lock (preprocessedPackets)
+                {
+                    preprocessedPackets[2] = new KeyValuePair<byte, Packet>[(int)Mod.config["MaxClientCount"]];
+                    preprocessedPackets[9] = new KeyValuePair<byte, Packet>[100];
+                }
+            }
+            else
+            {
+                packetPreprocessors[2] = PlayerStatePreprocessor;
+                packetPreprocessors[157] = TrackedObjectsPreprocessor;
+
+                preprocessedPacketHandlers[2] = PlayerStatePacketHandler;
+                preprocessedPacketHandlers[157] = TrackedObjectsPacketHandler;
+
+                lock (preprocessedPackets)
+                {
+                    preprocessedPackets[2] = new KeyValuePair<byte, Packet>[(int)Mod.config["MaxClientCount"]];
+                    preprocessedPackets[157] = new KeyValuePair<byte, Packet>[100];
+                }
+            }
+        }
+
+        public static bool PreprocessPacket(Packet packet, int packetID, int clientID = -1)
+        {
+            if (packetID <= -2)
+            {
+                int index = packetID * -1 - 2;
+                lock (customPacketPreprocessors)
+                {
+                    lock (customPreprocessedPackets)
+                    {
+                        if (customPacketPreprocessors.Length > index && customPacketPreprocessors[index] != null)
+                        {
+                            return customPacketPreprocessors[index](packet, clientID);
+                        }
+                    }
+                }
+            }
+            else
+            {
+                if (packetPreprocessors.Length > packetID && packetPreprocessors[packetID] != null)
+                {
+                    return packetPreprocessors[packetID](packet, clientID);
+                }
+            }
+
+            return true; // True means that we don't want to preprocess a packet with this ID
+        }
+
+        public bool PlayerStatePacketHandler(ref int index, object data)
+        {
+
+        }
+
+        public bool TrackedObjectsPacketHandler(ref int index, object data)
+        {
+            TrackedObjectData[] arrToUse = null;
+            if (host)
+            {
+                arrToUse = Server.objects;
+            }
+            else
+            {
+                arrToUse = Client.objects;
+            }
+
+            while (copiedPacketSubProcessQueue.Count > 0)
+            {
+                KeyValuePair<int, int> pair = objectsToUpdate.Dequeue();
+                TrackedObjectData trackedObjectData = arrToUse[pair.Key];
+                trackedObjectData.UpdateFromPacket();
+
+                // Relay to other clients in the same scene/instance
+                if (GameManager.playersByInstanceByScene.TryGetValue(Server.clients[pair.Value].player.scene, out Dictionary<int, List<int>> instances) &&
+                    instances.TryGetValue(Server.clients[pair.Value].player.instance, out List<int> players))
+                {
+                    ServerSend.TrackedObjects(trackedObjectData.latestUpdate, players, pair.Value);
+                }
+
+                trackedObjectData.latestUpdate.Dispose();
+            }
+        }
+
+        public bool PlayerStatePreprocessor(Packet packet, int clientID = -1)
+        {
+            byte order = packet.ReadByte();
+            int playerID = clientID;
+            int packetID = -1;
+            if (host)
+            {
+                packetID = (int)ClientPackets.playerState;
+            }
+            else
+            {
+                playerID = packet.ReadInt();
+                packetID = (int)ServerPackets.playerState;
+            }
+
+            lock (preprocessedPackets)
+            {
+                object[] packetData = (object[])preprocessedPackets[packetID];
+                KeyValuePair<byte, Packet>[] data = (KeyValuePair<byte, Packet>[])packetData[1];
+                if ((bool)packetData[0])
+                {
+                    if (data[playerID].Value == null)
+                    {
+                        data[playerID] = new KeyValuePair<byte, Packet>(order, packet);
+                        lock (packetSubProcessQueues)
+                        {
+                            packetSubProcessQueues[packetID].Enqueue(playerID);
+                        }
+                    }
+                    else if (order > data[playerID].Key || data[playerID].Key - order > 128)
+                    {
+                        data[playerID].Value.Dispose();
+                        data[playerID] = new KeyValuePair<byte, Packet>(order, packet);
+                    }
+                }
+                else // No entry yet for this packetID
+                {
+                    data[playerID] = new KeyValuePair<byte, Packet>(order, packet);
+                    packetData[0] = true;
+                    lock (packetProcessQueue)
+                    {
+                        packetProcessQueue.Enqueue(packetID);
+                    }
+                    lock (packetSubProcessQueues)
+                    {
+                        packetSubProcessQueues[packetID].Enqueue(playerID);
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        public bool TrackedObjectsPreprocessor(Packet packet, int clientID = -1)
+        {
+            byte order = packet.ReadByte();
+            int trackedID = packet.ReadInt();
+            int packetID = -1;
+            if (host)
+            {
+                packetID = (int)ClientPackets.trackedObjects;
+            }
+            else
+            {
+                packetID = (int)ServerPackets.trackedObjects;
+            }
+
+            lock (preprocessedPackets)
+            {
+                object[] packetData = (object[])preprocessedPackets[packetID];
+                KeyValuePair<byte, Packet>[] data = (KeyValuePair<byte, Packet>[])packetData[1];
+
+                // Increase data array size if necessary
+                if (trackedID >= data.Length)
+                {
+                    int newLength = trackedID - trackedID % 100 + 100;
+                    KeyValuePair<byte, Packet>[] temp = data;
+                    data = new KeyValuePair<byte, Packet>[newLength];
+                    for (int i = 0; i < temp.Length; ++i)
+                    {
+                        data[i] = temp[i];
+                    }
+                }
+
+                if ((bool)packetData[0])
+                {
+                    TODO:// In handler, dont forget to set to null and dispose when packet is used
+                    if (data[trackedID].Value == null) 
+                    {
+                        data[trackedID] = new KeyValuePair<byte, Packet>(order, packet);
+                        lock (packetSubProcessQueues)
+                        {
+                            packetSubProcessQueues[packetID].Enqueue(trackedID);
+                        }
+                    }
+                    else if (order > data[trackedID].Key || data[trackedID].Key - order > 128)
+                    {
+                        data[trackedID].Value.Dispose();
+                        data[trackedID] = new KeyValuePair<byte, Packet>(order, packet);
+                    }
+                }
+                else
+                {
+                    data[trackedID] = new KeyValuePair<byte, Packet>(order, packet);
+                    packetData[0] = true;
+                    lock (packetProcessQueue)
+                    {
+                        packetProcessQueue.Enqueue(packetID);
+                    }
+                    lock (packetSubProcessQueues)
+                    {
+                        packetSubProcessQueues[packetID].Enqueue(trackedID);
+                    }
+                }
+            }
+
+            return false;
+        }
+        #endregion
 
         private void Update()
         {
@@ -70,7 +376,7 @@ namespace H3MP.Networking
         {
             Stopwatch start = Stopwatch.StartNew();
 
-            if(updateState == 0)
+            if(updateState == -1)
             {
 #if DEBUG
                 if (Input.GetKey(KeyCode.PageDown))
@@ -84,6 +390,12 @@ namespace H3MP.Networking
                     {
                         executeCopiedOnMainThread[i]();
                         updateStateIndex = i;
+
+                        if (start.ElapsedMilliseconds >= updateTimeLimit)
+                        {
+                            Mod.LogWarning("Main packet queue reached time limit at " + i + " of " + executeCopiedOnMainThread.Count);
+                            return;
+                        }
                     }
                 }
                 else
@@ -109,189 +421,144 @@ namespace H3MP.Networking
                             executeCopiedOnMainThread[i]();
                             updateStateIndex = i;
 
-                            if(start.ElapsedMilliseconds >= updateLimit)
+                            if(start.ElapsedMilliseconds >= updateTimeLimit)
                             {
+                                Mod.LogWarning("Main packet queue reached time limit at " + i + " of " + executeCopiedOnMainThread.Count);
                                 return;
                             }
                         }
                     }
                 }
 
-                updateState = 1;
-                updateStateIndex = 0;
+                updateState = 0;
+                updateStateIndex = -1;
+                updateSubStateIndex = -1;
             }
 
-            // Update objects
-            if (host)
+            // Do preprocessed updates
+            if(updateState >= 0)
             {
-                if (updateState == 1)
+                // If not started yet
+                if (updateStateIndex == -1)
                 {
-                    if(updateStateIndex == 0)
+                    // Copy process queue
+                    lock (packetProcessQueue)
                     {
-                        updateStateLimit = objectsToUpdate.Count;
+                        copiedPacketProcessQueue = new Queue<int>(packetProcessQueue);
+                        packetProcessQueue.Clear();
                     }
 
-                    while (objectsToUpdate.Count > 0 && updateStateIndex < updateStateLimit)
-                    {
-                        KeyValuePair<int, int> pair = objectsToUpdate.Dequeue();
-                        TrackedObjectData trackedObjectData = Server.objects[pair.Key];
-                        trackedObjectData.UpdateFromPacket();
-
-                        // Relay to other clients in the same scene/instance
-                        if (GameManager.playersByInstanceByScene.TryGetValue(Server.clients[pair.Value].player.scene, out Dictionary<int, List<int>> instances) &&
-                            instances.TryGetValue(Server.clients[pair.Value].player.instance, out List<int> players))
-                        {
-                            ServerSend.TrackedObjects(trackedObjectData.latestUpdate, players, pair.Value);
-                        }
-
-                        trackedObjectData.latestUpdate.Dispose();
-
-                        updateStateIndex++;
-
-                        if (start.ElapsedMilliseconds >= updateLimit)
-                        {
-                            return;
-                        }
-                    }
-
-                    updateState = 2;
+                    // Set updateStateIndex to indicate we started
                     updateStateIndex = 0;
                 }
 
-                if(updateState == 2)
+                while (copiedPacketProcessQueue.Count > 0)
                 {
-                    if (updateStateIndex == 0)
+                    // If we don't have a substate, we want to start processing a new packet type
+                    if(updateSubStateIndex == -1)
                     {
-                        updateStateLimit = objectsToUpdate.Count;
-                    }
-
-                    while (playersToUpdate.Count > 0 && updateStateIndex < updateStateLimit)
-                    {
-                        int playerID = playersToUpdate.Dequeue();
-                        Player player = Server.clients[playerID].player;
-                        PlayerManager playerManager = GameManager.players[playerID];
-                        playerManager.order = playerManager.latestOrder;
-
-                        player.position = playerManager.latestUpdate.ReadVector3();
-                        player.rotation = playerManager.latestUpdate.ReadQuaternion();
-                        player.headPos = playerManager.latestUpdate.ReadVector3();
-                        player.headRot = playerManager.latestUpdate.ReadQuaternion();
-                        player.torsoPos = playerManager.latestUpdate.ReadVector3();
-                        player.torsoRot = playerManager.latestUpdate.ReadQuaternion();
-                        player.leftHandPos = playerManager.latestUpdate.ReadVector3();
-                        player.leftHandRot = playerManager.latestUpdate.ReadQuaternion();
-                        player.rightHandPos = playerManager.latestUpdate.ReadVector3();
-                        player.rightHandRot = playerManager.latestUpdate.ReadQuaternion();
-                        player.health = playerManager.latestUpdate.ReadFloat();
-                        player.maxHealth = playerManager.latestUpdate.ReadInt();
-                        short additionalDataLength = playerManager.latestUpdate.ReadShort();
-                        byte[] additionalData = null;
-                        if (additionalDataLength > 0)
+                        updateState = copiedPacketProcessQueue.Dequeue();
+                        lock (packetSubProcessQueues)
                         {
-                            additionalData = playerManager.latestUpdate.ReadBytes(additionalDataLength);
+                            copiedPacketSubProcessQueue = new Queue<int>(packetSubProcessQueues[updateState]);
+                            packetSubProcessQueues[updateState].Clear();
                         }
 
-                        GameManager.UpdatePlayerState(player.ID, player.position, player.rotation, player.headPos, player.headRot, player.torsoPos, player.torsoRot,
-                                                      player.leftHandPos, player.leftHandRot,
-                                                      player.rightHandPos, player.rightHandRot,
-                                                      player.health, player.maxHealth, additionalData);
-
-                        // Relay
-                        ServerSend.PlayerState(playerManager.latestUpdate, player);
-
-                        playerManager.latestUpdate.Dispose();
-
-                        updateStateIndex++;
-
-                        if (start.ElapsedMilliseconds >= updateLimit)
+                        // We copied the queue and cleared the original, so set this flag to false, indicating we don't have data for this 
+                        // packetID (updateState) yet, so we know to add it to queue again if we process a new packet for it
+                        lock (preprocessedPackets)
                         {
-                            return;
+                            ((object[])preprocessedPackets[updateState])[0] = false;
                         }
                     }
 
-                    updateState = 0;
-                    updateStateIndex = 0;
+                    // Then call current preprocessed packet handler with substate
+                    lock (preprocessedPackets) 
+                    {
+                        if (preprocessedPacketHandlers[updateState](ref updateSubStateIndex, preprocessedPackets[updateState]))
+                        {
+                            // Completed this handler, increment state index
+                            updateStateIndex++;
+                            updateSubStateIndex = -1;
+                        }
+                    }
+
+                    if (start.ElapsedMilliseconds >= updateTimeLimit)
+                    {
+                        return;
+                    }
                 }
+
+                updateState = -2;
+                updateStateIndex = -1;
+                updateSubStateIndex = -1;
             }
-            else
+
+            // Do custom preprocessed updates
+            if (updateState <= -2)
             {
-                if (updateState == 1)
+                // Convert current update state to a custom packet ID
+                int actualUpdateState = updateState * -1 - 2;
+
+                // If not started yet
+                if (updateStateIndex == -1)
                 {
-                    if (updateStateIndex == 0)
+                    // Copy process queue
+                    lock (customPacketProcessQueue)
                     {
-                        updateStateLimit = objectsToUpdate.Count;
+                        copiedPacketProcessQueue = new Queue<int>(customPacketProcessQueue);
+                        customPacketProcessQueue.Clear();
                     }
 
-                    while (objectsToUpdate.Count > 0)
-                    {
-                        TrackedObjectData trackedObjectData = Client.objects[objectsToUpdate.Dequeue().Key];
-                        trackedObjectData.UpdateFromPacket();
-                        trackedObjectData.latestUpdate.Dispose();
-
-                        updateStateIndex++;
-
-                        if (start.ElapsedMilliseconds >= updateLimit)
-                        {
-                            return;
-                        }
-                    }
-
-                    updateState = 2;
+                    // Set updateStateIndex to indicate we started
                     updateStateIndex = 0;
                 }
 
-                if (updateState == 2)
+                while (copiedPacketProcessQueue.Count > 0)
                 {
-                    if (updateStateIndex == 0)
+                    // If we don't have a substate, we want to start processing a new packet type
+                    if (updateSubStateIndex == -1)
                     {
-                        updateStateLimit = objectsToUpdate.Count;
-                    }
-
-                    while (playersToUpdate.Count > 0)
-                    {
-                        PlayerManager playerManager = GameManager.players[playersToUpdate.Dequeue()];
-                        playerManager.order = playerManager.latestOrder;
-
-                        Vector3 position = playerManager.latestUpdate.ReadVector3();
-                        Quaternion rotation = playerManager.latestUpdate.ReadQuaternion();
-                        Vector3 headPos = playerManager.latestUpdate.ReadVector3();
-                        Quaternion headRot = playerManager.latestUpdate.ReadQuaternion();
-                        Vector3 torsoPos = playerManager.latestUpdate.ReadVector3();
-                        Quaternion torsoRot = playerManager.latestUpdate.ReadQuaternion();
-                        Vector3 leftHandPos = playerManager.latestUpdate.ReadVector3();
-                        Quaternion leftHandRot = playerManager.latestUpdate.ReadQuaternion();
-                        Vector3 rightHandPos = playerManager.latestUpdate.ReadVector3();
-                        Quaternion rightHandRot = playerManager.latestUpdate.ReadQuaternion();
-                        float health = playerManager.latestUpdate.ReadFloat();
-                        int maxHealth = playerManager.latestUpdate.ReadInt();
-                        short additionalDataLength = playerManager.latestUpdate.ReadShort();
-                        byte[] additionalData = null;
-                        if (additionalDataLength > 0)
+                        actualUpdateState = copiedPacketProcessQueue.Dequeue(); 
+                        updateState = actualUpdateState * -1 - 2;
+                        lock (customPacketSubProcessQueues)
                         {
-                            additionalData = playerManager.latestUpdate.ReadBytes(additionalDataLength);
+                            copiedPacketSubProcessQueue = new Queue<int>(customPacketSubProcessQueues[actualUpdateState]);
+                            customPacketSubProcessQueues[actualUpdateState].Clear();
                         }
 
-                        GameManager.UpdatePlayerState(playerManager.ID, position, rotation, headPos, headRot, torsoPos, torsoRot,
-                                                      leftHandPos, leftHandRot,
-                                                      rightHandPos, rightHandRot,
-                                                      health, maxHealth, additionalData);
-
-                        playerManager.latestUpdate.Dispose();
-
-                        updateStateIndex++;
-
-                        if (start.ElapsedMilliseconds >= updateLimit)
+                        // We copied the queue and cleared the original, so set this flag to false, indicating we don't have data for this 
+                        // packetID (updateState) yet, so we know to add it to queue again if we process a new packet for it
+                        lock (customPreprocessedPackets)
                         {
-                            return;
+                            ((object[])customPreprocessedPackets[actualUpdateState])[0] = false;
                         }
                     }
 
-                    updateState = 0;
-                    updateStateIndex = 0;
+                    // Then call current preprocessed packet handler with substate
+                    lock (customPreprocessedPackets)
+                    {
+                        lock (customPreprocessedPacketHandlers)
+                        {
+                            if (customPreprocessedPacketHandlers[actualUpdateState](ref updateSubStateIndex, customPreprocessedPackets[actualUpdateState]))
+                            {
+                                // Completed this handler, increment state index
+                                updateStateIndex++;
+                                updateSubStateIndex = -1;
+                            }
+                        }
+                    }
+
+                    if (start.ElapsedMilliseconds >= updateTimeLimit)
+                    {
+                        return;
+                    }
                 }
+
+                updateState = -1;
+                updateStateIndex = -1;
+                updateSubStateIndex = -1;
             }
-            objectsToUpdate.Clear();
-            playersToUpdate.Clear();
 
             if (!host)
             {
@@ -441,7 +708,7 @@ namespace H3MP.Networking
                     // Also send the host's player state to all clients
                     if (GM.CurrentPlayerBody != null)
                     {
-                        ServerSend.PlayerState(playerOrder++,
+                        ServerSend.PlayerState(GameManager.playerOrder++,
                                                0,
                                                GM.CurrentPlayerBody.transform.position,
                                                GM.CurrentPlayerBody.transform.rotation,
@@ -494,7 +761,7 @@ namespace H3MP.Networking
                     // Also send the player state to all clients
                     if (GM.CurrentPlayerBody != null)
                     {
-                        ClientSend.PlayerState(playerOrder++,
+                        ClientSend.PlayerState(GameManager.playerOrder++,
                                                GM.CurrentPlayerBody.transform.position,
                                                GM.CurrentPlayerBody.transform.rotation,
                                                GM.CurrentPlayerBody.headPositionFiltered,

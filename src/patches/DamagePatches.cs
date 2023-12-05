@@ -3271,26 +3271,21 @@ namespace H3MP.Patches
             trackedEncryption = GameManager.trackedEncryptionByEncryption.ContainsKey(__instance) ? GameManager.trackedEncryptionByEncryption[__instance] : __instance.GetComponent<TrackedEncryption>();
             if (trackedEncryption != null)
             {
-                if (ThreadManager.host)
-                {
-                    if (trackedEncryption.data.controller == 0)
-                    {
-                        return true;
-                    }
-                    else
-                    {
-                        // Not in control, we want to send the damage to the controller for them to precess it and return the result
-                        ServerSend.EncryptionDamage(trackedEncryption.encryptionData, d);
-                        return false;
-                    }
-                }
-                else if (trackedEncryption.data.controller == Client.singleton.ID)
+                if(trackedEncryption.data.controller == GameManager.ID)
                 {
                     return true;
                 }
                 else
                 {
-                    ClientSend.EncryptionDamage(trackedEncryption.data.trackedID, d);
+                    // Not in control, we want to send the damage to the controller for them to process it and return the result
+                    if (ThreadManager.host)
+                    {
+                        ServerSend.EncryptionDamage(trackedEncryption.encryptionData, d);
+                    }
+                    else
+                    {
+                        ClientSend.EncryptionDamage(trackedEncryption.data.trackedID, d);
+                    }
                     return false;
                 }
             }
@@ -3310,7 +3305,7 @@ namespace H3MP.Patches
                         ServerSend.EncryptionDamageData(trackedEncryption);
                     }
                 }
-                else if (trackedEncryption.data.controller == Client.singleton.ID && trackedEncryption.data.trackedID != -1)
+                else if (trackedEncryption.data.controller == GameManager.ID && trackedEncryption.data.trackedID != -1)
                 {
                     ClientSend.EncryptionDamageData(trackedEncryption);
                 }
@@ -4257,7 +4252,6 @@ namespace H3MP.Patches
             List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
 
             List<CodeInstruction> toInsert = new List<CodeInstruction>();
-            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load system instance
             toInsert.Add(new CodeInstruction(OpCodes.Ldloc_S, 4)); // Load IFVRDamageable
             toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(BrutBlockSystemDamageablePatch), "GetActualDamageable"))); // Call GetActualDamageable, put return val on stack
             toInsert.Add(new CodeInstruction(OpCodes.Stloc_S, 4)); // Set IFVRDamageable
@@ -4321,7 +4315,6 @@ namespace H3MP.Patches
             List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
 
             List<CodeInstruction> toInsert = new List<CodeInstruction>();
-            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load BrutTurbine instance
             toInsert.Add(new CodeInstruction(OpCodes.Ldloc_S, 8)); // Load IFVRDamageable
             toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(BrutTurbineDamageablePatch), "GetActualFlag"))); // Call GetActualFlag, put return val on stack
             toInsert.Add(new CodeInstruction(OpCodes.Stloc_3)); // Set flag2

@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
+using System.Threading;
 using UnityEngine;
 
 namespace H3MP.Networking
@@ -386,15 +387,7 @@ namespace H3MP.Networking
 
                 Packet packet = new Packet(data);
                 int packetID = packet.ReadInt();
-                if (packetID == 9 /*ClientPackets.trackedObjects*/)
-                {
-                    HandleTrackedObjectUpdate(packet, false);
-                }
-                else if (packetID == 2 /*ClientPackets.playerState*/)
-                {
-                    HandlePlayerStateUpdate(packet);
-                }
-                else // Not a specifically handled UDP packet type
+                if (ThreadManager.PreprocessPacket(packet, packetID))
                 {
                     ThreadManager.ExecuteOnMainThread(() =>
                     {
@@ -439,67 +432,6 @@ namespace H3MP.Networking
                             }
                         }
                     });
-                }
-            }
-
-            public void HandleTrackedObjectUpdate(Packet packet, bool full)
-            {
-                byte order = packet.ReadByte();
-                int trackedID = packet.ReadInt();
-
-                if (trackedID < 0)
-                {
-                    if (trackedID == -2)
-                    {
-                        Mod.LogWarning("Got update packet for object with trackedID -2");
-                    }
-                    return;
-                }
-
-                if (Server.objects.Length < trackedID)
-                {
-                    Mod.LogError("Server got update for object at " + trackedID + " which is out of range of objects array");
-                    return;
-                }
-
-                TrackedObjectData trackedObjectData = Client.objects[trackedID];
-                if (trackedObjectData != null)
-                {
-                    if (trackedObjectData.controller != GameManager.ID)
-                    {
-                        if (trackedObjectData.latestUpdate == null)
-                        {
-                            ThreadManager.objectsToUpdate.Enqueue(new KeyValuePair<int, int>(trackedID, 0));
-                            trackedObjectData.latestOrder = order;
-                            trackedObjectData.latestFull = full;
-                            trackedObjectData.latestUpdate = packet;
-                        }
-                        else if (full || (order > trackedObjectData.latestOrder || trackedObjectData.latestOrder - order > 128))
-                        {
-                            trackedObjectData.latestOrder = order;
-                            trackedObjectData.latestFull = full;
-                            trackedObjectData.latestUpdate = packet;
-                        }
-                    }
-                }
-            }
-
-            public void HandlePlayerStateUpdate(Packet packet)
-            {
-                byte order = packet.ReadByte();
-                int playerID = packet.ReadInt();
-
-                PlayerManager playerManager = GameManager.players[playerID];
-                if (playerManager.latestUpdate == null)
-                {
-                    ThreadManager.playersToUpdate.Enqueue(playerID);
-                    playerManager.latestOrder = order;
-                    playerManager.latestUpdate = packet;
-                }
-                else if (order > playerManager.latestOrder || playerManager.latestOrder - order > 128)
-                {
-                    playerManager.latestOrder = order;
-                    playerManager.latestUpdate = packet;
                 }
             }
 
