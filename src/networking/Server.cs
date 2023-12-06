@@ -97,6 +97,7 @@ namespace H3MP.Networking
             udpListener = null;
 
             GameManager.Reset();
+            ThreadManager.Reset();
             Mod.Reset();
             SpecificClose();
             if (OnServerClose != null)

@@ -24,9 +24,7 @@ namespace H3MP.Networking
         public static int updateTimeLimit = 10; // Time limit (ms) we have to apply received updates before leaving it to the next frame
         public static int updateState = -1; // The packet ID we are currently at in updates. -1 is Main queue
         public static int updateStateIndex = 0; // Count of how many elements we've gone through this iteration 
-        //public static int updateStateLimit = 0; // Limit of how many elements we can process this iteration, in case number of elements grew in between frames
         public static int updateSubStateIndex = -1; // Count of how many elements we've gone through this iteration 
-        //public static int updateSubStateLimit = 0; // Limit of how many elements we can process this iteration, in case number of elements grew in between frames
 
         public static readonly DateTime epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
         public static readonly float pingTime = 1;
@@ -54,7 +52,6 @@ namespace H3MP.Networking
         // but should take progress into account, and return the index of its progress if it did not complete.
         // See PlayerStatePacketHandler to see an example of how this is done
 
-        TODO: // Make sure we clear and nullify these properly on reset
         /// <summary>
         /// CUSTOMIZATION
         /// Delegate for the OnSpectatorHostsChanged event
@@ -87,10 +84,12 @@ namespace H3MP.Networking
         /// Note that once your handler is called customPreprocessedPackets is already locked, so you don't have to in the handler.
         /// 
         /// </summary>
-        /// <param name="index">Current substate index. Indicates the progress that has already been done on this handler this iteration.</param>
+        /// <param name="index">Current substate index. Indicates the progress that has already been done on this handler this iteration. 
+        ///                     Where the handler left off in last update iteration.</param>
+        /// <param name="start">Stopwatch to check how much time has elapsed since the start of this update iteration</param>
         /// <param name="data">The data relevant for this handler</param>
         /// <returns>True if completed</returns>
-        public delegate bool PreprocessedPacketHandler(ref int index, object data);
+        public delegate bool PreprocessedPacketHandler(ref int index, Stopwatch start, object data);
         public static PreprocessedPacketHandler[] preprocessedPacketHandlers;
         public static PreprocessedPacketHandler[] customPreprocessedPacketHandlers;
 
@@ -184,13 +183,99 @@ namespace H3MP.Networking
             return true; // True means that we don't want to preprocess a packet with this ID
         }
 
-        public bool PlayerStatePacketHandler(ref int index, object data)
+        public bool PlayerStatePacketHandler(ref int index, Stopwatch start, object data)
         {
+            // Index is not actually used in this handler but must make it at least non zero so
+            // update process knows we are not done with this handler if we return false
+            ++index;
 
+            KeyValuePair<byte, Packet>[] actualData = (KeyValuePair<byte, Packet>[])data;
+
+            while (copiedPacketSubProcessQueue.Count > 0)
+            {
+                // Check timer at beginning becuase we know we still have data left to handle 
+                if (start.ElapsedMilliseconds > updateTimeLimit)
+                {
+                    return false;
+                }
+
+                int playerID = copiedPacketSubProcessQueue.Dequeue();
+                KeyValuePair<byte, Packet> pair = actualData[playerID];
+
+                if (host)
+                {
+                    Player player = Server.clients[playerID].player;
+
+                    player.position = pair.Value.ReadVector3();
+                    player.rotation = pair.Value.ReadQuaternion();
+                    player.headPos = pair.Value.ReadVector3();
+                    player.headRot = pair.Value.ReadQuaternion();
+                    player.torsoPos = pair.Value.ReadVector3();
+                    player.torsoRot = pair.Value.ReadQuaternion();
+                    player.leftHandPos = pair.Value.ReadVector3();
+                    player.leftHandRot = pair.Value.ReadQuaternion();
+                    player.rightHandPos = pair.Value.ReadVector3();
+                    player.rightHandRot = pair.Value.ReadQuaternion();
+                    player.health = pair.Value.ReadFloat();
+                    player.maxHealth = pair.Value.ReadInt();
+                    short additionalDataLength = pair.Value.ReadShort();
+                    byte[] additionalData = null;
+                    if (additionalDataLength > 0)
+                    {
+                        additionalData = pair.Value.ReadBytes(additionalDataLength);
+                    }
+
+                    GameManager.UpdatePlayerState(player.ID, player.position, player.rotation, player.headPos, player.headRot, player.torsoPos, player.torsoRot,
+                                                  player.leftHandPos, player.leftHandRot,
+                                                  player.rightHandPos, player.rightHandRot,
+                                                  player.health, player.maxHealth, additionalData);
+
+                    // Relay
+                    ServerSend.PlayerState(pair.Value, player);
+                }
+                else
+                {
+                    Vector3 position = pair.Value.ReadVector3();
+                    Quaternion rotation = pair.Value.ReadQuaternion();
+                    Vector3 headPos = pair.Value.ReadVector3();
+                    Quaternion headRot = pair.Value.ReadQuaternion();
+                    Vector3 torsoPos = pair.Value.ReadVector3();
+                    Quaternion torsoRot = pair.Value.ReadQuaternion();
+                    Vector3 leftHandPos = pair.Value.ReadVector3();
+                    Quaternion leftHandRot = pair.Value.ReadQuaternion();
+                    Vector3 rightHandPos = pair.Value.ReadVector3();
+                    Quaternion rightHandRot = pair.Value.ReadQuaternion();
+                    float health = pair.Value.ReadFloat();
+                    int maxHealth = pair.Value.ReadInt();
+                    short additionalDataLength = pair.Value.ReadShort();
+                    byte[] additionalData = null;
+                    if (additionalDataLength > 0)
+                    {
+                        additionalData = pair.Value.ReadBytes(additionalDataLength);
+                    }
+
+                    GameManager.UpdatePlayerState(playerID, position, rotation, headPos, headRot, torsoPos, torsoRot,
+                                                  leftHandPos, leftHandRot,
+                                                  rightHandPos, rightHandRot,
+                                                  health, maxHealth, additionalData);
+                }
+
+                // Dispose and nullify in data so preprocessor knows we don't yet have an update packet for this object
+                pair.Value.Dispose();
+                actualData[copiedPacketSubProcessQueue.Dequeue()] = new KeyValuePair<byte, Packet>();
+            }
+
+            // If we got here, return true, meaning we are done with handling this packet type
+            return true;
         }
 
-        public bool TrackedObjectsPacketHandler(ref int index, object data)
+        public bool TrackedObjectsPacketHandler(ref int index, Stopwatch start, object data)
         {
+            // Index is not actually used in this handler but must make it at least non zero so
+            // update process knows we are not done with this handler if we return false
+            ++index;
+
+            KeyValuePair<byte, Packet>[] actualData = (KeyValuePair<byte, Packet>[])data;
             TrackedObjectData[] arrToUse = null;
             if (host)
             {
@@ -203,19 +288,34 @@ namespace H3MP.Networking
 
             while (copiedPacketSubProcessQueue.Count > 0)
             {
-                KeyValuePair<int, int> pair = objectsToUpdate.Dequeue();
-                TrackedObjectData trackedObjectData = arrToUse[pair.Key];
-                trackedObjectData.UpdateFromPacket();
-
-                // Relay to other clients in the same scene/instance
-                if (GameManager.playersByInstanceByScene.TryGetValue(Server.clients[pair.Value].player.scene, out Dictionary<int, List<int>> instances) &&
-                    instances.TryGetValue(Server.clients[pair.Value].player.instance, out List<int> players))
+                // Check timer at beginning becuase we know we still have data left to handle 
+                if (start.ElapsedMilliseconds > updateTimeLimit)
                 {
-                    ServerSend.TrackedObjects(trackedObjectData.latestUpdate, players, pair.Value);
+                    return false;
                 }
 
-                trackedObjectData.latestUpdate.Dispose();
+                int trackedID = copiedPacketSubProcessQueue.Dequeue();
+                KeyValuePair<byte, Packet> pair = actualData[trackedID];
+                TrackedObjectData trackedObjectData = arrToUse[pair.Key];
+                trackedObjectData.UpdateFromPacket(pair.Value);
+
+                if (host)
+                {
+                    // Relay to other clients in the same scene/instance
+                    if (GameManager.playersByInstanceByScene.TryGetValue(trackedObjectData.scene, out Dictionary<int, List<int>> instances) &&
+                        instances.TryGetValue(trackedObjectData.instance, out List<int> players))
+                    {
+                        ServerSend.TrackedObjects(pair.Value, players, trackedObjectData.controller);
+                    }
+                }
+
+                // Dispose and nullify in data so preprocessor knows we don't yet have an update packet for this object
+                pair.Value.Dispose();
+                actualData[trackedID] = new KeyValuePair<byte, Packet>();
             }
+
+            // If we got here, return true, meaning we are done with handling this packet type
+            return true;
         }
 
         public bool PlayerStatePreprocessor(Packet packet, int clientID = -1)
@@ -304,7 +404,6 @@ namespace H3MP.Networking
 
                 if ((bool)packetData[0])
                 {
-                    TODO:// In handler, dont forget to set to null and dispose when packet is used
                     if (data[trackedID].Value == null) 
                     {
                         data[trackedID] = new KeyValuePair<byte, Packet>(order, packet);
@@ -475,7 +574,7 @@ namespace H3MP.Networking
                     // Then call current preprocessed packet handler with substate
                     lock (preprocessedPackets) 
                     {
-                        if (preprocessedPacketHandlers[updateState](ref updateSubStateIndex, preprocessedPackets[updateState]))
+                        if (preprocessedPacketHandlers[updateState](ref updateSubStateIndex, start, preprocessedPackets[updateState]))
                         {
                             // Completed this handler, increment state index
                             updateStateIndex++;
@@ -540,7 +639,7 @@ namespace H3MP.Networking
                     {
                         lock (customPreprocessedPacketHandlers)
                         {
-                            if (customPreprocessedPacketHandlers[actualUpdateState](ref updateSubStateIndex, customPreprocessedPackets[actualUpdateState]))
+                            if (customPreprocessedPacketHandlers[actualUpdateState](ref updateSubStateIndex, start, customPreprocessedPackets[actualUpdateState]))
                             {
                                 // Completed this handler, increment state index
                                 updateStateIndex++;
@@ -556,7 +655,7 @@ namespace H3MP.Networking
                 }
 
                 updateState = -1;
-                updateStateIndex = -1;
+                updateStateIndex = 0;
                 updateSubStateIndex = -1;
             }
 
@@ -777,6 +876,24 @@ namespace H3MP.Networking
                     }
                 }
             }
+        }
+
+        public static void Reset()
+        {
+            packetPreprocessors = null;
+            customPacketPreprocessors = null;
+            preprocessedPacketHandlers = null;
+            customPreprocessedPacketHandlers = null;
+
+            preprocessedPackets = null;
+            packetProcessQueue.Clear();
+            packetSubProcessQueues = null;
+            customPreprocessedPackets = null;
+            customPacketProcessQueue.Clear();
+            customPacketSubProcessQueues = null;
+
+            copiedPacketProcessQueue.Clear();
+            copiedPacketSubProcessQueue.Clear();
         }
 
         private void OnApplicationQuit()

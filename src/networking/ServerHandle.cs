@@ -77,9 +77,9 @@ namespace H3MP.Networking
             }
 
             GameManager.UpdatePlayerState(player.ID, player.position, player.rotation, player.headPos, player.headRot, player.torsoPos, player.torsoRot,
-                                            player.leftHandPos, player.leftHandRot,
-                                            player.rightHandPos, player.rightHandRot,
-                                            player.health, player.maxHealth, additionalData);
+                                          player.leftHandPos, player.leftHandRot,
+                                          player.rightHandPos, player.rightHandRot,
+                                          player.health, player.maxHealth, additionalData);
 
             // Relay
             ServerSend.PlayerState(packet, player);
