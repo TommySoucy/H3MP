@@ -6,7 +6,7 @@ using FistVR;
 using System.Collections.Generic;
 using H3MP.Patches;
 using H3MP.Tracking;
-using System.Security.Policy;
+using H3MP.Scripts;
 
 namespace H3MP.Networking
 {
@@ -283,54 +283,62 @@ namespace H3MP.Networking
                 int packetLength = packetData.ReadInt();
                 byte[] packetBytes = packetData.ReadBytes(packetLength);
 
-                ThreadManager.ExecuteOnMainThread(() =>
+                Packet PPacket = new Packet(packetBytes);
+                int PPacketID = PPacket.ReadInt();
+                if (ThreadManager.PreprocessPacket(PPacket, PPacketID, ID))
                 {
-                    if (Server.tcpListener != null)
+                    ThreadManager.ExecuteOnMainThread(() =>
                     {
-                        using (Packet packet = new Packet(packetBytes))
+                        if (Server.tcpListener != null)
                         {
-                            int packetID = packet.ReadInt();
+                            using (Packet packet = new Packet(packetBytes))
+                            {
+                                int packetID = packet.ReadInt();
 
-                            if (packetID < 0)
-                            {
-                                if (packetID == -1)
+                                if (packetID < 0)
                                 {
-                                    Mod.GenericCustomPacketReceivedInvoke(ID, packet.ReadString(), packet);
-                                }
-                                else // packetID <= -2
-                                {
-                                    int index = packetID * -1 - 2;
-                                    if (Mod.customPacketHandlers.Length > index && Mod.customPacketHandlers[index] != null)
+                                    if (packetID == -1)
                                     {
-#if DEBUG
-                                        if (Input.GetKey(KeyCode.PageDown))
+                                        Mod.GenericCustomPacketReceivedInvoke(ID, packet.ReadString(), packet);
+                                    }
+                                    else // packetID <= -2
+                                    {
+                                        int index = packetID * -1 - 2;
+                                        if (Mod.customPacketHandlers.Length > index && Mod.customPacketHandlers[index] != null)
                                         {
-                                            Mod.LogInfo("\tHandling custom UDP packet: " + packetID);
+    #if DEBUG
+                                            if (Input.GetKey(KeyCode.PageDown))
+                                            {
+                                                Mod.LogInfo("\tHandling custom UDP packet: " + packetID);
+                                            }
+    #endif
+                                            Mod.customPacketHandlers[index](ID, packet);
                                         }
-#endif
-                                        Mod.customPacketHandlers[index](ID, packet);
+    #if DEBUG
+                                        else
+                                        {
+                                            Mod.LogWarning("\tServer received invalid custom UDP packet ID: " + packetID + " from client " + ID);
+                                        }
+    #endif
                                     }
-#if DEBUG
-                                    else
-                                    {
-                                        Mod.LogWarning("\tServer received invalid custom UDP packet ID: " + packetID + " from client " + ID);
-                                    }
-#endif
                                 }
-                            }
-                            else
-                            {
-#if DEBUG
-                                if (Input.GetKey(KeyCode.PageDown))
+                                else
                                 {
-                                    Mod.LogInfo("\tHandling UDP packet: " + packetID + " ("+(ClientPackets)packetID+"), length: " + packet.buffer.Count+", from client "+ID);
+    #if DEBUG
+                                    if (Input.GetKey(KeyCode.PageDown))
+                                    {
+                                        Mod.LogInfo("\tHandling UDP packet: " + packetID + " (" + (ClientPackets)packetID + "), length: " + packet.buffer.Count + ", from client " + ID);
+                                    }
+    #endif
+                                    Server.packetHandlers[packetID](ID, packet);
                                 }
-#endif
-                                Server.packetHandlers[packetID](ID, packet);
+
+                                packet.Dispose();
+
                             }
                         }
-                    }
-                });
+                    });
+                }
             }
 
             public void Disconnect()
@@ -443,10 +451,12 @@ namespace H3MP.Networking
             if (GameManager.objectsByInstanceByScene.TryGetValue(player.scene, out Dictionary<int, List<int>> objectInstances) &&
                 objectInstances.TryGetValue(player.instance, out List<int> objects))
             {
-                for(int i=0; i < objects.Count; ++i)
+                Mod.LogInfo("\tGot "+objects.Count+" objects to send");
+                for (int i=0; i < objects.Count; ++i)
                 {
                     TrackedObjectData trackedObjectData = Server.objects[objects[i]];
-                    if(trackedObjectData != null && (fromClient == -1 || trackedObjectData.controller == fromClient))
+                    Mod.LogInfo("\t\tObject "+i+" null: "+(trackedObjectData == null));
+                    if (trackedObjectData != null && (fromClient == -1 || trackedObjectData.controller == fromClient))
                     {
                         // If this is ours
                         if(trackedObjectData.controller == 0)
@@ -459,9 +469,10 @@ namespace H3MP.Networking
                                 continue;
                             }
 
-                            // If sending, make sure it init otherwise we might be missing data
+                            // If sending, make sure it is init otherwise we might be missing data
                             trackedObjectData.Update();
                         }
+                        Mod.LogInfo("\t\t\tSending");
                         ServerSend.TrackedObjectSpecific(trackedObjectData, ID);
                     }
                 }

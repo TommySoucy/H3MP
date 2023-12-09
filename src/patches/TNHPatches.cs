@@ -1173,8 +1173,8 @@ namespace H3MP.Patches
         static bool SetPhaseTakePrefix()
         {
             // TODO: Future: Scoring needs to be properly tracked, when we implement proper support for that
-            //               will need to track alterted this phase, took damage this phase, etc. For now we only
-            //               reset those here according with SetPahe_Take functionality
+            //               will need to track alerted this phase, took damage this phase, etc. For now we only
+            //               reset those here according with SetPhase_Take functionality
             if (Mod.managerObject != null && Mod.currentTNHInstance != null)
             {
                 Mod.LogInfo("SetPhaseTakePrefix: In MP TNH", false);
@@ -1253,41 +1253,73 @@ namespace H3MP.Patches
 
                         if (PatchController.TNHTweakerAsmIdx > -1)
                         {
-                            for (int i = 0; i < Mod.currentTNHInstance.activeSupplyPointIndices.Count; ++i)
+                            if (Mod.currentTNHInstance.manager.m_curPointSequence.UsesExplicitSingleSupplyPoints)
                             {
-                                TNH_SupplyPoint tnh_SupplyPoint = Mod.currentTNHInstance.manager.SupplyPoints[Mod.currentTNHInstance.activeSupplyPointIndices[i]];
+                                for (int i = 0; i < Mod.currentTNHInstance.activeSupplyPointIndices.Count; ++i)
+                                {
+                                    TNH_SupplyPoint tnh_SupplyPoint = Mod.currentTNHInstance.manager.SupplyPoints[Mod.currentTNHInstance.activeSupplyPointIndices[i]];
+                                    // Here we pass false to spawn sosigs,turrets, and 0 for max boxes because since we are not controller we do not want to spawn those ourselves
 
-                                int panelIndex = Mod.currentTNHInstance.nextSupplyPanelType;
-                                object[] args = new object[] { tnh_SupplyPoint, level, panelIndex };
-                                PatchController.TNHTweaker_TNHPatches_ConfigureSupplyPoint.Invoke(PatchController.TNHTweaker_TNHPatches, args);
-                                Mod.currentTNHInstance.nextSupplyPanelType = (int)args[2];
+                                    object[] args = new object[] { tnh_SupplyPoint, level, TNH_SupplyPoint.SupplyPanelType.All };
+                                    PatchController.TNHTweaker_TNHPatches_ConfigureSupplyPoint.Invoke(PatchController.TNHTweaker_TNHPatches, args);
+                                    Mod.currentTNHInstance.nextSupplyPanelType = (int)args[2];
 
-                                TAH_ReticleContact contact = Mod.currentTNHInstance.manager.TAHReticle.RegisterTrackedObject(tnh_SupplyPoint.SpawnPoint_PlayerSpawn, TAH_ReticleContact.ContactType.Supply);
-                                tnh_SupplyPoint.SetContact(contact);
+                                    TAH_ReticleContact contact = Mod.currentTNHInstance.manager.TAHReticle.RegisterTrackedObject(tnh_SupplyPoint.SpawnPoint_PlayerSpawn, TAH_ReticleContact.ContactType.Supply);
+                                    tnh_SupplyPoint.SetContact(contact);
+                                }
+                            }
+                            else
+                            {
+                                for (int i = 0; i < Mod.currentTNHInstance.activeSupplyPointIndices.Count; ++i)
+                                {
+                                    TNH_SupplyPoint tnh_SupplyPoint = Mod.currentTNHInstance.manager.SupplyPoints[Mod.currentTNHInstance.activeSupplyPointIndices[i]];
+
+                                    int panelIndex = Mod.currentTNHInstance.nextSupplyPanelType;
+                                    object[] args = new object[] { tnh_SupplyPoint, level, panelIndex };
+                                    PatchController.TNHTweaker_TNHPatches_ConfigureSupplyPoint.Invoke(PatchController.TNHTweaker_TNHPatches, args);
+                                    Mod.currentTNHInstance.nextSupplyPanelType = (int)args[2];
+
+                                    TAH_ReticleContact contact = Mod.currentTNHInstance.manager.TAHReticle.RegisterTrackedObject(tnh_SupplyPoint.SpawnPoint_PlayerSpawn, TAH_ReticleContact.ContactType.Supply);
+                                    tnh_SupplyPoint.SetContact(contact);
+                                }
                             }
                         }
                         else
                         {
-                            for (int i = 0; i < Mod.currentTNHInstance.activeSupplyPointIndices.Count; ++i)
+                            if (Mod.currentTNHInstance.manager.m_curPointSequence.UsesExplicitSingleSupplyPoints)
                             {
-                                TNH_SupplyPoint tnh_SupplyPoint = Mod.currentTNHInstance.manager.SupplyPoints[Mod.currentTNHInstance.activeSupplyPointIndices[i]];
-
-                                int num6 = i;
-                                if (i > 0)
+                                for (int i = 0; i < Mod.currentTNHInstance.activeSupplyPointIndices.Count; ++i)
                                 {
-                                    num6 = Mod.currentTNHInstance.nextSupplyPanelType;
-                                    Mod.currentTNHInstance.nextSupplyPanelType++;
-                                    if (Mod.currentTNHInstance.nextSupplyPanelType > 2)
-                                    {
-                                        Mod.currentTNHInstance.nextSupplyPanelType = 1;
-                                    }
+                                    TNH_SupplyPoint tnh_SupplyPoint = Mod.currentTNHInstance.manager.SupplyPoints[Mod.currentTNHInstance.activeSupplyPointIndices[i]];
+                                    // Here we pass false to spawn sosigs,turrets, and 0 for max boxes because since we are not controller we do not want to spawn those ourselves
+                                    tnh_SupplyPoint.Configure(curLevel.SupplyChallenge, false, false, true, TNH_SupplyPoint.SupplyPanelType.All, 0, 0, true);
+                                    TAH_ReticleContact contact = Mod.currentTNHInstance.manager.TAHReticle.RegisterTrackedObject(tnh_SupplyPoint.SpawnPoint_PlayerSpawn, TAH_ReticleContact.ContactType.Supply);
+                                    tnh_SupplyPoint.SetContact(contact);
                                 }
-                                TNH_SupplyPoint.SupplyPanelType panelType = (TNH_SupplyPoint.SupplyPanelType)num6;
-                                // Here we pass false to spawn sosigs,turrets, and 0 for max boxes because since we are not controller we do not want to spawn those ourselves
-                                tnh_SupplyPoint.Configure(curLevel.SupplyChallenge, false, false, true, panelType, 0, 0, spawnToken);
-                                spawnToken = false;
-                                TAH_ReticleContact contact = Mod.currentTNHInstance.manager.TAHReticle.RegisterTrackedObject(tnh_SupplyPoint.SpawnPoint_PlayerSpawn, TAH_ReticleContact.ContactType.Supply);
-                                tnh_SupplyPoint.SetContact(contact);
+                            }
+                            else
+                            {
+                                for (int i = 0; i < Mod.currentTNHInstance.activeSupplyPointIndices.Count; ++i)
+                                {
+                                    TNH_SupplyPoint tnh_SupplyPoint = Mod.currentTNHInstance.manager.SupplyPoints[Mod.currentTNHInstance.activeSupplyPointIndices[i]];
+
+                                    int num6 = i;
+                                    if (i > 0)
+                                    {
+                                        num6 = Mod.currentTNHInstance.nextSupplyPanelType;
+                                        Mod.currentTNHInstance.nextSupplyPanelType++;
+                                        if (Mod.currentTNHInstance.nextSupplyPanelType > 2)
+                                        {
+                                            Mod.currentTNHInstance.nextSupplyPanelType = 1;
+                                        }
+                                    }
+                                    TNH_SupplyPoint.SupplyPanelType panelType = (TNH_SupplyPoint.SupplyPanelType)num6;
+                                    // Here we pass false to spawn sosigs,turrets, and 0 for max boxes because since we are not controller we do not want to spawn those ourselves
+                                    tnh_SupplyPoint.Configure(curLevel.SupplyChallenge, false, false, true, panelType, 0, 0, spawnToken);
+                                    spawnToken = false;
+                                    TAH_ReticleContact contact = Mod.currentTNHInstance.manager.TAHReticle.RegisterTrackedObject(tnh_SupplyPoint.SpawnPoint_PlayerSpawn, TAH_ReticleContact.ContactType.Supply);
+                                    tnh_SupplyPoint.SetContact(contact);
+                                }
                             }
                         }
                         if (Mod.currentTNHInstance.manager.BGAudioMode == TNH_BGAudioMode.Default)
@@ -1341,6 +1373,8 @@ namespace H3MP.Patches
                     Mod.LogInfo("\tWe are not controller, this was an order, setting from data", false);
                     Mod.currentTNHInstance.manager.Phase = TNH_Phase.Hold;
 
+                    Mod.currentTNHInstance.manager.m_fireThreshold = 0;
+                    Mod.currentTNHInstance.manager.m_botKillThreshold = 0;
                     Mod.currentTNHInstance.manager.m_patrolSquads.Clear();
 
                     Mod.currentTNHInstance.manager.TAHReticle.GetComponent<AIEntity>().LM_VisualOcclusionCheck = Mod.currentTNHInstance.manager.ReticleMask_Hold;
@@ -1777,38 +1811,66 @@ namespace H3MP.Patches
                 int panelIndex = 0;
                 if (PatchController.TNHTweakerAsmIdx > -1)
                 {
-                    for (int i = 0; i < Mod.currentTNHInstance.activeSupplyPointIndices.Count; ++i)
+                    if (Mod.currentTNHInstance.manager.m_curPointSequence.UsesExplicitSingleSupplyPoints)
                     {
-                        TNH_SupplyPoint tnh_SupplyPoint = Mod.currentTNHInstance.manager.SupplyPoints[Mod.currentTNHInstance.activeSupplyPointIndices[i]];
+                        for (int i = 0; i < Mod.currentTNHInstance.activeSupplyPointIndices.Count; ++i)
+                        {
+                            TNH_SupplyPoint tnh_SupplyPoint = Mod.currentTNHInstance.manager.SupplyPoints[Mod.currentTNHInstance.activeSupplyPointIndices[i]];
+                            // Here we pass false to spawn sosigs,turrets, and 0 for max boxes because since we are not controller we do not want to spawn those ourselves
+                            PatchController.TNHTweaker_TNHPatches_ConfigureSupplyPoint.Invoke(PatchController.TNHTweaker_TNHPatches, new object[] { tnh_SupplyPoint, level, TNH_SupplyPoint.SupplyPanelType.All });
+                            TAH_ReticleContact contact = Mod.currentTNHInstance.manager.TAHReticle.RegisterTrackedObject(tnh_SupplyPoint.SpawnPoint_PlayerSpawn, TAH_ReticleContact.ContactType.Supply);
+                            tnh_SupplyPoint.SetContact(contact);
+                        }
+                    }
+                    else
+                    {
+                        for (int i = 0; i < Mod.currentTNHInstance.activeSupplyPointIndices.Count; ++i)
+                        {
+                            TNH_SupplyPoint tnh_SupplyPoint = Mod.currentTNHInstance.manager.SupplyPoints[Mod.currentTNHInstance.activeSupplyPointIndices[i]];
 
-                        PatchController.TNHTweaker_TNHPatches_ConfigureSupplyPoint.Invoke(PatchController.TNHTweaker_TNHPatches, new object[] { tnh_SupplyPoint, level, panelIndex });
+                            PatchController.TNHTweaker_TNHPatches_ConfigureSupplyPoint.Invoke(PatchController.TNHTweaker_TNHPatches, new object[] { tnh_SupplyPoint, level, panelIndex });
 
-                        TAH_ReticleContact contact = Mod.currentTNHInstance.manager.TAHReticle.RegisterTrackedObject(tnh_SupplyPoint.SpawnPoint_PlayerSpawn, TAH_ReticleContact.ContactType.Supply);
-                        tnh_SupplyPoint.SetContact(contact);
+                            TAH_ReticleContact contact = Mod.currentTNHInstance.manager.TAHReticle.RegisterTrackedObject(tnh_SupplyPoint.SpawnPoint_PlayerSpawn, TAH_ReticleContact.ContactType.Supply);
+                            tnh_SupplyPoint.SetContact(contact);
+                        }
                     }
                 }
                 else
                 {
-                    for (int i = 0; i < Mod.currentTNHInstance.activeSupplyPointIndices.Count; ++i)
+                    if (Mod.currentTNHInstance.manager.m_curPointSequence.UsesExplicitSingleSupplyPoints)
                     {
-                        TNH_SupplyPoint tnh_SupplyPoint = Mod.currentTNHInstance.manager.SupplyPoints[Mod.currentTNHInstance.activeSupplyPointIndices[i]];
-
-                        int num6 = i;
-                        if (i > 0)
+                        for (int i = 0; i < Mod.currentTNHInstance.activeSupplyPointIndices.Count; ++i)
                         {
-                            num6 = panelIndex;
-                            panelIndex++;
-                            if (panelIndex > 2)
-                            {
-                                panelIndex = 1;
-                            }
+                            TNH_SupplyPoint tnh_SupplyPoint = Mod.currentTNHInstance.manager.SupplyPoints[Mod.currentTNHInstance.activeSupplyPointIndices[i]];
+                            // Here we pass false to spawn sosigs,turrets, and 0 for max boxes because since we are not controller we do not want to spawn those ourselves
+                            tnh_SupplyPoint.Configure(curLevel.SupplyChallenge, false, false, true, TNH_SupplyPoint.SupplyPanelType.All, 0, 0, true);
+                            TAH_ReticleContact contact = Mod.currentTNHInstance.manager.TAHReticle.RegisterTrackedObject(tnh_SupplyPoint.SpawnPoint_PlayerSpawn, TAH_ReticleContact.ContactType.Supply);
+                            tnh_SupplyPoint.SetContact(contact);
                         }
-                        TNH_SupplyPoint.SupplyPanelType panelType = (TNH_SupplyPoint.SupplyPanelType)num6;
-                        // Here we pass false to spawn sosigs,turrets, and 0 for max boxes because since we are not controller we do not want to spawn those ourselves
-                        tnh_SupplyPoint.Configure(curLevel.SupplyChallenge, false, false, true, panelType, 0, 0, spawnToken);
-                        spawnToken = false;
-                        TAH_ReticleContact contact = Mod.currentTNHInstance.manager.TAHReticle.RegisterTrackedObject(tnh_SupplyPoint.SpawnPoint_PlayerSpawn, TAH_ReticleContact.ContactType.Supply);
-                        tnh_SupplyPoint.SetContact(contact);
+                    }
+                    else
+                    {
+                        for (int i = 0; i < Mod.currentTNHInstance.activeSupplyPointIndices.Count; ++i)
+                        {
+                            TNH_SupplyPoint tnh_SupplyPoint = Mod.currentTNHInstance.manager.SupplyPoints[Mod.currentTNHInstance.activeSupplyPointIndices[i]];
+
+                            int num6 = i;
+                            if (i > 0)
+                            {
+                                num6 = panelIndex;
+                                panelIndex++;
+                                if (panelIndex > 2)
+                                {
+                                    panelIndex = 1;
+                                }
+                            }
+                            TNH_SupplyPoint.SupplyPanelType panelType = (TNH_SupplyPoint.SupplyPanelType)num6;
+                            // Here we pass false to spawn sosigs,turrets, and 0 for max boxes because since we are not controller we do not want to spawn those ourselves
+                            tnh_SupplyPoint.Configure(curLevel.SupplyChallenge, false, false, true, panelType, 0, 0, spawnToken);
+                            spawnToken = false;
+                            TAH_ReticleContact contact = Mod.currentTNHInstance.manager.TAHReticle.RegisterTrackedObject(tnh_SupplyPoint.SpawnPoint_PlayerSpawn, TAH_ReticleContact.ContactType.Supply);
+                            tnh_SupplyPoint.SetContact(contact);
+                        }
                     }
                 }
 

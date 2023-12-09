@@ -112,6 +112,10 @@ namespace H3MP.Networking
 
         public static void PlayerState(Packet packet)
         {
+            // Discarded because we now need to write the order for preprocessing but if that is disabled
+            // it will still be written to packet
+            _ = packet.ReadByte();
+
             int ID = packet.ReadInt();
             Vector3 position = packet.ReadVector3();
             Quaternion rotation = packet.ReadQuaternion();
@@ -133,9 +137,9 @@ namespace H3MP.Networking
             }
 
             GameManager.UpdatePlayerState(ID, position, rotation, headPos, headRot, torsoPos, torsoRot,
-                                               leftHandPos, leftHandRot,
-                                               rightHandPos, rightHandRot,
-                                               health, maxHealth, additionalData);
+                                          leftHandPos, leftHandRot,
+                                          rightHandPos, rightHandRot,
+                                          health, maxHealth, additionalData);
         }
 
         public static void PlayerIFF(Packet packet)
@@ -4118,9 +4122,33 @@ namespace H3MP.Networking
                     int newLength = index - index % 10 + 10;
                     Mod.CustomPacketHandler[] temp = Mod.customPacketHandlers;
                     Mod.customPacketHandlers = new Mod.CustomPacketHandler[newLength];
-                    for (int i = 0; i < temp.Length; ++i)
+                    lock (ThreadManager.customPacketPreprocessors)
                     {
-                        Mod.customPacketHandlers[i] = temp[i];
+                        lock (ThreadManager.customPreprocessedPackets)
+                        {
+                            lock (ThreadManager.customPreprocessedPacketHandlers)
+                            {
+                                lock (ThreadManager.customPacketSubProcessQueues)
+                                {
+                                    ThreadManager.PacketPreprocessor[] preprocessorTemp = ThreadManager.customPacketPreprocessors;
+                                    ThreadManager.customPacketPreprocessors = new ThreadManager.PacketPreprocessor[newLength];
+                                    object[] packetTemp = ThreadManager.customPreprocessedPackets;
+                                    ThreadManager.customPreprocessedPackets = new object[index + 10];
+                                    ThreadManager.PreprocessedPacketHandler[] handlerTemp = ThreadManager.customPreprocessedPacketHandlers;
+                                    ThreadManager.customPreprocessedPacketHandlers = new ThreadManager.PreprocessedPacketHandler[newLength];
+                                    Queue<int>[] subTemp = ThreadManager.customPacketSubProcessQueues;
+                                    ThreadManager.customPacketSubProcessQueues = new Queue<int>[newLength];
+                                    for (int i = 0; i < temp.Length; ++i)
+                                    {
+                                        Mod.customPacketHandlers[i] = temp[i];
+                                        ThreadManager.customPacketPreprocessors[i] = preprocessorTemp[i];
+                                        ThreadManager.customPreprocessedPackets[i] = packetTemp[i];
+                                        ThreadManager.customPreprocessedPacketHandlers[i] = handlerTemp[i];
+                                        ThreadManager.customPacketSubProcessQueues[i] = subTemp[i];
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
 
