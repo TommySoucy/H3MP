@@ -509,11 +509,11 @@ namespace H3MP.Networking
                         executeCopiedOnMainThread[i]();
                         updateStateIndex = i;
 
-                        if (start.ElapsedMilliseconds >= updateTimeLimit)
-                        {
-                            Mod.LogWarning("Main packet queue reached time limit at " + i + " of " + executeCopiedOnMainThread.Count);
-                            return;
-                        }
+                        //if (start.ElapsedMilliseconds >= updateTimeLimit)
+                        //{
+                        //    Mod.LogWarning("Main packet queue reached time limit at " + i + " of " + executeCopiedOnMainThread.Count);
+                        //    return;
+                        //}
                     }
                 }
                 else
