@@ -1331,6 +1331,7 @@ namespace H3MP
                     AddTrackedType(typeof(TrackedGatlingGunData));
                     AddTrackedType(typeof(TrackedPlayerBodyData));
                     AddTrackedType(typeof(TrackedIrisData));
+                    AddTrackedType(typeof(TrackedSentinelData));
 
                     continue;
                 }
