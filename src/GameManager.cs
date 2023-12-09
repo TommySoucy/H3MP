@@ -64,7 +64,7 @@ namespace H3MP
         public static bool resetSpectatorHost;
         public static bool instanceBringItems;
         public static long ping = -1;
-        private static int reconnectionInstance = -1;
+        public static int reconnectionInstance = -1;
 
         /// <summary>
         /// CUSTOMIZATION
