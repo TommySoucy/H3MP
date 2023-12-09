@@ -92,6 +92,8 @@
     <Compile Include="src\tracking\TrackedObjectData.cs" />
     <Compile Include="src\tracking\TrackedPlayerBody.cs" />
     <Compile Include="src\tracking\TrackedPlayerBodyData.cs" />
+    <Compile Include="src\tracking\TrackedSentinel.cs" />
+    <Compile Include="src\tracking\TrackedSentinelData.cs" />
     <Compile Include="src\tracking\TrackedSosig.cs" />
     <Compile Include="src\tracking\TrackedSosigData.cs" />
     <Compile Include="src\scripts\H3MPWristMenuSection.cs" />
