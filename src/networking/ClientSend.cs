@@ -75,7 +75,6 @@ namespace H3MP.Networking
 
         public static void SendBatchedPackets()
         {
-            
             List<byte[]> packetsToSend = new List<byte[]>();
             lock (queuedPackets)
             {

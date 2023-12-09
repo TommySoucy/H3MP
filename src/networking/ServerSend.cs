@@ -79,7 +79,10 @@ namespace H3MP.Networking
                 if (exclude == -1 || toClients[i] != exclude)
                 {
                     //Server.clients[toClients[i]].udp.SendData(packet);
-                    Server.clients[toClients[i]].queuedPackets[key] = packet.ToArray();
+                    lock (Server.clients[toClients[i]].queuedPackets)
+                    {
+                        Server.clients[toClients[i]].queuedPackets[key] = packet.ToArray();
+                    }
                 }
             }
         }
@@ -94,7 +97,6 @@ namespace H3MP.Networking
         
         public static void SendBatchedPackets(ServerClient client)
         {
-            
             List<byte[]> packetsToSend = new List<byte[]>();
             lock (client.queuedPackets)
             {
