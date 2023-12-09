@@ -285,52 +285,60 @@ namespace H3MP.Networking
 
                 Packet packet = new Packet(packetBytes);
                 int packetID = packet.ReadInt();
-                if (ThreadManager.PreprocessPacket(packet, packetID, ID))
-                {
+                //if (ThreadManager.PreprocessPacket(packet, packetID, ID))
+                //{
                     ThreadManager.ExecuteOnMainThread(() =>
                     {
                         if (Server.tcpListener != null)
                         {
-                            if (packetID < 0)
-                            {
-                                if (packetID == -1)
+                        //    using(Packet packet = new Packet(packetBytes))
+                        //    {
+                        //        int packetID = packet.ReadInt();
+
+                                if (packetID < 0)
                                 {
-                                    Mod.GenericCustomPacketReceivedInvoke(ID, packet.ReadString(), packet);
-                                }
-                                else // packetID <= -2
-                                {
-                                    int index = packetID * -1 - 2;
-                                    if (Mod.customPacketHandlers.Length > index && Mod.customPacketHandlers[index] != null)
+                                    if (packetID == -1)
                                     {
-#if DEBUG
-                                        if (Input.GetKey(KeyCode.PageDown))
+                                        Mod.GenericCustomPacketReceivedInvoke(ID, packet.ReadString(), packet);
+                                    }
+                                    else // packetID <= -2
+                                    {
+                                        int index = packetID * -1 - 2;
+                                        if (Mod.customPacketHandlers.Length > index && Mod.customPacketHandlers[index] != null)
                                         {
-                                            Mod.LogInfo("\tHandling custom UDP packet: " + packetID);
+    #if DEBUG
+                                            if (Input.GetKey(KeyCode.PageDown))
+                                            {
+                                                Mod.LogInfo("\tHandling custom UDP packet: " + packetID);
+                                            }
+    #endif
+                                            Mod.customPacketHandlers[index](ID, packet);
                                         }
-#endif
-                                        Mod.customPacketHandlers[index](ID, packet);
+    #if DEBUG
+                                        else
+                                        {
+                                            Mod.LogWarning("\tServer received invalid custom UDP packet ID: " + packetID + " from client " + ID);
+                                        }
+    #endif
                                     }
-#if DEBUG
-                                    else
-                                    {
-                                        Mod.LogWarning("\tServer received invalid custom UDP packet ID: " + packetID + " from client " + ID);
-                                    }
-#endif
                                 }
-                            }
-                            else
-                            {
-#if DEBUG
-                                if (Input.GetKey(KeyCode.PageDown))
+                                else
                                 {
-                                    Mod.LogInfo("\tHandling UDP packet: " + packetID + " (" + (ClientPackets)packetID + "), length: " + packet.buffer.Count + ", from client " + ID);
+    #if DEBUG
+                                    if (Input.GetKey(KeyCode.PageDown))
+                                    {
+                                        Mod.LogInfo("\tHandling UDP packet: " + packetID + " (" + (ClientPackets)packetID + "), length: " + packet.buffer.Count + ", from client " + ID);
+                                    }
+    #endif
+                                    Server.packetHandlers[packetID](ID, packet);
                                 }
-#endif
-                                Server.packetHandlers[packetID](ID, packet);
-                            }
+
+                                packet.Dispose();
+
+                            //}
                         }
                     });
-                }
+                //}
             }
 
             public void Disconnect()

@@ -64,12 +64,7 @@ namespace H3MP
         public static bool resetSpectatorHost;
         public static bool instanceBringItems;
         public static long ping = -1;
-        private static int _reconnectionInstance = -1;
-        public static int reconnectionInstance
-        {
-            get { return _reconnectionInstance; } 
-            set { Mod.LogInfo("Setting reconnectionInstance:\n" + Environment.StackTrace); _reconnectionInstance = value; }
-        }
+        private static int reconnectionInstance = -1;
 
         /// <summary>
         /// CUSTOMIZATION

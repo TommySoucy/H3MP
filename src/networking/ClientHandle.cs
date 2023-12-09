@@ -112,6 +112,10 @@ namespace H3MP.Networking
 
         public static void PlayerState(Packet packet)
         {
+            // Discarded because we now need to write the order for preprocessing but if that is disabled
+            // it will still be written to packet
+            _ = packet.ReadByte();
+
             int ID = packet.ReadInt();
             Vector3 position = packet.ReadVector3();
             Quaternion rotation = packet.ReadQuaternion();

@@ -57,6 +57,10 @@ namespace H3MP.Networking
 
             Player player = Server.clients[clientID].player;
 
+            // Discarded because we now need to write the order for preprocessing but if that is disabled
+            // it will still be written to packet
+            _ = packet.ReadByte();
+
             player.position = packet.ReadVector3();
             player.rotation = packet.ReadQuaternion();
             player.headPos = packet.ReadVector3();

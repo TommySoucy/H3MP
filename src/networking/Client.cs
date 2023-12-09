@@ -385,50 +385,55 @@ namespace H3MP.Networking
                     data = prePacket.ReadBytes(packetLength);
                 }
 
-                Packet packet = new Packet(data);
-                int packetID = packet.ReadInt();
-                if (ThreadManager.PreprocessPacket(packet, packetID))
+                Packet PPacket = new Packet(data);
+                int PPacketID = PPacket.ReadInt();
+                if (ThreadManager.PreprocessPacket(PPacket, PPacketID))
                 {
                     ThreadManager.ExecuteOnMainThread(() =>
                     {
                         if (singleton.isConnected)
                         {
-                            if (packetID < 0)
+                            using (Packet packet = new Packet(data))
                             {
-                                if (packetID == -1)
+                                int packetID = packet.ReadInt();
+
+                                if (packetID < 0)
                                 {
-                                    Mod.GenericCustomPacketReceivedInvoke(0, packet.ReadString(), packet);
-                                }
-                                else // packetID <= -2
-                                {
-                                    int index = packetID * -1 - 2;
-                                    if (Mod.customPacketHandlers.Length > index && Mod.customPacketHandlers[index] != null)
+                                    if (packetID == -1)
                                     {
-#if DEBUG
-                                        if (Input.GetKey(KeyCode.PageDown))
+                                        Mod.GenericCustomPacketReceivedInvoke(0, packet.ReadString(), packet);
+                                    }
+                                    else // packetID <= -2
+                                    {
+                                        int index = packetID * -1 - 2;
+                                        if (Mod.customPacketHandlers.Length > index && Mod.customPacketHandlers[index] != null)
                                         {
-                                            Mod.LogInfo("\tHandling custom UDP packet: " + packetID);
+#if DEBUG
+                                            if (Input.GetKey(KeyCode.PageDown))
+                                            {
+                                                Mod.LogInfo("\tHandling custom UDP packet: " + packetID);
+                                            }
+#endif
+                                            Mod.customPacketHandlers[index](0, packet);
+                                        }
+#if DEBUG
+                                        else
+                                        {
+                                            Mod.LogWarning("\tClient received invalid custom UDP packet ID: " + packetID);
                                         }
 #endif
-                                        Mod.customPacketHandlers[index](0, packet);
                                     }
-#if DEBUG
-                                    else
-                                    {
-                                        Mod.LogWarning("\tClient received invalid custom UDP packet ID: " + packetID);
-                                    }
-#endif
                                 }
-                            }
-                            else
-                            {
-#if DEBUG
-                                if (Input.GetKey(KeyCode.PageDown))
+                                else
                                 {
-                                    Mod.LogInfo("\tHandling UDP packet: " + packetID + " (" + (ServerPackets)packetID + "), length: " + packet.buffer.Count);
-                                }
+#if DEBUG
+                                    if (Input.GetKey(KeyCode.PageDown))
+                                    {
+                                        Mod.LogInfo("\tHandling UDP packet: " + packetID + " (" + (ServerPackets)packetID + "), length: " + packet.buffer.Count);
+                                    }
 #endif
-                                packetHandlers[packetID](packet);
+                                    packetHandlers[packetID](packet);
+                                }
                             }
                         }
                     });
