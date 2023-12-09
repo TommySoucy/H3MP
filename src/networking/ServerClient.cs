@@ -283,17 +283,17 @@ namespace H3MP.Networking
                 int packetLength = packetData.ReadInt();
                 byte[] packetBytes = packetData.ReadBytes(packetLength);
 
-                Packet packet = new Packet(packetBytes);
-                int packetID = packet.ReadInt();
-                //if (ThreadManager.PreprocessPacket(packet, packetID, ID))
-                //{
+                Packet PPacket = new Packet(packetBytes);
+                int PPacketID = PPacket.ReadInt();
+                if (ThreadManager.PreprocessPacket(PPacket, PPacketID, ID))
+                {
                     ThreadManager.ExecuteOnMainThread(() =>
                     {
                         if (Server.tcpListener != null)
                         {
-                        //    using(Packet packet = new Packet(packetBytes))
-                        //    {
-                        //        int packetID = packet.ReadInt();
+                            using (Packet packet = new Packet(packetBytes))
+                            {
+                                int packetID = packet.ReadInt();
 
                                 if (packetID < 0)
                                 {
@@ -335,10 +335,10 @@ namespace H3MP.Networking
 
                                 packet.Dispose();
 
-                            //}
+                            }
                         }
                     });
-                //}
+                }
             }
 
             public void Disconnect()
