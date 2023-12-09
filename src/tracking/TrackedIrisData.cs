@@ -75,6 +75,11 @@ namespace H3MP.Tracking
 
             GameManager.trackedIrisByIris.Add(trackedIris.physicalIris, trackedIris);
             GameManager.trackedObjectByObject.Add(trackedIris.physicalIris, trackedIris);
+            GameManager.trackedObjectByShatterable.Add(trackedIris.physicalIris.GetComponentInChildren<UberShatterable>(), trackedIris);
+            for (int i = 0; i < trackedIris.physicalIris.Rings.Count; ++i)
+            {
+                GameManager.trackedObjectByShatterable.Add(trackedIris.physicalIris.Rings[i], trackedIris);
+            }
 
             // Add to local list
             data.localTrackedID = GameManager.objects.Count;
@@ -141,6 +146,11 @@ namespace H3MP.Tracking
 
             GameManager.trackedIrisByIris.Add(physicalIris.physicalIris, physicalIris);
             GameManager.trackedObjectByObject.Add(physicalIris.physicalIris, physicalIris);
+            GameManager.trackedObjectByShatterable.Add(physicalIris.GetComponentInChildren<UberShatterable>(), physicalIris);
+            for(int i = 0; i< physicalIris.physicalIris.Rings.Count; ++i)
+            {
+                GameManager.trackedObjectByShatterable.Add(physicalIris.physicalIris.Rings[i], physicalIris);
+            }
 
             // Initially set itself
             UpdateFromData(this);
@@ -316,6 +326,11 @@ namespace H3MP.Tracking
                 if (physicalIris != null && physicalIris.physicalIris != null)
                 {
                     GameManager.trackedIrisByIris.Remove(physicalIris.physicalIris);
+                    GameManager.trackedObjectByShatterable.Remove(physicalIris.physicalIris.GetComponentInChildren<UberShatterable>());
+                    for (int i = 0; i < physicalIris.physicalIris.Rings.Count; ++i)
+                    {
+                        GameManager.trackedObjectByShatterable.Remove(physicalIris.physicalIris.Rings[i]);
+                    }
                 }
             }
         }

@@ -101,6 +101,11 @@ namespace H3MP.Tracking
 
             // Remove from tracked lists, which has to be done no matter what OnDestroy because we will not have the physical object anymore
             GameManager.trackedIrisByIris.Remove(physicalIris);
+            GameManager.trackedObjectByShatterable.Remove(physicalIris.GetComponentInChildren<UberShatterable>());
+            for (int i = 0; i < physicalIris.Rings.Count; ++i)
+            {
+                GameManager.trackedObjectByShatterable.Remove(physicalIris.Rings[i]);
+            }
 
             base.OnDestroy();
         }

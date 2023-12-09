@@ -47,7 +47,7 @@ namespace H3MP.Networking
 #if DEBUG
             if (Input.GetKey(KeyCode.PageDown))
             {
-                Mod.LogInfo("SendUDPData: " + BitConverter.ToInt32(packet.ToArray(), 0)+" legnth "+packet.buffer.Count);
+                Mod.LogInfo("SendUDPData: " + BitConverter.ToInt32(packet.ToArray(), 0)+" length "+packet.buffer.Count);
             }
 #endif
             packet.WriteLength();

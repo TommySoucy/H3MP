@@ -54,8 +54,11 @@ namespace H3MP.Tracking
 
             GameManager.trackedSentinelBySentinel.Add(trackedSentinel.physicalSentinel, trackedSentinel);
             GameManager.trackedObjectByObject.Add(trackedSentinel.physicalSentinel, trackedSentinel);
-            GameManager.trackedObjectByDamageable.Add(trackedSentinel.physicalSentinel, trackedSentinel);
-            GameManager.trackedObjectByDamageable.Add(trackedSentinel.GetComponentInChildren<Construct_Sentinel_Core>(), trackedSentinel);
+            GameManager.trackedObjectByShatterable.Add(trackedSentinel.physicalSentinel.GetComponentInChildren<UberShatterable>(), trackedSentinel);
+            for (int i = 0; i < trackedSentinel.physicalSentinel.Plates.Count; ++i)
+            {
+                GameManager.trackedObjectByShatterable.Add(trackedSentinel.physicalSentinel.Plates[i], trackedSentinel);
+            }
 
             // Add to local list
             data.localTrackedID = GameManager.objects.Count;
@@ -84,15 +87,15 @@ namespace H3MP.Tracking
         {
             Mod.LogInfo("Instantiating sentinel at " + trackedID, false);
             GameObject prefab = null;
-            Construct_Sentinel_Volume sentinelVolume = GameObject.FindObjectOfType<Construct_Sentinel_Volume>();
+            Construct_Sentinel_Path sentinelVolume = GameObject.FindObjectOfType<Construct_Sentinel_Path>();
             if (sentinelVolume == null)
             {
-                Mod.LogError("Failed to instantiate sentinel: " + trackedID + ": Could not find suitable sentinel volume to get prefab from");
+                Mod.LogError("Failed to instantiate sentinel: " + trackedID + ": Could not find suitable sentinel path to get prefab from");
                 yield break;
             }
             else
             {
-                prefab = sentinelVolume.Sentinel_Prefab;
+                prefab = sentinelVolume.SentinelPrefab;
             }
 
             ++Mod.skipAllInstantiates;
@@ -108,8 +111,11 @@ namespace H3MP.Tracking
 
             GameManager.trackedSentinelBySentinel.Add(physicalSentinel.physicalSentinel, physicalSentinel);
             GameManager.trackedObjectByObject.Add(physicalSentinel.physicalSentinel, physicalSentinel);
-            GameManager.trackedObjectByDamageable.Add(physicalSentinel.physicalSentinel, physicalSentinel);
-            GameManager.trackedObjectByDamageable.Add(physicalSentinel.GetComponentInChildren<Construct_Sentinel_Core>(), physicalSentinel);
+            GameManager.trackedObjectByShatterable.Add(physicalSentinel.physicalSentinel.GetComponentInChildren<UberShatterable>(), physicalSentinel);
+            for (int i = 0; i < physicalSentinel.physicalSentinel.Plates.Count; ++i)
+            {
+                GameManager.trackedObjectByShatterable.Add(physicalSentinel.physicalSentinel.Plates[i], physicalSentinel);
+            }
 
             // Initially set itself
             UpdateFromData(this);
@@ -168,30 +174,6 @@ namespace H3MP.Tracking
             return updated || !previousPos.Equals(position) || !previousRot.Equals(rotation);
         }
 
-        public override void OnTrackedIDReceived(TrackedObjectData newData)
-        {
-            base.OnTrackedIDReceived(newData);
-
-            if (localTrackedID != -1 && TrackedSentinel.unknownSentinelBeginExploding.Contains(localWaitingIndex))
-            {
-                ClientSend.SentinelBeginExploding(trackedID, true);
-
-                TrackedSentinel.unknownSentinelBeginExploding.Remove(localWaitingIndex);
-            }
-            if (localTrackedID != -1 && TrackedSentinel.unknownSentinelBeginDefusing.Contains(localWaitingIndex))
-            {
-                ClientSend.SentinelBeginDefusing(trackedID, true);
-
-                TrackedSentinel.unknownSentinelBeginDefusing.Remove(localWaitingIndex);
-            }
-            if (localTrackedID != -1 && TrackedSentinel.unknownSentinelExplode.TryGetValue(localWaitingIndex, out bool defusing))
-            {
-                ClientSend.SentinelExplode(trackedID, defusing);
-
-                TrackedSentinel.unknownSentinelExplode.Remove(localWaitingIndex);
-            }
-        }
-
         public override void RemoveFromLocal()
         {
             base.RemoveFromLocal();
@@ -202,8 +184,11 @@ namespace H3MP.Tracking
                 if (physicalSentinel != null && physicalSentinel.physicalSentinel != null)
                 {
                     GameManager.trackedSentinelBySentinel.Remove(physicalSentinel.physicalSentinel);
-                    GameManager.trackedObjectByDamageable.Remove(physicalSentinel.physicalSentinel);
-                    GameManager.trackedObjectByDamageable.Remove(physicalSentinel.GetComponentInChildren<Construct_Sentinel_Core>());
+                    GameManager.trackedObjectByShatterable.Remove(physicalSentinel.physicalSentinel.GetComponentInChildren<UberShatterable>());
+                    for (int i = 0; i < physicalSentinel.physicalSentinel.Plates.Count; ++i)
+                    {
+                        GameManager.trackedObjectByShatterable.Remove(physicalSentinel.physicalSentinel.Plates[i]);
+                    }
                 }
             }
         }
