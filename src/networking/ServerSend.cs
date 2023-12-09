@@ -345,15 +345,15 @@ namespace H3MP.Networking
             }
         }
 
-        public static void PlayerState(byte order, Player player, string scene, int instance)
+        public static void PlayerState(Player player, string scene, int instance)
         {
-            PlayerState(order, player.ID, player.position, player.rotation, player.headPos, player.headRot, player.torsoPos, player.torsoRot,
+            PlayerState(player.ID, player.position, player.rotation, player.headPos, player.headRot, player.torsoPos, player.torsoRot,
                         player.leftHandPos, player.leftHandRot,
                         player.leftHandPos, player.leftHandRot,
                         player.health, player.maxHealth, scene, instance);
         }
 
-        public static void PlayerState(byte order, int ID, Vector3 position, Quaternion rotation, Vector3 headPos, Quaternion headRot, Vector3 torsoPos, Quaternion torsoRot,
+        public static void PlayerState(int ID, Vector3 position, Quaternion rotation, Vector3 headPos, Quaternion headRot, Vector3 torsoPos, Quaternion torsoRot,
                                        Vector3 leftHandPos, Quaternion leftHandRot,
                                        Vector3 rightHandPos, Quaternion rightHandRot,
                                        float health, int maxHealth, string scene, int instance)
@@ -364,7 +364,6 @@ namespace H3MP.Networking
             {
                 using (Packet packet = new Packet((int)ServerPackets.playerState))
                 {
-                    packet.Write(order);
                     packet.Write(ID);
                     packet.Write(position);
                     packet.Write(rotation);

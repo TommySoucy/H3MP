@@ -137,14 +137,13 @@ namespace H3MP.Networking
             }
         }
 
-        public static void PlayerState(byte order, Vector3 playerPos, Quaternion playerRot, Vector3 headPos, Quaternion headRot, Vector3 torsoPos, Quaternion torsoRot,
+        public static void PlayerState(Vector3 playerPos, Quaternion playerRot, Vector3 headPos, Quaternion headRot, Vector3 torsoPos, Quaternion torsoRot,
                                        Vector3 leftHandPos, Quaternion leftHandRot,
                                        Vector3 rightHandPos, Quaternion rightHandRot,
                                        float health, int maxHealth)
         {
             using(Packet packet = new Packet((int)ClientPackets.playerState))
             {
-                packet.Write(order);
                 packet.Write(playerPos);
                 packet.Write(playerRot);
                 packet.Write(headPos);

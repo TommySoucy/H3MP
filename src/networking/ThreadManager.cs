@@ -242,8 +242,7 @@ namespace H3MP.Networking
                     // Also send the host's player state to all clients
                     if (GM.CurrentPlayerBody != null)
                     {
-                        ServerSend.PlayerState(GameManager.playerOrder++,
-                                               0,
+                        ServerSend.PlayerState(0,
                                                GM.CurrentPlayerBody.transform.position,
                                                GM.CurrentPlayerBody.transform.rotation,
                                                GM.CurrentPlayerBody.headPositionFiltered,
@@ -295,8 +294,7 @@ namespace H3MP.Networking
                     // Also send the player state to all clients
                     if (GM.CurrentPlayerBody != null)
                     {
-                        ClientSend.PlayerState(GameManager.playerOrder++,
-                                               GM.CurrentPlayerBody.transform.position,
+                        ClientSend.PlayerState(GM.CurrentPlayerBody.transform.position,
                                                GM.CurrentPlayerBody.transform.rotation,
                                                GM.CurrentPlayerBody.headPositionFiltered,
                                                GM.CurrentPlayerBody.headRotationFiltered,
