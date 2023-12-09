@@ -305,8 +305,6 @@ namespace H3MP
             currentTNHInstance = null;
             currentlyPlayingTNH = false;
             customPacketHandlers = new CustomPacketHandler[10];
-            ThreadManager.customPacketPreprocessors = new PacketPreprocessor[10];
-            ThreadManager.customPreprocessedPacketHandlers = new PreprocessedPacketHandler[10];
             registeredCustomPacketIDs.Clear();
             availableCustomPacketIndices = new List<int>() { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
             spectatorHostWaitingForTNHSetup = false;
@@ -2452,7 +2450,6 @@ namespace H3MP
 
                 ThreadManager threadManager = managerObject.AddComponent<ThreadManager>();
                 ThreadManager.host = host;
-                threadManager.InitializePacketPreprocessing();
 
                 GameManager gameManager = managerObject.AddComponent<GameManager>();
 

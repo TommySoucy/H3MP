@@ -115,7 +115,6 @@ namespace H3MP.Networking
             udpListener = null;
 
             GameManager.Reset();
-            ThreadManager.Reset();
             Mod.Reset();
             SpecificClose();
             if (OnServerClose != null)
@@ -590,33 +589,9 @@ namespace H3MP.Networking
                     index = Mod.customPacketHandlers.Length;
                     Mod.CustomPacketHandler[] temp = Mod.customPacketHandlers;
                     Mod.customPacketHandlers = new Mod.CustomPacketHandler[index + 10];
-                    lock (ThreadManager.customPacketPreprocessors)
+                    for (int i = 0; i < temp.Length; ++i)
                     {
-                        lock (ThreadManager.customPreprocessedPackets)
-                        {
-                            lock (ThreadManager.customPreprocessedPacketHandlers)
-                            {
-                                lock (ThreadManager.customPacketSubProcessQueues)
-                                {
-                                    ThreadManager.PacketPreprocessor[] preprocessorTemp = ThreadManager.customPacketPreprocessors;
-                                    ThreadManager.customPacketPreprocessors = new ThreadManager.PacketPreprocessor[index + 10];
-                                    object[] packetTemp = ThreadManager.customPreprocessedPackets;
-                                    ThreadManager.customPreprocessedPackets = new object[index + 10];
-                                    ThreadManager.PreprocessedPacketHandler[] handlerTemp = ThreadManager.customPreprocessedPacketHandlers;
-                                    ThreadManager.customPreprocessedPacketHandlers = new ThreadManager.PreprocessedPacketHandler[index + 10];
-                                    Queue<int>[] subTemp = ThreadManager.customPacketSubProcessQueues;
-                                    ThreadManager.customPacketSubProcessQueues = new Queue<int>[index + 10];
-                                    for (int i = 0; i < temp.Length; ++i)
-                                    {
-                                        Mod.customPacketHandlers[i] = temp[i];
-                                        ThreadManager.customPacketPreprocessors[i] = preprocessorTemp[i];
-                                        ThreadManager.customPreprocessedPackets[i] = packetTemp[i];
-                                        ThreadManager.customPreprocessedPacketHandlers[i] = handlerTemp[i];
-                                        ThreadManager.customPacketSubProcessQueues[i] = subTemp[i];
-                                    }
-                                }
-                            }
-                        }
+                        Mod.customPacketHandlers[i] = temp[i];
                     }
                     for (int i = index + 1; i < Mod.customPacketHandlers.Length; ++i) 
                     {

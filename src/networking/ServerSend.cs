@@ -86,7 +86,7 @@ namespace H3MP.Networking
 
         public static void SendAllBatchedUDPData()
         {
-            foreach (var client in Server.clients.Values)
+            foreach (ServerClient client in Server.clients.Values)
             {
                 SendBatchedPackets(client);
             }
@@ -106,7 +106,7 @@ namespace H3MP.Networking
             
             Packet batchedPacket = new Packet((int) ServerPackets.batchedPacket);
             
-            foreach (var packetData in packetsToSend)
+            foreach (byte[] packetData in packetsToSend)
             {
 
                 // If the data of this packet would put us over the MTU, send what we have now

@@ -401,59 +401,54 @@ namespace H3MP.Networking
                     data = prePacket.ReadBytes(packetLength);
                 }
 
-                Packet PPacket = new Packet(data);
-                int PPacketID = PPacket.ReadInt();
-                if (ThreadManager.PreprocessPacket(PPacket, PPacketID))
+                ThreadManager.ExecuteOnMainThread(() =>
                 {
-                    ThreadManager.ExecuteOnMainThread(() =>
+                    if (singleton.isConnected)
                     {
-                        if (singleton.isConnected)
+                        using (Packet packet = new Packet(data))
                         {
-                            using (Packet packet = new Packet(data))
-                            {
-                                int packetID = packet.ReadInt();
+                            int packetID = packet.ReadInt();
 
-                                if (packetID < 0)
+                            if (packetID < 0)
+                            {
+                                if (packetID == -1)
                                 {
-                                    if (packetID == -1)
-                                    {
-                                        Mod.GenericCustomPacketReceivedInvoke(0, packet.ReadString(), packet);
-                                    }
-                                    else // packetID <= -2
-                                    {
-                                        int index = packetID * -1 - 2;
-                                        if (Mod.customPacketHandlers.Length > index && Mod.customPacketHandlers[index] != null)
-                                        {
-#if DEBUG
-                                            if (Input.GetKey(KeyCode.PageDown))
-                                            {
-                                                Mod.LogInfo("\tHandling custom UDP packet: " + packetID);
-                                            }
-#endif
-                                            Mod.customPacketHandlers[index](0, packet);
-                                        }
-#if DEBUG
-                                        else
-                                        {
-                                            Mod.LogWarning("\tClient received invalid custom UDP packet ID: " + packetID);
-                                        }
-#endif
-                                    }
+                                    Mod.GenericCustomPacketReceivedInvoke(0, packet.ReadString(), packet);
                                 }
-                                else
+                                else // packetID <= -2
                                 {
-#if DEBUG
-                                    if (Input.GetKey(KeyCode.PageDown))
+                                    int index = packetID * -1 - 2;
+                                    if (Mod.customPacketHandlers.Length > index && Mod.customPacketHandlers[index] != null)
                                     {
-                                        Mod.LogInfo("\tHandling UDP packet: " + packetID + " (" + (ServerPackets)packetID + "), length: " + packet.buffer.Count);
+#if DEBUG
+                                        if (Input.GetKey(KeyCode.PageDown))
+                                        {
+                                            Mod.LogInfo("\tHandling custom UDP packet: " + packetID);
+                                        }
+#endif
+                                        Mod.customPacketHandlers[index](0, packet);
+                                    }
+#if DEBUG
+                                    else
+                                    {
+                                        Mod.LogWarning("\tClient received invalid custom UDP packet ID: " + packetID);
                                     }
 #endif
-                                    packetHandlers[packetID](packet);
                                 }
                             }
+                            else
+                            {
+#if DEBUG
+                                if (Input.GetKey(KeyCode.PageDown))
+                                {
+                                    Mod.LogInfo("\tHandling UDP packet: " + packetID + " (" + (ServerPackets)packetID + "), length: " + packet.buffer.Count);
+                                }
+#endif
+                                packetHandlers[packetID](packet);
+                            }
                         }
-                    });
-                }
+                    }
+                });
             }
 
             private void Disconnect(int code)
@@ -960,7 +955,6 @@ namespace H3MP.Networking
 
                 ID = -1;
                 GameManager.Reset();
-                ThreadManager.Reset();
                 SpecificDisconnect();
                 if (OnDisconnect != null)
                 {
