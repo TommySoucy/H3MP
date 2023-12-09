@@ -5405,5 +5405,20 @@ namespace H3MP.Networking
                 ServerSend.BrutBlockSystemStart(trackedID, next, clientID);
             }
         }
+
+        public static void BatchedPackets(int clientID, Packet packet)
+        {
+            while (packet.UnreadLength() > 0)
+            {
+                int length = packet.ReadInt();
+                byte[] data = packet.ReadBytes(length);
+
+                using (Packet childPacket = new Packet(data))
+                {
+                    int packetId = childPacket.ReadInt();
+                    Server.packetHandlers[packetId](clientID, childPacket);
+                }
+            }
+        }
     }
 }

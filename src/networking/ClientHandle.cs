@@ -17,6 +17,7 @@ namespace H3MP.Networking
         {
             string msg = packet.ReadString();
             int ID = packet.ReadInt();
+            Client.singleton.SetTickRate(packet.ReadByte());
             GameManager.colorByIFF = packet.ReadBool();
             GameManager.nameplateMode = packet.ReadInt();
             GameManager.radarMode = packet.ReadInt();
@@ -4871,13 +4872,28 @@ namespace H3MP.Networking
             TrackedBrutBlockSystemData trackedBrutBlockSystemData = Client.objects[trackedID] as TrackedBrutBlockSystemData;
             if (trackedBrutBlockSystemData != null)
             {
-                if(trackedBrutBlockSystemData.physicalBrutBlockSystem != null)
+                if (trackedBrutBlockSystemData.physicalBrutBlockSystem != null)
                 {
                     trackedBrutBlockSystemData.physicalBrutBlockSystem.physicalBrutBlockSystem.isNextBlock0 = next;
 
                     ++BrutBlockSystemPatch.startSkip;
                     trackedBrutBlockSystemData.physicalBrutBlockSystem.physicalBrutBlockSystem.TryToStartBlock();
                     --BrutBlockSystemPatch.startSkip;
+                } 
+            }
+        }
+
+        public static void BatchedPackets(Packet packet)
+        {
+            while (packet.UnreadLength() > 0)
+            {
+                int length = packet.ReadInt();
+                byte[] data = packet.ReadBytes(length);
+
+                using (Packet childPacket = new Packet(data))
+                {
+                    int packetId = childPacket.ReadInt();
+                    Client.packetHandlers[packetId](childPacket);
                 }
             }
         }

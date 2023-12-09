@@ -1473,7 +1473,7 @@ namespace H3MP
             //Server.IP = config["IP"].ToString();
             CreateManagerObject(true);
 
-            Server.Start((ushort)config["MaxClientCount"], (ushort)config["Port"]);
+            Server.Start((ushort)config["MaxClientCount"], (ushort)config["Port"], (int)config["TickRate"]);
 
             if (GameManager.scene.Equals("TakeAndHold_Lobby_2"))
             {

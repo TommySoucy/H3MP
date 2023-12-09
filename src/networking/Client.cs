@@ -1,11 +1,10 @@
 ﻿using FistVR;
-using H3MP.Scripts;
 using H3MP.Tracking;
 using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
-using System.Threading;
+using System.Timers;
 using UnityEngine;
 
 namespace H3MP.Networking
@@ -43,8 +42,8 @@ namespace H3MP.Networking
         public bool gotWelcome = false;
         public bool gotConnectSync = false;
         public int pingAttemptCounter = 0;
-        private delegate void PacketHandler(Packet packet);
-        private static PacketHandler[] packetHandlers;
+        public delegate void PacketHandler(Packet packet);
+        public static PacketHandler[] packetHandlers;
         public static Dictionary<string, int> synchronizedScenes;
         public static TrackedObjectData[] objects; // All tracked objects, regardless of whos control they are under
 
@@ -55,6 +54,9 @@ namespace H3MP.Networking
         public static IAsyncResult connectResult;
         public static int punchThroughAttemptCounter;
 
+        public int tickRate = 20;
+        public Timer tickTimer = new Timer();
+        
         /// <summary>
         /// CUSTOMIZATION
         /// Delegate for the OnDisconnect event
@@ -95,6 +97,20 @@ namespace H3MP.Networking
             tcp.Connect();
         }
 
+        public void SetTickRate(int tickRate)
+        {
+            this.tickRate = tickRate;
+            tickTimer.Elapsed += Tick;
+            tickTimer.Interval = 1000f / tickRate;
+            tickTimer.AutoReset = true;
+            tickTimer.Start();
+        }
+
+        private void Tick(object sender, ElapsedEventArgs e)
+        {
+            ClientSend.SendBatchedPackets();
+        }
+        
         public class TCP
         {
             public TcpClient socket;
@@ -377,7 +393,7 @@ namespace H3MP.Networking
                 }
             }
 
-            private void HandleData(byte[] data)
+            public void HandleData(byte[] data)
             {
                 using(Packet prePacket = new Packet(data))
                 {
@@ -636,6 +652,7 @@ namespace H3MP.Networking
                 ClientHandle.SightFlipperState,
                 ClientHandle.SightRaiserState,
                 ClientHandle.GatlingGunFire,
+                null, // punch through
                 ClientHandle.GasCuboidGout,
                 ClientHandle.GasCuboidDamage,
                 ClientHandle.GasCuboidHandleDamage,
@@ -650,6 +667,7 @@ namespace H3MP.Networking
                 ClientHandle.IrisSetState,
                 ClientHandle.BrutBlockSystemStart,
                 ClientHandle.FloaterBeginDefusing,
+                ClientHandle.BatchedPackets
             };
 
             // All vanilla scenes can be synced by default
@@ -956,6 +974,9 @@ namespace H3MP.Networking
                 {
                     Mod.OnConnectClicked(null);
                 }
+
+                tickTimer.Stop();
+                tickTimer.Elapsed -= Tick;
             }
         }
 

@@ -1,4 +1,4 @@
-﻿using FistVR;
+using FistVR;
 using H3MP.Tracking;
 using System;
 using System.Collections.Generic;
@@ -55,12 +55,17 @@ namespace H3MP.Networking
                 }
             }
         }
-
-        public static void SendUDPData(List<int> toClients, Packet packet, int exclude = -1, bool custom = false)
+        
+        public static void SendUDPData(List<int> toClients, Packet packet, int exclude = -1, bool custom = false, object key = null)
         {
             if (custom)
             {
                 ConvertToCustomID(packet);
+            }
+
+            if (key == null)
+            {
+                key = new object();
             }
 #if DEBUG
             if (Input.GetKey(KeyCode.PageDown))
@@ -73,11 +78,60 @@ namespace H3MP.Networking
             {
                 if (exclude == -1 || toClients[i] != exclude)
                 {
-                    Server.clients[toClients[i]].udp.SendData(packet);
+                    //Server.clients[toClients[i]].udp.SendData(packet);
+                    Server.clients[toClients[i]].queuedPackets[key] = packet.ToArray();
                 }
             }
         }
 
+        public static void SendAllBatchedUDPData()
+        {
+            foreach (var client in Server.clients.Values)
+            {
+                SendBatchedPackets(client);
+            }
+        }
+        
+        public static void SendBatchedPackets(ServerClient client)
+        {
+            
+            List<byte[]> packetsToSend = new List<byte[]>();
+            lock (client.queuedPackets)
+            {
+                packetsToSend.AddRange(client.queuedPackets.Values);
+                client.queuedPackets.Clear();
+            }
+
+            const int mtu = 1300;
+            
+            Packet batchedPacket = new Packet((int) ServerPackets.batchedPacket);
+            
+            foreach (var packetData in packetsToSend)
+            {
+
+                // If the data of this packet would put us over the MTU, send what we have now
+                int curLength = batchedPacket.Length();
+                if (curLength > 0 && curLength + packetData.Length > mtu)
+                {
+                    batchedPacket.WriteLength();
+                    client.udp.SendData(batchedPacket);
+                    batchedPacket.Dispose();
+                    batchedPacket = new Packet((int)ServerPackets.batchedPacket);
+                }
+                
+                // Then add the data to the batch
+                batchedPacket.Write(packetData);
+            }
+
+            // Send the remaining data
+            if (batchedPacket.Length() > 0)
+            {
+                batchedPacket.WriteLength();
+                client.udp.SendData(batchedPacket);
+            }
+            batchedPacket.Dispose();
+        }
+        
         public static void SendTCPDataToAll(Packet packet, bool custom = false)
         {
             if (custom)
@@ -97,31 +151,37 @@ namespace H3MP.Networking
             }
         }
 
-        public static void SendUDPDataToAll(Packet packet, bool custom = false)
-        {
-            if (custom)
-            {
-                ConvertToCustomID(packet);
-            }
-#if DEBUG
-            if (Input.GetKey(KeyCode.PageDown))
-            {
-                Mod.LogInfo("SendUDPDataToAll: " + BitConverter.ToInt32(packet.ToArray(), 0));
-            }
-#endif
-            packet.WriteLength();
-            for(int i = 1; i<= Server.maxClientCount; ++i)
-            {
-                Server.clients[i].udp.SendData(packet);
-            }
-        }
+//         public static void SendUDPDataToAll(Packet packet, bool custom = false)
+//         {
+//             if (custom)
+//             {
+//                 ConvertToCustomID(packet);
+//             }
+// #if DEBUG
+//             if (Input.GetKey(KeyCode.PageDown))
+//             {
+//                 Mod.LogInfo("SendUDPDataToAll: " + BitConverter.ToInt32(packet.ToArray(), 0));
+//             }
+// #endif
+//             packet.WriteLength();
+//             for(int i = 1; i<= Server.maxClientCount; ++i)
+//             {
+//                 Server.clients[i].udp.SendData(packet);
+//             }
+//         }
 
-        public static void SendUDPDataToClients(Packet packet, List<int> clientIDs, int excluding = -1, bool custom = false)
+        public static void SendUDPDataToClients(Packet packet, List<int> clientIDs, int excluding = -1, bool custom = false, object key = null)
         {
             if (custom)
             {
                 ConvertToCustomID(packet);
             }
+
+            if (key == null)
+            {
+                key = new object();
+            }
+            
 #if DEBUG
             if (Input.GetKey(KeyCode.PageDown))
             {
@@ -133,7 +193,8 @@ namespace H3MP.Networking
             {
                 if (excluding == -1 || clientID != excluding)
                 {
-                    Server.clients[clientID].udp.SendData(packet);
+                    //Server.clients[clientID].udp.SendData(packet);
+                    Server.clients[clientID].queuedPackets[key] = packet.ToArray();
                 }
             }
         }
@@ -182,27 +243,27 @@ namespace H3MP.Networking
             }
         }
 
-        public static void SendUDPDataToAll(int exceptClient, Packet packet, bool custom = false)
-        {
-            if (custom)
-            {
-                ConvertToCustomID(packet);
-            }
-#if DEBUG
-            if (Input.GetKey(KeyCode.PageDown))
-            {
-                Mod.LogInfo("SendUDPDataToAll: " + BitConverter.ToInt32(packet.ToArray(), 0));
-            }
-#endif
-            packet.WriteLength();
-            for(int i = 1; i<= Server.maxClientCount; ++i)
-            {
-                if (i != exceptClient)
-                {
-                    Server.clients[i].udp.SendData(packet);
-                }
-            }
-        }
+//         public static void SendUDPDataToAll(int exceptClient, Packet packet, bool custom = false)
+//         {
+//             if (custom)
+//             {
+//                 ConvertToCustomID(packet);
+//             }
+// #if DEBUG
+//             if (Input.GetKey(KeyCode.PageDown))
+//             {
+//                 Mod.LogInfo("SendUDPDataToAll: " + BitConverter.ToInt32(packet.ToArray(), 0));
+//             }
+// #endif
+//             packet.WriteLength();
+//             for(int i = 1; i<= Server.maxClientCount; ++i)
+//             {
+//                 if (i != exceptClient)
+//                 {
+//                     Server.clients[i].udp.SendData(packet);
+//                 }
+//             }
+//         }
 
         public static void Welcome(int toClient, string msg, bool colorByIFF, int nameplateMode, int radarMode, bool radarColor, Dictionary<string, Dictionary<int, KeyValuePair<float, int>>> maxHealthEntries)
         {
@@ -210,6 +271,7 @@ namespace H3MP.Networking
             {
                 packet.Write(msg);
                 packet.Write(toClient);
+                packet.Write((byte)(int)Mod.config["TickRate"]);
                 packet.Write(colorByIFF);
                 packet.Write(nameplateMode);
                 packet.Write(radarMode);
@@ -329,7 +391,7 @@ namespace H3MP.Networking
                         packet.Write((short)0);
                     }
 
-                    SendUDPData(otherPlayers, packet, ID);
+                    SendUDPData(otherPlayers, packet, ID, false, GM.CurrentPlayerBody);
                 }
             }
         }
@@ -422,7 +484,7 @@ namespace H3MP.Networking
                                 Mod.LogWarning("Update packet size for " + trackedObject.trackedID + " of type: " + trackedObject.typeIdentifier + " is above 1500 bytes");
                             }
 
-                            SendUDPDataToClients(packet, GameManager.playersPresent);
+                            SendUDPDataToClients(packet, GameManager.playersPresent, key:trackedObject);
                         }
                     }
                     else if (!trackedObject.latestUpdateSent)
