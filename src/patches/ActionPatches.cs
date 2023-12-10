@@ -8319,34 +8319,37 @@ namespace H3MP.Patches
 
             if(__instance.SpawnOnSplodePoints[__instance.SpawnOnSplodePoints.Count - 1] != null)
             {
-                TrackedItem trackedGasCuboid = (TrackedItem)TrackedObject.trackedReferences[int.Parse(__instance.SpawnOnSplodePoints[__instance.SpawnOnSplodePoints.Count - 1].name)];
-                if (trackedGasCuboid != null && trackedGasCuboid.itemData.additionalData[0] < 255)
+                if(int.TryParse(__instance.SpawnOnSplodePoints[__instance.SpawnOnSplodePoints.Count - 1].name, out int refIndex))
                 {
-                    byte[] temp = trackedGasCuboid.itemData.additionalData;
-                    trackedGasCuboid.itemData.additionalData = new byte[temp.Length + 24];
-                    for (int i = 0; i < temp.Length; ++i)
+                    TrackedItem trackedGasCuboid = (TrackedItem)TrackedObject.trackedReferences[refIndex];
+                    if (trackedGasCuboid != null && trackedGasCuboid.itemData.additionalData[0] < 255)
                     {
-                        trackedGasCuboid.itemData.additionalData[i] = temp[i];
-                    }
-                    ++trackedGasCuboid.itemData.additionalData[1];
-
-                    if (ThreadManager.host)
-                    {
-                        ServerSend.GasCuboidGout(trackedGasCuboid.itemData.trackedID, point, normal);
-                    }
-                    else if (trackedGasCuboid.itemData.trackedID != -1)
-                    {
-                        ClientSend.GasCuboidGout(trackedGasCuboid.itemData.trackedID, point, normal);
-                    }
-                    else
-                    {
-                        if (TrackedItem.unknownGasCuboidGout.TryGetValue(trackedGasCuboid.data.localWaitingIndex, out List<KeyValuePair<Vector3, Vector3>> current))
+                        byte[] temp = trackedGasCuboid.itemData.additionalData;
+                        trackedGasCuboid.itemData.additionalData = new byte[temp.Length + 24];
+                        for (int i = 0; i < temp.Length; ++i)
                         {
-                            current.Add(new KeyValuePair<Vector3, Vector3>(point, normal));
+                            trackedGasCuboid.itemData.additionalData[i] = temp[i];
+                        }
+                        ++trackedGasCuboid.itemData.additionalData[1];
+
+                        if (ThreadManager.host)
+                        {
+                            ServerSend.GasCuboidGout(trackedGasCuboid.itemData.trackedID, point, normal);
+                        }
+                        else if (trackedGasCuboid.itemData.trackedID != -1)
+                        {
+                            ClientSend.GasCuboidGout(trackedGasCuboid.itemData.trackedID, point, normal);
                         }
                         else
                         {
-                            TrackedItem.unknownGasCuboidGout.Add(trackedGasCuboid.data.localWaitingIndex, new List<KeyValuePair<Vector3, Vector3>>() { new KeyValuePair<Vector3, Vector3>(point, normal) });
+                            if (TrackedItem.unknownGasCuboidGout.TryGetValue(trackedGasCuboid.data.localWaitingIndex, out List<KeyValuePair<Vector3, Vector3>> current))
+                            {
+                                current.Add(new KeyValuePair<Vector3, Vector3>(point, normal));
+                            }
+                            else
+                            {
+                                TrackedItem.unknownGasCuboidGout.Add(trackedGasCuboid.data.localWaitingIndex, new List<KeyValuePair<Vector3, Vector3>>() { new KeyValuePair<Vector3, Vector3>(point, normal) });
+                            }
                         }
                     }
                 }
@@ -8363,22 +8366,25 @@ namespace H3MP.Patches
 
             if (__instance.SpawnOnSplodePoints[__instance.SpawnOnSplodePoints.Count - 1] != null)
             {
-                TrackedItem trackedGasCuboid = (TrackedItem)TrackedObject.trackedReferences[int.Parse(__instance.SpawnOnSplodePoints[__instance.SpawnOnSplodePoints.Count - 1].name)];
-                if (trackedGasCuboid != null)
+                if (int.TryParse(__instance.SpawnOnSplodePoints[__instance.SpawnOnSplodePoints.Count - 1].name, out int refIndex))
                 {
-                    trackedGasCuboid.itemData.additionalData[0] = 1;
+                    TrackedItem trackedGasCuboid = (TrackedItem)TrackedObject.trackedReferences[refIndex];
+                    if (trackedGasCuboid != null)
+                    {
+                        trackedGasCuboid.itemData.additionalData[0] = 1;
 
-                    if (ThreadManager.host)
-                    {
-                        ServerSend.GasCuboidDamageHandle(trackedGasCuboid.itemData.trackedID);
-                    }
-                    else if (trackedGasCuboid.itemData.trackedID != -1)
-                    {
-                        ClientSend.GasCuboidDamageHandle(trackedGasCuboid.itemData.trackedID);
-                    }
-                    else
-                    {
-                        TrackedItem.unknownGasCuboidDamageHandle.Add(trackedGasCuboid.data.localWaitingIndex);
+                        if (ThreadManager.host)
+                        {
+                            ServerSend.GasCuboidDamageHandle(trackedGasCuboid.itemData.trackedID);
+                        }
+                        else if (trackedGasCuboid.itemData.trackedID != -1)
+                        {
+                            ClientSend.GasCuboidDamageHandle(trackedGasCuboid.itemData.trackedID);
+                        }
+                        else
+                        {
+                            TrackedItem.unknownGasCuboidDamageHandle.Add(trackedGasCuboid.data.localWaitingIndex);
+                        }
                     }
                 }
             }
@@ -8394,10 +8400,13 @@ namespace H3MP.Patches
 
             if (__instance.SpawnOnSplodePoints[__instance.SpawnOnSplodePoints.Count - 1] != null)
             {
-                TrackedItem trackedGasCuboid = (TrackedItem)TrackedObject.trackedReferences[int.Parse(__instance.SpawnOnSplodePoints[__instance.SpawnOnSplodePoints.Count - 1].name)];
-                if (trackedGasCuboid != null)
+                if (int.TryParse(__instance.SpawnOnSplodePoints[__instance.SpawnOnSplodePoints.Count - 1].name, out int refIndex))
                 {
-                    return trackedGasCuboid.itemData.controller == GameManager.ID;
+                    TrackedItem trackedGasCuboid = (TrackedItem)TrackedObject.trackedReferences[refIndex];
+                    if (trackedGasCuboid != null)
+                    {
+                        return trackedGasCuboid.itemData.controller == GameManager.ID;
+                    }
                 }
             }
 
@@ -8416,16 +8425,19 @@ namespace H3MP.Patches
 
             if (__instance.SpawnOnSplodePoints[__instance.SpawnOnSplodePoints.Count - 1] != null)
             {
-                TrackedItem trackedGasCuboid = (TrackedItem)TrackedObject.trackedReferences[int.Parse(__instance.SpawnOnSplodePoints[__instance.SpawnOnSplodePoints.Count - 1].name)];
-                if (trackedGasCuboid != null)
+                if (int.TryParse(__instance.SpawnOnSplodePoints[__instance.SpawnOnSplodePoints.Count - 1].name, out int refIndex))
                 {
-                    if (ThreadManager.host)
+                    TrackedItem trackedGasCuboid = (TrackedItem)TrackedObject.trackedReferences[refIndex];
+                    if (trackedGasCuboid != null)
                     {
-                        ServerSend.GasCuboidExplode(trackedGasCuboid.itemData.trackedID, point, dir, isBig);
-                    }
-                    else
-                    {
-                        ClientSend.GasCuboidExplode(trackedGasCuboid.itemData.trackedID, point, dir, isBig);
+                        if (ThreadManager.host)
+                        {
+                            ServerSend.GasCuboidExplode(trackedGasCuboid.itemData.trackedID, point, dir, isBig);
+                        }
+                        else
+                        {
+                            ClientSend.GasCuboidExplode(trackedGasCuboid.itemData.trackedID, point, dir, isBig);
+                        }
                     }
                 }
             }
@@ -8446,16 +8458,19 @@ namespace H3MP.Patches
 
             if (__instance.SpawnOnSplodePoints[__instance.SpawnOnSplodePoints.Count - 1] != null)
             {
-                TrackedItem trackedGasCuboid = (TrackedItem)TrackedObject.trackedReferences[int.Parse(__instance.SpawnOnSplodePoints[__instance.SpawnOnSplodePoints.Count - 1].name)];
-                if (trackedGasCuboid != null)
+                if (int.TryParse(__instance.SpawnOnSplodePoints[__instance.SpawnOnSplodePoints.Count - 1].name, out int refIndex))
                 {
-                    if (ThreadManager.host)
+                    TrackedItem trackedGasCuboid = (TrackedItem)TrackedObject.trackedReferences[refIndex];
+                    if (trackedGasCuboid != null)
                     {
-                        ServerSend.GasCuboidShatter(trackedGasCuboid.itemData.trackedID, point, dir);
-                    }
-                    else
-                    {
-                        ClientSend.GasCuboidShatter(trackedGasCuboid.itemData.trackedID, point, dir);
+                        if (ThreadManager.host)
+                        {
+                            ServerSend.GasCuboidShatter(trackedGasCuboid.itemData.trackedID, point, dir);
+                        }
+                        else
+                        {
+                            ClientSend.GasCuboidShatter(trackedGasCuboid.itemData.trackedID, point, dir);
+                        }
                     }
                 }
             }

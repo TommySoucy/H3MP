@@ -3399,16 +3399,24 @@ namespace H3MP.Patches
             }
             else // Damageable object tracked, only want to apply damage if encryption controller
             {
-                TrackedEncryption trackedEncryption = TrackedEncryption.trackedEncryptionReferences[int.Parse(encryption.SpawnPoints[encryption.SpawnPoints.Count - 1].name)];
-                if (trackedEncryption == null)
+                if(encryption.SpawnPoints[encryption.SpawnPoints.Count - 1] != null)
                 {
-                    return false;
-                }
-                else
-                {
-                    return trackedEncryption.data.controller == GameManager.ID;
+                    if (int.TryParse(encryption.SpawnPoints[encryption.SpawnPoints.Count - 1].name, out int refIndex))
+                    {
+                        TrackedEncryption trackedEncryption = TrackedEncryption.trackedEncryptionReferences[refIndex];
+                        if (trackedEncryption == null)
+                        {
+                            return false;
+                        }
+                        else
+                        {
+                            return trackedEncryption.data.controller == GameManager.ID;
+                        }
+                    }
                 }
             }
+
+            return true;
         }
 
         static IEnumerable<CodeInstruction> FixedUpdateTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)

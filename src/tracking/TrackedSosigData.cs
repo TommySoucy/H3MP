@@ -1289,7 +1289,14 @@ namespace H3MP.Tracking
                 }
             }
             previousJointLimit = jointLimit;
-            jointLimit = physicalSosig.physicalSosig.m_joints[0].lowTwistLimit.limit;
+            for(int i = 0; i < physicalSosig.physicalSosig.m_joints.Count; i++)
+            {
+                if (physicalSosig.physicalSosig.m_joints[i] != null)
+                {
+                    jointLimit = physicalSosig.physicalSosig.m_joints[i].lowTwistLimit.limit;
+                    break;
+                }
+            }
 
             return updated || ammoStoresModified || modifiedLinkIntegrity || NeedsUpdate();
         }
