@@ -915,6 +915,15 @@ namespace H3MP.Patches
             {
                 Mod.LogError("Exception caught applying DamagePatches.BrutTurbineDamageablePatch: " + ex.Message + ":\n" + ex.StackTrace);
             }
+
+            ++patchIndex; // 60
+
+            // HazeDamagePatch
+            MethodInfo hazeDamageOriginal = typeof(Construct_Haze).GetMethod("Damage", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo hazeDamagePrefix = typeof(HazeDamagePatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(hazeDamageOriginal, harmony, false);
+            harmony.Patch(hazeDamageOriginal, new HarmonyMethod(hazeDamagePrefix));
         }
     }
 
@@ -4338,6 +4347,48 @@ namespace H3MP.Patches
             }
 
             return instructionList;
+        }
+    }
+
+    // Patches Construct_Haze.Damage to control who causes damage
+    class HazeDamagePatch
+    {
+        public static int skip;
+
+        static bool Prefix(Construct_Haze __instance, Damage D)
+        {
+            if (skip > 0 || Mod.managerObject == null)
+            {
+                return true;
+            }
+
+            // If in control, apply damage, send to everyone else
+            // If not in control, apply damage without adding force to RB, then send to everyone, controller will apply force
+            if(int.TryParse(__instance.PSystem2.name, out int refIndex))
+            {
+                TrackedHaze trackedHaze = TrackedObject.trackedReferences[refIndex] as TrackedHaze;
+                if (trackedHaze != null)
+                {
+                    if (trackedHaze.data.controller == GameManager.ID)
+                    {
+                        return true;
+                    }
+                    else // Not controller, send damage to controller for processing
+                    {
+                        if (ThreadManager.host)
+                        {
+                            ServerSend.HazeDamage(trackedHaze.data.trackedID, D, trackedHaze.data.controller);
+                        }
+                        else
+                        {
+                            ClientSend.HazeDamage(trackedHaze.data.trackedID, D);
+                        }
+
+                        return false;
+                    }
+                }
+            }
+            return true;
         }
     }
 }

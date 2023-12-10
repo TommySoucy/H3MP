@@ -53,6 +53,7 @@ namespace H3MP
         public static Dictionary<Construct_Iris, TrackedIris> trackedIrisByIris = new Dictionary<Construct_Iris, TrackedIris>();
         public static Dictionary<Construct_Sentinel, TrackedSentinel> trackedSentinelBySentinel = new Dictionary<Construct_Sentinel, TrackedSentinel>();
         public static Dictionary<Construct_Node, TrackedNode> trackedNodeByNode = new Dictionary<Construct_Node, TrackedNode>();
+        public static Dictionary<Construct_Haze, TrackedHaze> trackedHazeByHaze = new Dictionary<Construct_Haze, TrackedHaze>();
         public static Dictionary<int, int> activeInstances = new Dictionary<int, int>();
         public static Dictionary<int, TNHInstance> TNHInstances = new Dictionary<int, TNHInstance>();
         public static List<int> playersAtLoadStart;

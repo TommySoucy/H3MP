@@ -111,6 +111,17 @@ namespace H3MP.Tracking
             GameManager.trackedObjectByDamageable.Add(physicalFloater.physicalFloater, physicalFloater);
             GameManager.trackedObjectByDamageable.Add(physicalFloater.GetComponentInChildren<Construct_Floater_Core>(), physicalFloater);
 
+            // Deregister the AI from the manager if we are not in control
+            // Also set RB as kinematic
+            if (controller != GameManager.ID)
+            {
+                if (GM.CurrentAIManager != null)
+                {
+                    GM.CurrentAIManager.DeRegisterAIEntity(physicalFloater.physicalFloater.E);
+                }
+                physicalFloater.physicalFloater.RB.isKinematic = true;
+            }
+
             // Initially set itself
             UpdateFromData(this);
         }
@@ -189,6 +200,35 @@ namespace H3MP.Tracking
                 ClientSend.FloaterExplode(trackedID, defusing);
 
                 TrackedFloater.unknownFloaterExplode.Remove(localWaitingIndex);
+            }
+        }
+
+        public override void OnControlChanged(int newController)
+        {
+            base.OnControlChanged(newController);
+
+            // Note that this only gets called when the new controller is different from the old one
+            if (newController == GameManager.ID) // Gain control
+            {
+                if (physicalFloater != null && physicalFloater.physicalFloater != null)
+                {
+                    if (GM.CurrentAIManager != null)
+                    {
+                        GM.CurrentAIManager.RegisterAIEntity(physicalFloater.physicalFloater.E);
+                    }
+                    physicalFloater.physicalFloater.RB.isKinematic = false;
+                }
+            }
+            else if (controller == GameManager.ID) // Lose control
+            {
+                if (physicalFloater != null && physicalFloater.physicalFloater != null)
+                {
+                    if (GM.CurrentAIManager != null)
+                    {
+                        GM.CurrentAIManager.DeRegisterAIEntity(physicalFloater.physicalFloater.E);
+                    }
+                    physicalFloater.physicalFloater.RB.isKinematic = true;
+                }
             }
         }
 

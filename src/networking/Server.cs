@@ -546,6 +546,7 @@ namespace H3MP.Networking
                 ServerHandle.BatchedPackets,
                 ServerHandle.NodeInit,
                 ServerHandle.NodeFire,
+                ServerHandle.HazeDamage,
             };
 
             objects = new TrackedObjectData[100];

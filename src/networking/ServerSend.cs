@@ -4752,5 +4752,28 @@ namespace H3MP.Networking
                 }
             }
         }
+
+        public static void HazeDamage(int trackedID, Damage d, int clientID)
+        {
+            using (Packet packet = new Packet((int)ServerPackets.hazeDamage))
+            {
+                packet.Write(trackedID);
+                packet.Write(d);
+
+                SendTCPData(clientID, packet);
+            }
+        }
+
+        public static void HazeDamage(Packet packet, int clientID)
+        {
+            byte[] IDbytes = BitConverter.GetBytes((int)ServerPackets.hazeDamage);
+            for (int i = 0; i < 4; ++i)
+            {
+                packet.buffer[i] = IDbytes[i];
+            }
+            packet.readPos = 0;
+
+            SendTCPData(clientID, packet);
+        }
     }
 }

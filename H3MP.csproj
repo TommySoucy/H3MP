@@ -84,6 +84,8 @@
     <Compile Include="src\tracking\TrackedFloaterData.cs" />
     <Compile Include="src\tracking\TrackedGatlingGun.cs" />
     <Compile Include="src\tracking\TrackedGatlingGunData.cs" />
+    <Compile Include="src\tracking\TrackedHaze.cs" />
+    <Compile Include="src\tracking\TrackedHazeData.cs" />
     <Compile Include="src\tracking\TrackedIris.cs" />
     <Compile Include="src\tracking\TrackedIrisData.cs" />
     <Compile Include="src\tracking\TrackedItem.cs" />

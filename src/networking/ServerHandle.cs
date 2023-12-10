@@ -5475,5 +5475,28 @@ namespace H3MP.Networking
                 ServerSend.NodeFire(trackedID, velMult, dir, clientID);
             }
         }
+
+        public static void HazeDamage(int clientID, Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+
+            TrackedHazeData trackedHazeData = Server.objects[trackedID] as TrackedHazeData;
+            if (trackedHazeData != null)
+            {
+                if (trackedHazeData.controller == GameManager.ID)
+                {
+                    if (trackedHazeData.physical != null)
+                    {
+                        ++HazeDamagePatch.skip;
+                        trackedHazeData.physicalHaze.physicalHaze.Damage(packet.ReadDamage());
+                        --HazeDamagePatch.skip;
+                    }
+                }
+                else
+                {
+                    ServerSend.HazeDamage(packet, trackedHazeData.controller);
+                }
+            }
+        }
     }
 }

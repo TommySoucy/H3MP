@@ -665,6 +665,7 @@ namespace H3MP.Networking
                 ClientHandle.BatchedPackets,
                 ClientHandle.NodeInit,
                 ClientHandle.NodeFire,
+                ClientHandle.HazeDamage,
             };
 
             // All vanilla scenes can be synced by default

@@ -22,6 +22,7 @@ namespace H3MP.Tracking
         // TrackedEncryptionReferences array
         // Used by Encryptions who need to get access to their TrackedEncryption very often (On Update for example)
         // This is used to bypass having to find the item in a slow datastructure too often
+        // TODO: Improvement: Remove this, use generic tracked object reference system instead
         public static TrackedEncryption[] trackedEncryptionReferences = new TrackedEncryption[100];
         public static List<int> availableTrackedEncryptionRefIndices = new List<int>() {  1,2,3,4,5,6,7,8,9,
                                                                                         10,11,12,13,14,15,16,17,18,19,

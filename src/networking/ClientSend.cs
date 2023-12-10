@@ -2818,5 +2818,16 @@ namespace H3MP.Networking
                 SendTCPData(packet);
             }
         }
+
+        public static void HazeDamage(int trackedID, Damage D)
+        {
+            using (Packet packet = new Packet((int)ClientPackets.HazeDamage))
+            {
+                packet.Write(trackedID);
+                packet.Write(D);
+
+                SendTCPData(packet);
+            }
+        }
     }
 }

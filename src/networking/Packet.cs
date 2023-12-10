@@ -210,7 +210,8 @@ namespace H3MP.Networking
         floaterBeginDefusing = 197,
         batchedPacket = 198,
         nodeInit = 199,
-        nodeFire = 200
+        nodeFire = 200,
+        hazeDamage = 201
     }
 
     /// <summary>Sent from client to server.</summary>
@@ -407,7 +408,8 @@ namespace H3MP.Networking
         floaterBeginDefusing = 188,
         batchedPacket = 189,
         nodeInit = 190,
-        nodeFire = 191
+        nodeFire = 191,
+        HazeDamage = 192
     }
 
     public class Packet : IDisposable

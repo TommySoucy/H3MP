@@ -1161,6 +1161,19 @@ namespace H3MP.Patches
             {
                 Mod.LogError("Exception caught applying ActionPatches.NodePatch: " + ex.Message + ":\n" + ex.StackTrace);
             }
+
+            ++patchIndex; // 71
+
+            // HazePatch
+            MethodInfo hazeUpdateOriginal = typeof(Construct_Haze).GetMethod("Update", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo hazeUpdatePrefix = typeof(HazePatch).GetMethod("UpdatePrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo hazeFixedUpdateOriginal = typeof(Construct_Haze).GetMethod("FixedUpdate", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo hazeFixedUpdatePrefix = typeof(HazePatch).GetMethod("FixedUpdatePrefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(hazeUpdateOriginal, harmony, false);
+            PatchController.Verify(hazeFixedUpdateOriginal, harmony, false);
+            harmony.Patch(hazeUpdateOriginal, new HarmonyMethod(hazeUpdatePrefix));
+            harmony.Patch(hazeFixedUpdateOriginal, new HarmonyMethod(hazeFixedUpdatePrefix));
         }
     }
 
@@ -8927,6 +8940,106 @@ namespace H3MP.Patches
                     }
                 }
             }
+        }
+    }
+
+    // Patches Construct_Haze
+    class HazePatch
+    {
+        // Patches Update 
+        static bool UpdatePrefix(Construct_Haze __instance)
+        {
+            if (Mod.managerObject == null)
+            {
+                return true;
+            }
+
+            if (int.TryParse(__instance.PSystem2.name, out int refIndex))
+            {
+                TrackedHaze trackedHaze = TrackedObject.trackedReferences[refIndex] as TrackedHaze;
+                if (trackedHaze != null)
+                {
+                    if (trackedHaze.data.controller != GameManager.ID)
+                    {
+                        float num = Vector3.Distance(GM.CurrentPlayerBody.Head.position, __instance.transform.position);
+                        if (num < 1f && GM.TNH_Manager != null)
+                        {
+                            GM.TNH_Manager.TeleportToRandomHoldPoint();
+                        }
+                        if (__instance.KEBattery > 0f)
+                        {
+                            __instance.KEBattery -= Time.deltaTime * __instance.KEBatteryDecaySpeed;
+                            ParticleSystem.MainModule temp = __instance.PSystem.main;
+                            temp.startSize = 0.1f;
+                        }
+                        else
+                        {
+                            ParticleSystem.MainModule temp = __instance.PSystem.main;
+                            temp.startSize = 0.7f;
+                            if (!__instance.DamSphere.enabled)
+                            {
+                                __instance.DamSphere.enabled = true;
+                            }
+                        }
+                        float t = Mathf.InverseLerp(__instance.PSystemEnergyRange.x, __instance.PSystemEnergyRange.y, __instance.KEBattery);
+                        float radius = Mathf.Lerp(__instance.PSystemEmitRange.x, __instance.PSystemEmitRange.y, t);
+                        __instance.sh.radius = radius;
+                        Vector3 vector = GM.CurrentPlayerBody.Head.position - __instance.transform.position;
+                        if (vector.magnitude > __instance.MaxSoundDist)
+                        {
+                            if (__instance.AudSource_Haze.isPlaying)
+                            {
+                                __instance.AudSource_Haze.Stop();
+                                __instance.curLPFreq = 100f;
+                                __instance.tarLPFreq = 100f;
+                            }
+                        }
+                        else
+                        {
+                            if (Physics.Linecast(GM.CurrentPlayerBody.Head.position, __instance.transform.position, __instance.LM_Env, QueryTriggerInteraction.Ignore))
+                            {
+                                __instance.AudSource_Haze.volume = __instance.BaseVolume * __instance.OcclusionVolumeCurve.Evaluate(vector.magnitude);
+                                __instance.tarLPFreq = __instance.OcclusionFactorCurve.Evaluate(vector.magnitude);
+                            }
+                            else
+                            {
+                                __instance.AudSource_Haze.volume = __instance.BaseVolume;
+                                __instance.tarLPFreq = 22000f;
+                            }
+                            __instance.curLPFreq = Mathf.MoveTowards(__instance.curLPFreq, __instance.tarLPFreq, Time.deltaTime * 50000f);
+                            __instance.AudLowPass.cutoffFrequency = __instance.curLPFreq;
+                            if (!__instance.AudSource_Haze.isPlaying)
+                            {
+                                __instance.AudSource_Haze.Play();
+                            }
+                        }
+
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        // Patches FixedUpdate 
+        static bool FixedUpdatePrefix(Construct_Haze __instance)
+        {
+            if (Mod.managerObject == null)
+            {
+                return true;
+            }
+
+            if (int.TryParse(__instance.PSystem2.name, out int refIndex))
+            {
+                TrackedHaze trackedHaze = TrackedObject.trackedReferences[refIndex] as TrackedHaze;
+                if (trackedHaze != null)
+                {
+                    return trackedHaze.data.controller == GameManager.ID;
+                }
+            }
+
+            return true;
         }
     }
 }
