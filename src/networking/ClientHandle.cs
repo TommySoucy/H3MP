@@ -4933,5 +4933,40 @@ namespace H3MP.Networking
                 --HazeDamagePatch.skip;
             }
         }
+
+        public static void EncryptionFireGun(Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+
+            TrackedEncryptionData trackedEncryptionData = Client.objects[trackedID] as TrackedEncryptionData;
+            if (trackedEncryptionData != null && trackedEncryptionData.physicalEncryption != null)
+            {
+                List<float> vels = new List<float>();
+                int velCount = packet.ReadByte();
+                for (int i = 0; i < velCount; ++i)
+                {
+                    vels.Add(packet.ReadFloat());
+                }
+                List<Vector3> dirs = new List<Vector3>();
+                int dirCount = packet.ReadByte();
+                for (int i = 0; i < dirCount; ++i)
+                {
+                    dirs.Add(packet.ReadVector3());
+                }
+
+                for (int i = 0; i < trackedEncryptionData.physicalEncryption.physicalEncryption.RefractiveMuzzles.Count; i++)
+                {
+                    Vector3 position = trackedEncryptionData.physicalEncryption.physicalEncryption.RefractiveMuzzles[i].position;
+                    GameObject gameObject = UnityEngine.Object.Instantiate<GameObject>(trackedEncryptionData.physicalEncryption.physicalEncryption.RefractiveProjectile, position, trackedEncryptionData.physicalEncryption.physicalEncryption.RefractiveMuzzles[i].rotation);
+                    BallisticProjectile component = gameObject.GetComponent<BallisticProjectile>();
+                    component.FlightVelocityMultiplier = 0.04f;
+                    component.Fire(vels[i], dirs[i], null, true);
+                }
+                if (trackedEncryptionData.physicalEncryption.physicalEncryption.GunShotProfile != null)
+                {
+                    trackedEncryptionData.physicalEncryption.physicalEncryption.PlayShotEvent(trackedEncryptionData.physicalEncryption.physicalEncryption.RefractiveMuzzles[0].position);
+                }
+            }
+        }
     }
 }

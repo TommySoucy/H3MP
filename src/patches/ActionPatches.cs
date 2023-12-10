@@ -686,12 +686,15 @@ namespace H3MP.Patches
             MethodInfo EncryptionPatchUpdateDisplayPostfix = typeof(EncryptionPatch).GetMethod("UpdateDisplayPostfix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo EncryptionPatchDestroyOriginal = typeof(TNH_EncryptionTarget).GetMethod("Destroy", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo EncryptionPatchDestroyTranspiler = typeof(EncryptionPatch).GetMethod("DestroyTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo EncryptionPatchFireGunOriginal = typeof(TNH_EncryptionTarget).GetMethod("FireGun", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo EncryptionPatchFireGunPrefix = typeof(EncryptionPatch).GetMethod("FireGunPrefix", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(EncryptionPatchUpdateOriginal, harmony, true);
             PatchController.Verify(EncryptionPatchFixedUpdateOriginal, harmony, true);
             PatchController.Verify(EncryptionPatchStartOriginal, harmony, true);
             PatchController.Verify(EncryptionPatchUpdateDisplayOriginal, harmony, true);
             PatchController.Verify(EncryptionPatchDestroyOriginal, harmony, true);
+            PatchController.Verify(EncryptionPatchFireGunOriginal, harmony, true);
             try 
             { 
                 harmony.Patch(EncryptionPatchUpdateOriginal, new HarmonyMethod(EncryptionPatchUpdatePrefix), null, new HarmonyMethod(EncryptionPatchUpdateTranspiler));
@@ -711,6 +714,7 @@ namespace H3MP.Patches
             {
                 Mod.LogError("Exception caught applying ActionPatches.EncryptionPatch on EncryptionPatchDestroyOriginal: " + ex.Message + ":\n" + ex.StackTrace);
             }
+            harmony.Patch(EncryptionPatchFireGunOriginal, new HarmonyMethod(EncryptionPatchFireGunPrefix));
 
             ++patchIndex; // 42
 
@@ -6286,6 +6290,57 @@ namespace H3MP.Patches
 
             cascadingDestroyIndex = 0;
             cascadingDestroyDepth = 0;
+        }
+
+        static bool FireGunPrefix(TNH_EncryptionTarget __instance)
+        {
+            if (Mod.managerObject == null)
+            {
+                return true;
+            }
+
+            if (int.TryParse(__instance.SpawnPoints[__instance.SpawnPoints.Count - 1].name, out int index))
+            {
+                TrackedEncryption trackedEncryption = TrackedEncryption.trackedEncryptionReferences[index];
+                if (trackedEncryption != null)
+                {
+                    if (trackedEncryption.data.controller == GameManager.ID)
+                    {
+                        float[] vels = new float[__instance.RefractiveMuzzles.Count];
+                        Vector3[] dirs = new Vector3[__instance.RefractiveMuzzles.Count];
+                        for (int i = 0; i < __instance.RefractiveMuzzles.Count; i++)
+                        {
+                            Vector3 position = __instance.RefractiveMuzzles[i].position;
+                            GameObject gameObject = UnityEngine.Object.Instantiate<GameObject>(__instance.RefractiveProjectile, position, __instance.RefractiveMuzzles[i].rotation);
+                            BallisticProjectile component = gameObject.GetComponent<BallisticProjectile>();
+                            component.FlightVelocityMultiplier = 0.04f;
+                            float muzzleVelocityBase = component.MuzzleVelocityBase;
+                            component.Fire(muzzleVelocityBase, gameObject.transform.forward, null, true);
+
+                            vels[i] = muzzleVelocityBase;
+                            dirs[i] = gameObject.transform.forward;
+
+                            if (ThreadManager.host)
+                            {
+                                ServerSend.EncryptionFireGun(trackedEncryption.data.trackedID, vels, dirs);
+                            }
+                            else
+                            {
+                                ClientSend.EncryptionFireGun(trackedEncryption.data.trackedID, vels, dirs);
+                            }
+                        }
+                        if (__instance.GunShotProfile != null)
+                        {
+                            FVRSoundEnvironment se = __instance.PlayShotEvent(__instance.RefractiveMuzzles[0].position);
+                            float soundTravelDistanceMultByEnvironment = SM.GetSoundTravelDistanceMultByEnvironment(se);
+                        }
+                    }
+
+                    return false;
+                }
+            }
+
+            return true;
         }
     }
 

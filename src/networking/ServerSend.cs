@@ -4775,5 +4775,65 @@ namespace H3MP.Networking
 
             SendTCPData(clientID, packet);
         }
+
+        public static void EncryptionFireGun(int trackedID, float[] vels, Vector3[] dirs, int clientID = 0)
+        {
+            using (Packet packet = new Packet((int)ServerPackets.encryptionFireGun))
+            {
+                packet.Write(trackedID);
+                if (vels == null || vels.Length == 0)
+                {
+                    packet.Write((byte)0);
+                }
+                else
+                {
+                    packet.Write((byte)vels.Length);
+                    for (int i = 0; i < vels.Length; ++i)
+                    {
+                        packet.Write(vels[i]);
+                    }
+                }
+                if (dirs == null || dirs.Length == 0)
+                {
+                    packet.Write((byte)0);
+                }
+                else
+                {
+                    packet.Write((byte)dirs.Length);
+                    for (int i = 0; i < dirs.Length; ++i)
+                    {
+                        packet.Write(dirs[i]);
+                    }
+                }
+
+                if (clientID == 0)
+                {
+                    SendTCPDataToAll(packet);
+                }
+                else
+                {
+                    SendTCPDataToAll(clientID, packet);
+                }
+            }
+        }
+
+        public static void EncryptionFireGun(int clientID, Packet packet)
+        {
+            byte[] IDbytes = BitConverter.GetBytes((int)ServerPackets.encryptionFireGun);
+            for (int i = 0; i < 4; ++i)
+            {
+                packet.buffer[i] = IDbytes[i];
+            }
+            packet.readPos = 0;
+
+            if (clientID == 0)
+            {
+                SendTCPDataToAll(packet);
+            }
+            else
+            {
+                SendTCPDataToAll(clientID, packet);
+            }
+        }
     }
 }

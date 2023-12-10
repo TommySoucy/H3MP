@@ -666,6 +666,7 @@ namespace H3MP.Networking
                 ClientHandle.NodeInit,
                 ClientHandle.NodeFire,
                 ClientHandle.HazeDamage,
+                ClientHandle.EncryptionFireGun,
             };
 
             // All vanilla scenes can be synced by default
