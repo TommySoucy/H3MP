@@ -3570,6 +3570,10 @@ namespace H3MP.Patches
                         __instance.E.FakePos = __instance.fakeEntityPos;
                         __instance.VaporizeUpdate();
                         __instance.HeadIconUpdate();
+                        if (__instance.m_recoveringFromBallisticState)
+                        {
+                            __instance.UpdateJoints(__instance.m_recoveryFromBallisticLerp);
+                        }
                     }
                     return runOriginal;
                 }
@@ -8313,34 +8317,37 @@ namespace H3MP.Patches
                 return;
             }
 
-            TrackedItem trackedGasCuboid = (TrackedItem)TrackedObject.trackedReferences[int.Parse(__instance.SpawnOnSplodePoints[__instance.SpawnOnSplodePoints.Count - 1].name)];
-            if (trackedGasCuboid != null && trackedGasCuboid.itemData.additionalData[0] < 255)
+            if(__instance.SpawnOnSplodePoints[__instance.SpawnOnSplodePoints.Count - 1] != null)
             {
-                byte[] temp = trackedGasCuboid.itemData.additionalData;
-                trackedGasCuboid.itemData.additionalData = new byte[temp.Length + 24];
-                for (int i = 0; i < temp.Length; ++i)
+                TrackedItem trackedGasCuboid = (TrackedItem)TrackedObject.trackedReferences[int.Parse(__instance.SpawnOnSplodePoints[__instance.SpawnOnSplodePoints.Count - 1].name)];
+                if (trackedGasCuboid != null && trackedGasCuboid.itemData.additionalData[0] < 255)
                 {
-                    trackedGasCuboid.itemData.additionalData[i] = temp[i];
-                }
-                ++trackedGasCuboid.itemData.additionalData[1];
-
-                if (ThreadManager.host)
-                {
-                    ServerSend.GasCuboidGout(trackedGasCuboid.itemData.trackedID, point, normal);
-                }
-                else if(trackedGasCuboid.itemData.trackedID != -1)
-                {
-                    ClientSend.GasCuboidGout(trackedGasCuboid.itemData.trackedID, point, normal);
-                }
-                else
-                {
-                    if (TrackedItem.unknownGasCuboidGout.TryGetValue(trackedGasCuboid.data.localWaitingIndex, out List<KeyValuePair<Vector3, Vector3>> current))
+                    byte[] temp = trackedGasCuboid.itemData.additionalData;
+                    trackedGasCuboid.itemData.additionalData = new byte[temp.Length + 24];
+                    for (int i = 0; i < temp.Length; ++i)
                     {
-                        current.Add(new KeyValuePair<Vector3, Vector3>(point, normal));
+                        trackedGasCuboid.itemData.additionalData[i] = temp[i];
+                    }
+                    ++trackedGasCuboid.itemData.additionalData[1];
+
+                    if (ThreadManager.host)
+                    {
+                        ServerSend.GasCuboidGout(trackedGasCuboid.itemData.trackedID, point, normal);
+                    }
+                    else if (trackedGasCuboid.itemData.trackedID != -1)
+                    {
+                        ClientSend.GasCuboidGout(trackedGasCuboid.itemData.trackedID, point, normal);
                     }
                     else
                     {
-                        TrackedItem.unknownGasCuboidGout.Add(trackedGasCuboid.data.localWaitingIndex, new List<KeyValuePair<Vector3, Vector3>>() { new KeyValuePair<Vector3, Vector3>(point, normal) });
+                        if (TrackedItem.unknownGasCuboidGout.TryGetValue(trackedGasCuboid.data.localWaitingIndex, out List<KeyValuePair<Vector3, Vector3>> current))
+                        {
+                            current.Add(new KeyValuePair<Vector3, Vector3>(point, normal));
+                        }
+                        else
+                        {
+                            TrackedItem.unknownGasCuboidGout.Add(trackedGasCuboid.data.localWaitingIndex, new List<KeyValuePair<Vector3, Vector3>>() { new KeyValuePair<Vector3, Vector3>(point, normal) });
+                        }
                     }
                 }
             }
@@ -8354,22 +8361,25 @@ namespace H3MP.Patches
                 return;
             }
 
-            TrackedItem trackedGasCuboid = (TrackedItem)TrackedObject.trackedReferences[int.Parse(__instance.SpawnOnSplodePoints[__instance.SpawnOnSplodePoints.Count - 1].name)];
-            if (trackedGasCuboid != null)
+            if (__instance.SpawnOnSplodePoints[__instance.SpawnOnSplodePoints.Count - 1] != null)
             {
-                trackedGasCuboid.itemData.additionalData[0] = 1;
+                TrackedItem trackedGasCuboid = (TrackedItem)TrackedObject.trackedReferences[int.Parse(__instance.SpawnOnSplodePoints[__instance.SpawnOnSplodePoints.Count - 1].name)];
+                if (trackedGasCuboid != null)
+                {
+                    trackedGasCuboid.itemData.additionalData[0] = 1;
 
-                if (ThreadManager.host)
-                {
-                    ServerSend.GasCuboidDamageHandle(trackedGasCuboid.itemData.trackedID);
-                }
-                else if(trackedGasCuboid.itemData.trackedID != -1)
-                {
-                    ClientSend.GasCuboidDamageHandle(trackedGasCuboid.itemData.trackedID);
-                }
-                else
-                {
-                    TrackedItem.unknownGasCuboidDamageHandle.Add(trackedGasCuboid.data.localWaitingIndex);
+                    if (ThreadManager.host)
+                    {
+                        ServerSend.GasCuboidDamageHandle(trackedGasCuboid.itemData.trackedID);
+                    }
+                    else if (trackedGasCuboid.itemData.trackedID != -1)
+                    {
+                        ClientSend.GasCuboidDamageHandle(trackedGasCuboid.itemData.trackedID);
+                    }
+                    else
+                    {
+                        TrackedItem.unknownGasCuboidDamageHandle.Add(trackedGasCuboid.data.localWaitingIndex);
+                    }
                 }
             }
         }
@@ -8382,10 +8392,13 @@ namespace H3MP.Patches
                 return true;
             }
 
-            TrackedItem trackedGasCuboid = (TrackedItem)TrackedObject.trackedReferences[int.Parse(__instance.SpawnOnSplodePoints[__instance.SpawnOnSplodePoints.Count - 1].name)];
-            if (trackedGasCuboid != null)
+            if (__instance.SpawnOnSplodePoints[__instance.SpawnOnSplodePoints.Count - 1] != null)
             {
-                return trackedGasCuboid.itemData.controller == GameManager.ID;
+                TrackedItem trackedGasCuboid = (TrackedItem)TrackedObject.trackedReferences[int.Parse(__instance.SpawnOnSplodePoints[__instance.SpawnOnSplodePoints.Count - 1].name)];
+                if (trackedGasCuboid != null)
+                {
+                    return trackedGasCuboid.itemData.controller == GameManager.ID;
+                }
             }
 
             return true;
@@ -8401,16 +8414,19 @@ namespace H3MP.Patches
                 return;
             }
 
-            TrackedItem trackedGasCuboid = (TrackedItem)TrackedObject.trackedReferences[int.Parse(__instance.SpawnOnSplodePoints[__instance.SpawnOnSplodePoints.Count - 1].name)];
-            if (trackedGasCuboid != null)
+            if (__instance.SpawnOnSplodePoints[__instance.SpawnOnSplodePoints.Count - 1] != null)
             {
-                if (ThreadManager.host)
+                TrackedItem trackedGasCuboid = (TrackedItem)TrackedObject.trackedReferences[int.Parse(__instance.SpawnOnSplodePoints[__instance.SpawnOnSplodePoints.Count - 1].name)];
+                if (trackedGasCuboid != null)
                 {
-                    ServerSend.GasCuboidExplode(trackedGasCuboid.itemData.trackedID, point, dir, isBig);
-                }
-                else
-                {
-                    ClientSend.GasCuboidExplode(trackedGasCuboid.itemData.trackedID, point, dir, isBig);
+                    if (ThreadManager.host)
+                    {
+                        ServerSend.GasCuboidExplode(trackedGasCuboid.itemData.trackedID, point, dir, isBig);
+                    }
+                    else
+                    {
+                        ClientSend.GasCuboidExplode(trackedGasCuboid.itemData.trackedID, point, dir, isBig);
+                    }
                 }
             }
         }
@@ -8428,16 +8444,19 @@ namespace H3MP.Patches
                 return;
             }
 
-            TrackedItem trackedGasCuboid = (TrackedItem)TrackedObject.trackedReferences[int.Parse(__instance.SpawnOnSplodePoints[__instance.SpawnOnSplodePoints.Count - 1].name)];
-            if (trackedGasCuboid != null)
+            if (__instance.SpawnOnSplodePoints[__instance.SpawnOnSplodePoints.Count - 1] != null)
             {
-                if (ThreadManager.host)
+                TrackedItem trackedGasCuboid = (TrackedItem)TrackedObject.trackedReferences[int.Parse(__instance.SpawnOnSplodePoints[__instance.SpawnOnSplodePoints.Count - 1].name)];
+                if (trackedGasCuboid != null)
                 {
-                    ServerSend.GasCuboidShatter(trackedGasCuboid.itemData.trackedID, point, dir);
-                }
-                else
-                {
-                    ClientSend.GasCuboidShatter(trackedGasCuboid.itemData.trackedID, point, dir);
+                    if (ThreadManager.host)
+                    {
+                        ServerSend.GasCuboidShatter(trackedGasCuboid.itemData.trackedID, point, dir);
+                    }
+                    else
+                    {
+                        ClientSend.GasCuboidShatter(trackedGasCuboid.itemData.trackedID, point, dir);
+                    }
                 }
             }
         }
@@ -8457,11 +8476,14 @@ namespace H3MP.Patches
                 return true;
             }
 
-            if (int.TryParse(__instance.SpawnOnSplode[__instance.SpawnOnSplode.Count - 1].name, out int refIndex))
+            if (__instance.SpawnOnSplode[__instance.SpawnOnSplode.Count - 1] != null)
             {
-                // Note: If we got here it is because we are not exploding, meaning that we don't want to continue no matter what if we are not controller
-                TrackedFloater trackedFloater = TrackedObject.trackedReferences[refIndex] as TrackedFloater;
-                return trackedFloater == null || trackedFloater.data.controller == GameManager.ID;
+                if (int.TryParse(__instance.SpawnOnSplode[__instance.SpawnOnSplode.Count - 1].name, out int refIndex))
+                {
+                    // Note: If we got here it is because we are not exploding, meaning that we don't want to continue no matter what if we are not controller
+                    TrackedFloater trackedFloater = TrackedObject.trackedReferences[refIndex] as TrackedFloater;
+                    return trackedFloater == null || trackedFloater.data.controller == GameManager.ID;
+                }
             }
 
             return true;
@@ -8475,10 +8497,13 @@ namespace H3MP.Patches
                 return true;
             }
 
-            if (int.TryParse(__instance.SpawnOnSplode[__instance.SpawnOnSplode.Count - 1].name, out int refIndex))
+            if (__instance.SpawnOnSplode[__instance.SpawnOnSplode.Count - 1] != null)
             {
-                TrackedFloater trackedFloater = TrackedObject.trackedReferences[refIndex] as TrackedFloater;
-                return trackedFloater == null || trackedFloater.data.controller == GameManager.ID;
+                if (int.TryParse(__instance.SpawnOnSplode[__instance.SpawnOnSplode.Count - 1].name, out int refIndex))
+                {
+                    TrackedFloater trackedFloater = TrackedObject.trackedReferences[refIndex] as TrackedFloater;
+                    return trackedFloater == null || trackedFloater.data.controller == GameManager.ID;
+                }
             }
 
             return true;
@@ -8492,30 +8517,33 @@ namespace H3MP.Patches
                 return true;
             }
 
-            if (int.TryParse(__instance.SpawnOnSplode[__instance.SpawnOnSplode.Count - 1].name, out int refIndex))
+            if (__instance.SpawnOnSplode[__instance.SpawnOnSplode.Count - 1] != null)
             {
-                TrackedFloater trackedFloater = TrackedObject.trackedReferences[refIndex] as TrackedFloater;
-                if (trackedFloater != null)
+                if (int.TryParse(__instance.SpawnOnSplode[__instance.SpawnOnSplode.Count - 1].name, out int refIndex))
                 {
-                    bool control = trackedFloater.data.controller == GameManager.ID;
-
-                    if (!beginExplodingOverride)
+                    TrackedFloater trackedFloater = TrackedObject.trackedReferences[refIndex] as TrackedFloater;
+                    if (trackedFloater != null)
                     {
-                        if (ThreadManager.host)
-                        {
-                            ServerSend.FloaterBeginExploding(trackedFloater.data.trackedID, control);
-                        }
-                        else if (trackedFloater.data.trackedID != -1)
-                        {
-                            ClientSend.FloaterBeginExploding(trackedFloater.data.trackedID, control);
-                        }
-                        else // Note that this is only possible if we are the controller
-                        {
-                            TrackedFloater.unknownFloaterBeginExploding.Add(trackedFloater.data.localWaitingIndex);
-                        }
-                    }
+                        bool control = trackedFloater.data.controller == GameManager.ID;
 
-                    return beginExplodingOverride || control;
+                        if (!beginExplodingOverride)
+                        {
+                            if (ThreadManager.host)
+                            {
+                                ServerSend.FloaterBeginExploding(trackedFloater.data.trackedID, control);
+                            }
+                            else if (trackedFloater.data.trackedID != -1)
+                            {
+                                ClientSend.FloaterBeginExploding(trackedFloater.data.trackedID, control);
+                            }
+                            else // Note that this is only possible if we are the controller
+                            {
+                                TrackedFloater.unknownFloaterBeginExploding.Add(trackedFloater.data.localWaitingIndex);
+                            }
+                        }
+
+                        return beginExplodingOverride || control;
+                    }
                 }
             }
 
@@ -8530,30 +8558,33 @@ namespace H3MP.Patches
                 return true;
             }
 
-            if (int.TryParse(__instance.SpawnOnSplode[__instance.SpawnOnSplode.Count - 1].name, out int refIndex))
+            if (__instance.SpawnOnSplode[__instance.SpawnOnSplode.Count - 1] != null)
             {
-                TrackedFloater trackedFloater = TrackedObject.trackedReferences[refIndex] as TrackedFloater;
-                if (trackedFloater != null)
+                if (int.TryParse(__instance.SpawnOnSplode[__instance.SpawnOnSplode.Count - 1].name, out int refIndex))
                 {
-                    bool control = trackedFloater.data.controller == GameManager.ID;
-
-                    if (!beginExplodingOverride)
+                    TrackedFloater trackedFloater = TrackedObject.trackedReferences[refIndex] as TrackedFloater;
+                    if (trackedFloater != null)
                     {
-                        if (ThreadManager.host)
-                        {
-                            ServerSend.FloaterBeginDefusing(trackedFloater.data.trackedID, control);
-                        }
-                        else if (trackedFloater.data.trackedID != -1)
-                        {
-                            ClientSend.FloaterBeginDefusing(trackedFloater.data.trackedID, control);
-                        }
-                        else // Note that this is only possible if we are the controller
-                        {
-                            TrackedFloater.unknownFloaterBeginDefusing.Add(trackedFloater.data.localWaitingIndex);
-                        }
-                    }
+                        bool control = trackedFloater.data.controller == GameManager.ID;
 
-                    return beginExplodingOverride || control;
+                        if (!beginExplodingOverride)
+                        {
+                            if (ThreadManager.host)
+                            {
+                                ServerSend.FloaterBeginDefusing(trackedFloater.data.trackedID, control);
+                            }
+                            else if (trackedFloater.data.trackedID != -1)
+                            {
+                                ClientSend.FloaterBeginDefusing(trackedFloater.data.trackedID, control);
+                            }
+                            else // Note that this is only possible if we are the controller
+                            {
+                                TrackedFloater.unknownFloaterBeginDefusing.Add(trackedFloater.data.localWaitingIndex);
+                            }
+                        }
+
+                        return beginExplodingOverride || control;
+                    }
                 }
             }
 
@@ -8749,12 +8780,15 @@ namespace H3MP.Patches
                 return true;
             }
 
-            if (int.TryParse(__instance.BlockPointUppers[__instance.BlockPointUppers.Count - 1].name, out int refIndex))
+            if (__instance.BlockPointUppers[__instance.BlockPointUppers.Count - 1] != null)
             {
-                TrackedBrutBlockSystem trackedBrutBlockSystem = TrackedObject.trackedReferences[refIndex] as TrackedBrutBlockSystem;
-                if (trackedBrutBlockSystem != null)
+                if (int.TryParse(__instance.BlockPointUppers[__instance.BlockPointUppers.Count - 1].name, out int refIndex))
                 {
-                    return trackedBrutBlockSystem.data.controller == GameManager.ID;
+                    TrackedBrutBlockSystem trackedBrutBlockSystem = TrackedObject.trackedReferences[refIndex] as TrackedBrutBlockSystem;
+                    if (trackedBrutBlockSystem != null)
+                    {
+                        return trackedBrutBlockSystem.data.controller == GameManager.ID;
+                    }
                 }
             }
 
@@ -8769,26 +8803,29 @@ namespace H3MP.Patches
                 return true;
             }
 
-            if(int.TryParse(__instance.BlockPointUppers[__instance.BlockPointUppers.Count - 1].name, out int refIndex))
+            if (__instance.BlockPointUppers[__instance.BlockPointUppers.Count - 1] != null)
             {
-                TrackedBrutBlockSystem trackedBrutBlockSystem = TrackedObject.trackedReferences[refIndex] as TrackedBrutBlockSystem;
-                if (trackedBrutBlockSystem != null)
+                if (int.TryParse(__instance.BlockPointUppers[__instance.BlockPointUppers.Count - 1].name, out int refIndex))
                 {
-                    if (trackedBrutBlockSystem.data.controller == GameManager.ID)
+                    TrackedBrutBlockSystem trackedBrutBlockSystem = TrackedObject.trackedReferences[refIndex] as TrackedBrutBlockSystem;
+                    if (trackedBrutBlockSystem != null)
                     {
-                        if (ThreadManager.host)
+                        if (trackedBrutBlockSystem.data.controller == GameManager.ID)
                         {
-                            ServerSend.BrutBlockSystemStart(trackedBrutBlockSystem.data.trackedID, __instance.isNextBlock0);
-                        }
-                        else if (trackedBrutBlockSystem.data.trackedID != -1)
-                        {
-                            ClientSend.BrutBlockSystemStart(trackedBrutBlockSystem.data.trackedID, __instance.isNextBlock0);
+                            if (ThreadManager.host)
+                            {
+                                ServerSend.BrutBlockSystemStart(trackedBrutBlockSystem.data.trackedID, __instance.isNextBlock0);
+                            }
+                            else if (trackedBrutBlockSystem.data.trackedID != -1)
+                            {
+                                ClientSend.BrutBlockSystemStart(trackedBrutBlockSystem.data.trackedID, __instance.isNextBlock0);
+                            }
+
+                            return true;
                         }
 
-                        return true;
+                        return false;
                     }
-
-                    return false;
                 }
             }
 
@@ -8807,12 +8844,15 @@ namespace H3MP.Patches
                 return true;
             }
 
-            if (int.TryParse(__instance.Stems[__instance.Stems.Count - 1].name, out int refIndex))
+            if (__instance.Stems[__instance.Stems.Count - 1] != null)
             {
-                TrackedNode trackedNode = TrackedObject.trackedReferences[refIndex] as TrackedNode;
-                if (trackedNode != null)
+                if (int.TryParse(__instance.Stems[__instance.Stems.Count - 1].name, out int refIndex))
                 {
-                    return trackedNode.data.controller == GameManager.ID;
+                    TrackedNode trackedNode = TrackedObject.trackedReferences[refIndex] as TrackedNode;
+                    if (trackedNode != null)
+                    {
+                        return trackedNode.data.controller == GameManager.ID;
+                    }
                 }
             }
 
@@ -8827,27 +8867,30 @@ namespace H3MP.Patches
                 return;
             }
 
-            if (int.TryParse(__instance.Stems[__instance.Stems.Count - 1].name, out int refIndex))
+            if (__instance.Stems[__instance.Stems.Count - 1] != null)
             {
-                TrackedNode trackedNode = TrackedObject.trackedReferences[refIndex] as TrackedNode;
-                if (trackedNode != null && trackedNode.data.controller == GameManager.ID)
+                if (int.TryParse(__instance.Stems[__instance.Stems.Count - 1].name, out int refIndex))
                 {
-                    trackedNode.nodeData.points = trackedNode.physicalNode.Points;
-                    trackedNode.nodeData.ups = trackedNode.physicalNode.Ups;
+                    TrackedNode trackedNode = TrackedObject.trackedReferences[refIndex] as TrackedNode;
+                    if (trackedNode != null && trackedNode.data.controller == GameManager.ID)
+                    {
+                        trackedNode.nodeData.points = trackedNode.physicalNode.Points;
+                        trackedNode.nodeData.ups = trackedNode.physicalNode.Ups;
 
-                    if (ThreadManager.host)
-                    {
-                        ServerSend.NodeInit(trackedNode.data.trackedID, __instance.Points, __instance.Ups);
-                    }
-                    else if(trackedNode.data.trackedID != -1)
-                    {
-                        ClientSend.NodeInit(trackedNode.data.trackedID, __instance.Points, __instance.Ups);
-                    }
-                    else
-                    {
-                        if (!TrackedNode.unknownInit.Contains(trackedNode.data.localWaitingIndex))
+                        if (ThreadManager.host)
                         {
-                            TrackedNode.unknownInit.Add(trackedNode.data.localWaitingIndex);
+                            ServerSend.NodeInit(trackedNode.data.trackedID, __instance.Points, __instance.Ups);
+                        }
+                        else if (trackedNode.data.trackedID != -1)
+                        {
+                            ClientSend.NodeInit(trackedNode.data.trackedID, __instance.Points, __instance.Ups);
+                        }
+                        else
+                        {
+                            if (!TrackedNode.unknownInit.Contains(trackedNode.data.localWaitingIndex))
+                            {
+                                TrackedNode.unknownInit.Add(trackedNode.data.localWaitingIndex);
+                            }
                         }
                     }
                 }
@@ -8862,28 +8905,31 @@ namespace H3MP.Patches
                 return true;
             }
 
-            if (int.TryParse(__instance.Stems[__instance.Stems.Count - 1].name, out int refIndex))
+            if (__instance.Stems[__instance.Stems.Count - 1] != null)
             {
-                TrackedNode trackedNode = TrackedObject.trackedReferences[refIndex] as TrackedNode;
-                if (trackedNode != null)
+                if (int.TryParse(__instance.Stems[__instance.Stems.Count - 1].name, out int refIndex))
                 {
-                    if (trackedNode.data.controller != GameManager.ID)
+                    TrackedNode trackedNode = TrackedObject.trackedReferences[refIndex] as TrackedNode;
+                    if (trackedNode != null)
                     {
-                        if (trackedNode.nodeData.underActiveControl || __instance.soundSilenceTimer < 3f)
+                        if (trackedNode.data.controller != GameManager.ID)
                         {
-                            if (!__instance.AudSource_Loop.isPlaying)
+                            if (trackedNode.nodeData.underActiveControl || __instance.soundSilenceTimer < 3f)
                             {
-                                __instance.AudSource_Loop.Play();
+                                if (!__instance.AudSource_Loop.isPlaying)
+                                {
+                                    __instance.AudSource_Loop.Play();
+                                }
+                                __instance.AudSource_Loop.volume = Mathf.Lerp(0f, 0.4f, __instance.RB.velocity.magnitude / 1f);
+                                __instance.AudSource_Loop.pitch = Mathf.Lerp(0.85f, 1.15f, __instance.RB.velocity.magnitude / 1f);
                             }
-                            __instance.AudSource_Loop.volume = Mathf.Lerp(0f, 0.4f, __instance.RB.velocity.magnitude / 1f);
-                            __instance.AudSource_Loop.pitch = Mathf.Lerp(0.85f, 1.15f, __instance.RB.velocity.magnitude / 1f);
-                        }
-                        else if (__instance.AudSource_Loop.isPlaying)
-                        {
-                            __instance.AudSource_Loop.Stop();
-                        }
+                            else if (__instance.AudSource_Loop.isPlaying)
+                            {
+                                __instance.AudSource_Loop.Stop();
+                            }
 
-                        return false;
+                            return false;
+                        }
                     }
                 }
             }
@@ -8899,40 +8945,43 @@ namespace H3MP.Patches
                 return true;
             }
 
-            if (int.TryParse(__instance.Stems[__instance.Stems.Count - 1].name, out int refIndex))
+            if (__instance.Stems[__instance.Stems.Count - 1] != null)
             {
-                TrackedNode trackedNode = TrackedObject.trackedReferences[refIndex] as TrackedNode;
-                if (trackedNode != null)
+                if (int.TryParse(__instance.Stems[__instance.Stems.Count - 1].name, out int refIndex))
                 {
-                    if (trackedNode.data.controller != GameManager.ID)
+                    TrackedNode trackedNode = TrackedObject.trackedReferences[refIndex] as TrackedNode;
+                    if (trackedNode != null)
                     {
-                        if (trackedNode.nodeData.underActiveControl)
+                        if (trackedNode.data.controller != GameManager.ID)
                         {
-                            if (__instance.damperRecoverTimer < 1f)
+                            if (trackedNode.nodeData.underActiveControl)
                             {
-                                __instance.damperRecoverTimer += Time.deltaTime;
+                                if (__instance.damperRecoverTimer < 1f)
+                                {
+                                    __instance.damperRecoverTimer += Time.deltaTime;
+                                }
+                                else
+                                {
+                                    __instance.Joint.damper = 10f;
+                                    __instance.RB.drag = 4f;
+                                }
+                                if (__instance.soundSilenceTimer < 3f)
+                                {
+                                    __instance.soundSilenceTimer += Time.deltaTime;
+                                }
+                            }
+                            if (trackedNode.nodeData.underActiveControl || __instance.RB.velocity.magnitude > 2f)
+                            {
+                                __instance.PSystem.gameObject.SetActive(true);
                             }
                             else
                             {
-                                __instance.Joint.damper = 10f;
-                                __instance.RB.drag = 4f;
+                                __instance.PSystem.gameObject.SetActive(false);
                             }
-                            if (__instance.soundSilenceTimer < 3f)
-                            {
-                                __instance.soundSilenceTimer += Time.deltaTime;
-                            }
-                        }
-                        if (trackedNode.nodeData.underActiveControl || __instance.RB.velocity.magnitude > 2f)
-                        {
-                            __instance.PSystem.gameObject.SetActive(true);
-                        }
-                        else
-                        {
-                            __instance.PSystem.gameObject.SetActive(false);
-                        }
-                        __instance.UpdateCageStems();
+                            __instance.UpdateCageStems();
 
-                        return false;
+                            return false;
+                        }
                     }
                 }
             }
@@ -8980,18 +9029,21 @@ namespace H3MP.Patches
                 return;
             }
 
-            if (int.TryParse(instance.Stems[instance.Stems.Count - 1].name, out int refIndex))
+            if (instance.Stems[instance.Stems.Count - 1] != null)
             {
-                TrackedNode trackedNode = TrackedObject.trackedReferences[refIndex] as TrackedNode;
-                if (trackedNode != null && trackedNode.data.controller == GameManager.ID)
+                if (int.TryParse(instance.Stems[instance.Stems.Count - 1].name, out int refIndex))
                 {
-                    if (ThreadManager.host)
+                    TrackedNode trackedNode = TrackedObject.trackedReferences[refIndex] as TrackedNode;
+                    if (trackedNode != null && trackedNode.data.controller == GameManager.ID)
                     {
-                        ServerSend.NodeFire(trackedNode.data.trackedID, velMult, firingDir);
-                    }
-                    else if (trackedNode.data.trackedID != -1)
-                    {
-                        ClientSend.NodeFire(trackedNode.data.trackedID, velMult, firingDir);
+                        if (ThreadManager.host)
+                        {
+                            ServerSend.NodeFire(trackedNode.data.trackedID, velMult, firingDir);
+                        }
+                        else if (trackedNode.data.trackedID != -1)
+                        {
+                            ClientSend.NodeFire(trackedNode.data.trackedID, velMult, firingDir);
+                        }
                     }
                 }
             }
@@ -9009,67 +9061,70 @@ namespace H3MP.Patches
                 return true;
             }
 
-            if (int.TryParse(__instance.PSystem2.name, out int refIndex))
+            if (__instance.PSystem2 != null)
             {
-                TrackedHaze trackedHaze = TrackedObject.trackedReferences[refIndex] as TrackedHaze;
-                if (trackedHaze != null)
+                if (int.TryParse(__instance.PSystem2.name, out int refIndex))
                 {
-                    if (trackedHaze.data.controller != GameManager.ID)
+                    TrackedHaze trackedHaze = TrackedObject.trackedReferences[refIndex] as TrackedHaze;
+                    if (trackedHaze != null)
                     {
-                        float num = Vector3.Distance(GM.CurrentPlayerBody.Head.position, __instance.transform.position);
-                        if (num < 1f && GM.TNH_Manager != null)
+                        if (trackedHaze.data.controller != GameManager.ID)
                         {
-                            GM.TNH_Manager.TeleportToRandomHoldPoint();
-                        }
-                        if (__instance.KEBattery > 0f)
-                        {
-                            __instance.KEBattery -= Time.deltaTime * __instance.KEBatteryDecaySpeed;
-                            ParticleSystem.MainModule temp = __instance.PSystem.main;
-                            temp.startSize = 0.1f;
-                        }
-                        else
-                        {
-                            ParticleSystem.MainModule temp = __instance.PSystem.main;
-                            temp.startSize = 0.7f;
-                            if (!__instance.DamSphere.enabled)
+                            float num = Vector3.Distance(GM.CurrentPlayerBody.Head.position, __instance.transform.position);
+                            if (num < 1f && GM.TNH_Manager != null)
                             {
-                                __instance.DamSphere.enabled = true;
+                                GM.TNH_Manager.TeleportToRandomHoldPoint();
                             }
-                        }
-                        float t = Mathf.InverseLerp(__instance.PSystemEnergyRange.x, __instance.PSystemEnergyRange.y, __instance.KEBattery);
-                        float radius = Mathf.Lerp(__instance.PSystemEmitRange.x, __instance.PSystemEmitRange.y, t);
-                        __instance.sh.radius = radius;
-                        Vector3 vector = GM.CurrentPlayerBody.Head.position - __instance.transform.position;
-                        if (vector.magnitude > __instance.MaxSoundDist)
-                        {
-                            if (__instance.AudSource_Haze.isPlaying)
+                            if (__instance.KEBattery > 0f)
                             {
-                                __instance.AudSource_Haze.Stop();
-                                __instance.curLPFreq = 100f;
-                                __instance.tarLPFreq = 100f;
-                            }
-                        }
-                        else
-                        {
-                            if (Physics.Linecast(GM.CurrentPlayerBody.Head.position, __instance.transform.position, __instance.LM_Env, QueryTriggerInteraction.Ignore))
-                            {
-                                __instance.AudSource_Haze.volume = __instance.BaseVolume * __instance.OcclusionVolumeCurve.Evaluate(vector.magnitude);
-                                __instance.tarLPFreq = __instance.OcclusionFactorCurve.Evaluate(vector.magnitude);
+                                __instance.KEBattery -= Time.deltaTime * __instance.KEBatteryDecaySpeed;
+                                ParticleSystem.MainModule temp = __instance.PSystem.main;
+                                temp.startSize = 0.1f;
                             }
                             else
                             {
-                                __instance.AudSource_Haze.volume = __instance.BaseVolume;
-                                __instance.tarLPFreq = 22000f;
+                                ParticleSystem.MainModule temp = __instance.PSystem.main;
+                                temp.startSize = 0.7f;
+                                if (!__instance.DamSphere.enabled)
+                                {
+                                    __instance.DamSphere.enabled = true;
+                                }
                             }
-                            __instance.curLPFreq = Mathf.MoveTowards(__instance.curLPFreq, __instance.tarLPFreq, Time.deltaTime * 50000f);
-                            __instance.AudLowPass.cutoffFrequency = __instance.curLPFreq;
-                            if (!__instance.AudSource_Haze.isPlaying)
+                            float t = Mathf.InverseLerp(__instance.PSystemEnergyRange.x, __instance.PSystemEnergyRange.y, __instance.KEBattery);
+                            float radius = Mathf.Lerp(__instance.PSystemEmitRange.x, __instance.PSystemEmitRange.y, t);
+                            __instance.sh.radius = radius;
+                            Vector3 vector = GM.CurrentPlayerBody.Head.position - __instance.transform.position;
+                            if (vector.magnitude > __instance.MaxSoundDist)
                             {
-                                __instance.AudSource_Haze.Play();
+                                if (__instance.AudSource_Haze.isPlaying)
+                                {
+                                    __instance.AudSource_Haze.Stop();
+                                    __instance.curLPFreq = 100f;
+                                    __instance.tarLPFreq = 100f;
+                                }
                             }
-                        }
+                            else
+                            {
+                                if (Physics.Linecast(GM.CurrentPlayerBody.Head.position, __instance.transform.position, __instance.LM_Env, QueryTriggerInteraction.Ignore))
+                                {
+                                    __instance.AudSource_Haze.volume = __instance.BaseVolume * __instance.OcclusionVolumeCurve.Evaluate(vector.magnitude);
+                                    __instance.tarLPFreq = __instance.OcclusionFactorCurve.Evaluate(vector.magnitude);
+                                }
+                                else
+                                {
+                                    __instance.AudSource_Haze.volume = __instance.BaseVolume;
+                                    __instance.tarLPFreq = 22000f;
+                                }
+                                __instance.curLPFreq = Mathf.MoveTowards(__instance.curLPFreq, __instance.tarLPFreq, Time.deltaTime * 50000f);
+                                __instance.AudLowPass.cutoffFrequency = __instance.curLPFreq;
+                                if (!__instance.AudSource_Haze.isPlaying)
+                                {
+                                    __instance.AudSource_Haze.Play();
+                                }
+                            }
 
-                        return false;
+                            return false;
+                        }
                     }
                 }
             }
@@ -9085,12 +9140,15 @@ namespace H3MP.Patches
                 return true;
             }
 
-            if (int.TryParse(__instance.PSystem2.name, out int refIndex))
+            if (__instance.PSystem2 != null)
             {
-                TrackedHaze trackedHaze = TrackedObject.trackedReferences[refIndex] as TrackedHaze;
-                if (trackedHaze != null)
+                if (int.TryParse(__instance.PSystem2.name, out int refIndex))
                 {
-                    return trackedHaze.data.controller == GameManager.ID;
+                    TrackedHaze trackedHaze = TrackedObject.trackedReferences[refIndex] as TrackedHaze;
+                    if (trackedHaze != null)
+                    {
+                        return trackedHaze.data.controller == GameManager.ID;
+                    }
                 }
             }
 

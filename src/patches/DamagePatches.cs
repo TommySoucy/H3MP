@@ -4364,27 +4364,30 @@ namespace H3MP.Patches
 
             // If in control, apply damage, send to everyone else
             // If not in control, apply damage without adding force to RB, then send to everyone, controller will apply force
-            if(int.TryParse(__instance.PSystem2.name, out int refIndex))
+            if (__instance.PSystem2 != null)
             {
-                TrackedHaze trackedHaze = TrackedObject.trackedReferences[refIndex] as TrackedHaze;
-                if (trackedHaze != null)
+                if (int.TryParse(__instance.PSystem2.name, out int refIndex))
                 {
-                    if (trackedHaze.data.controller == GameManager.ID)
+                    TrackedHaze trackedHaze = TrackedObject.trackedReferences[refIndex] as TrackedHaze;
+                    if (trackedHaze != null)
                     {
-                        return true;
-                    }
-                    else // Not controller, send damage to controller for processing
-                    {
-                        if (ThreadManager.host)
+                        if (trackedHaze.data.controller == GameManager.ID)
                         {
-                            ServerSend.HazeDamage(trackedHaze.data.trackedID, D, trackedHaze.data.controller);
+                            return true;
                         }
-                        else
+                        else // Not controller, send damage to controller for processing
                         {
-                            ClientSend.HazeDamage(trackedHaze.data.trackedID, D);
-                        }
+                            if (ThreadManager.host)
+                            {
+                                ServerSend.HazeDamage(trackedHaze.data.trackedID, D, trackedHaze.data.controller);
+                            }
+                            else
+                            {
+                                ClientSend.HazeDamage(trackedHaze.data.trackedID, D);
+                            }
 
-                        return false;
+                            return false;
+                        }
                     }
                 }
             }

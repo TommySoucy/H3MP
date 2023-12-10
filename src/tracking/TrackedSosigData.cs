@@ -47,6 +47,8 @@ namespace H3MP.Tracking
         public Vector3 idleDominantDir;
         public Vector3 pathToLookDir;
         public int[] inventory; // 0 and 1 primary and other hand, 2..n inventory slots
+        public float previousJointLimit;
+        public float jointLimit;
 
         public static KeyValuePair<int, TNH_Manager.SosigPatrolSquad> latestSosigPatrolSquad = new KeyValuePair<int, TNH_Manager.SosigPatrolSquad>(-1, null);
 
@@ -85,7 +87,8 @@ namespace H3MP.Tracking
             }
             fallbackOrder = (Sosig.SosigOrder)packet.ReadByte();
             currentOrder = (Sosig.SosigOrder)packet.ReadByte();
-
+            jointLimit = packet.ReadFloat();
+            
             // Full
             byte sosigLinkDataLength = packet.ReadByte();
             if (sosigLinkDataLength > 0)
@@ -542,6 +545,7 @@ namespace H3MP.Tracking
             }
             packet.Write((byte)fallbackOrder);
             packet.Write((byte)currentOrder);
+            packet.Write(jointLimit);
 
             if (full)
             {
@@ -1002,6 +1006,8 @@ namespace H3MP.Tracking
             fallbackOrder = updatedSosig.fallbackOrder;
             previousOrder = currentOrder;
             currentOrder = updatedSosig.currentOrder;
+            previousJointLimit = jointLimit;
+            jointLimit = updatedSosig.jointLimit;
 
             // Set physically
             if (physicalSosig != null)
@@ -1022,6 +1028,10 @@ namespace H3MP.Tracking
                             physicalSosig.physicalSosig.UpdateRendererOnLink(i);
                         }
                     }
+                }
+                if (previousJointLimit != jointLimit)
+                {
+                    physicalSosig.physicalSosig.UpdateJoints(Mathf.InverseLerp(60f, physicalSosig.physicalSosig.m_maxJointLimit, jointLimit));
                 }
             }
         }
@@ -1070,6 +1080,8 @@ namespace H3MP.Tracking
                 fallbackOrder = (Sosig.SosigOrder)packet.ReadByte();
                 previousOrder = currentOrder;
                 currentOrder = (Sosig.SosigOrder)packet.ReadByte();
+                previousJointLimit = jointLimit;
+                jointLimit = packet.ReadFloat();
                 ++debugStep;
 
                 if (full)
@@ -1192,6 +1204,10 @@ namespace H3MP.Tracking
                         }
                     }
                 }
+                if (previousJointLimit != jointLimit)
+                {
+                    physicalSosig.physicalSosig.UpdateJoints(Mathf.InverseLerp(60f, physicalSosig.physicalSosig.m_maxJointLimit, jointLimit));
+                }
             }
         }
 
@@ -1272,13 +1288,15 @@ namespace H3MP.Tracking
                     }
                 }
             }
+            previousJointLimit = jointLimit;
+            jointLimit = physicalSosig.physicalSosig.m_joints[0].lowTwistLimit.limit;
 
             return updated || ammoStoresModified || modifiedLinkIntegrity || NeedsUpdate();
         }
 
         public override bool NeedsUpdate()
         {
-            return base.NeedsUpdate() || !previousPos.Equals(position) || !previousRot.Equals(rotation) || previousMustard != mustard;
+            return base.NeedsUpdate() || !previousPos.Equals(position) || !previousRot.Equals(rotation) || previousMustard != mustard || previousJointLimit != jointLimit;
         }
 
         public override void OnTrackedIDReceived(TrackedObjectData newData)
