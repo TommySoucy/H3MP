@@ -914,6 +914,11 @@ namespace H3MP.Networking
         /// <param name="_moveReadPos">Whether or not to move the buffer's read position.</param>
         public byte[] ReadBytes(int _length, bool _moveReadPos = true)
         {
+            if(_length == 0)
+            {
+                return null;
+            }
+
             if (buffer.Count > readPos)
             {
                 // If there are unread bytes

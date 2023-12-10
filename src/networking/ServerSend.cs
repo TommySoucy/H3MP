@@ -1569,7 +1569,7 @@ namespace H3MP.Networking
                 packet.Write(point);
                 packet.Write(dir);
                 packet.Write(intensity);
-                if (data == null)
+                if (data == null || data.Length == 0)
                 {
                     packet.Write(0);
                 }

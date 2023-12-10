@@ -3417,7 +3417,7 @@ namespace H3MP.Patches
 
             List<CodeInstruction> toInsert0 = new List<CodeInstruction>();
             toInsert0.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load encryption instance
-            toInsert0.Add(new CodeInstruction(OpCodes.Ldloc_S, 76)); // Load damageable
+            toInsert0.Add(new CodeInstruction(OpCodes.Ldloc_S, 66)); // Load damageable
             toInsert0.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(EncryptionDamageablePatch), "GetActualFlag"))); // Call our GetActualFlag
 
             bool applied = false;
@@ -3425,7 +3425,7 @@ namespace H3MP.Patches
             for (int i = 0; i < instructionList.Count; ++i)
             {
                 CodeInstruction instruction = instructionList[i];
-                if (instruction.opcode == OpCodes.Stloc_S && instruction.operand.ToString().Contains("77"))
+                if (instruction.opcode == OpCodes.Stloc_S && instruction.operand.ToString().Contains("67"))
                 {
                     if (found)
                     {

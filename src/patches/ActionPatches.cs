@@ -8820,9 +8820,9 @@ namespace H3MP.Patches
         }
 
         // Patches Init to collect data to send to non controllers 
-        static void InitPostfix(Construct_Node __instance, bool __result)
+        static void InitPostfix(Construct_Node __instance)
         {
-            if (Mod.managerObject == null || !__result)
+            if (Mod.managerObject == null)
             {
                 return;
             }
