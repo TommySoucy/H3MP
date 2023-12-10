@@ -4692,5 +4692,65 @@ namespace H3MP.Networking
                 }
             }
         }
+
+        public static void NodeInit(int trackedID, List<Vector3> points, List<Vector3> ups, int clientID = 0)
+        {
+            using (Packet packet = new Packet((int)ServerPackets.nodeInit))
+            {
+                packet.Write(trackedID);
+                if (points == null || points.Count == 0)
+                {
+                    packet.Write((byte)0);
+                }
+                else
+                {
+                    packet.Write((byte)points.Count);
+                    for (int i = 0; i < points.Count; ++i)
+                    {
+                        packet.Write(points[i]);
+                    }
+                }
+                if (ups == null || ups.Count == 0)
+                {
+                    packet.Write((byte)0);
+                }
+                else
+                {
+                    packet.Write((byte)ups.Count);
+                    for (int i = 0; i < ups.Count; ++i)
+                    {
+                        packet.Write(ups[i]);
+                    }
+                }
+
+                if (clientID == 0)
+                {
+                    SendTCPDataToAll(packet);
+                }
+                else
+                {
+                    SendTCPDataToAll(clientID, packet);
+                }
+            }
+        }
+
+        public static void NodeFire(int trackedID, float velMult, Vector3 firingDir, int clientID = 0)
+        {
+            using (Packet packet = new Packet((int)ServerPackets.nodeFire))
+            {
+                packet.Write(trackedID);
+                packet.Write(velMult);
+                packet.Write(firingDir);
+
+                if (clientID == 0)
+                {
+                    SendTCPDataToAll(packet);
+                }
+                else
+                {
+                    SendTCPDataToAll(clientID, packet);
+                }
+            }
+        }
     }
 }

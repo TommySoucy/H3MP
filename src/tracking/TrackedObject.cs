@@ -67,6 +67,29 @@ namespace H3MP.Tracking
             }
         }
 
+        public void CheckReferenceSize()
+        {
+            if (availableTrackedRefIndices.Count == 0)
+            {
+                GameObject[] tempRefs = trackedReferenceObjects;
+                trackedReferenceObjects = new GameObject[tempRefs.Length + 100];
+                for (int i = 0; i < tempRefs.Length; ++i)
+                {
+                    trackedReferenceObjects[i] = tempRefs[i];
+                }
+                TrackedObject[] tempItems = trackedReferences;
+                trackedReferences = new TrackedObject[tempItems.Length + 100];
+                for (int i = 0; i < tempItems.Length; ++i)
+                {
+                    trackedReferences[i] = tempItems[i];
+                }
+                for (int i = tempItems.Length; i < trackedReferences.Length; ++i)
+                {
+                    availableTrackedRefIndices.Add(i);
+                }
+            }
+        }
+
         public virtual void OnTransformParentChanged()
         {
             if (data.ignoreParentChanged > 0)

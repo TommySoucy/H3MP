@@ -40,7 +40,14 @@ namespace H3MP.Patches
             MethodInfo fireSosigWeaponPatchPostfix = typeof(FireSosigWeaponPatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(fireSosigWeaponPatchOriginal, harmony, true);
-            harmony.Patch(fireSosigWeaponPatchOriginal, new HarmonyMethod(fireSosigWeaponPatchPrefix), new HarmonyMethod(fireSosigWeaponPatchPostfix), new HarmonyMethod(fireSosigWeaponPatchTranspiler));
+            try
+            {
+                harmony.Patch(fireSosigWeaponPatchOriginal, new HarmonyMethod(fireSosigWeaponPatchPrefix), new HarmonyMethod(fireSosigWeaponPatchPostfix), new HarmonyMethod(fireSosigWeaponPatchTranspiler));
+            }
+            catch (Exception ex)
+            {
+                Mod.LogError("Exception caught applying ActionPatches.FireSosigWeaponPatch: " + ex.Message + ":\n" + ex.StackTrace);
+            }
 
             ++patchIndex; // 2
 
@@ -1128,6 +1135,32 @@ namespace H3MP.Patches
             PatchController.Verify(brutBlockSystemStartOriginal, harmony, false);
             harmony.Patch(brutBlockSystemUpdateOriginal, new HarmonyMethod(brutBlockSystemUpdatePrefix));
             harmony.Patch(brutBlockSystemStartOriginal, new HarmonyMethod(brutBlockSystemStartPrefix));
+
+            ++patchIndex; // 70
+
+            // NodePatch
+            MethodInfo nodeInitOriginal = typeof(Construct_Node).GetMethod("Init", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo nodeInitPrefix = typeof(NodePatch).GetMethod("InitPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo nodeInitPostfix = typeof(NodePatch).GetMethod("InitPostfix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo nodeUpdateOriginal = typeof(Construct_Node).GetMethod("FVRUpdate", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo nodeUpdatePrefix = typeof(NodePatch).GetMethod("UpdatePrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo nodeFixedUpdateOriginal = typeof(Construct_Node).GetMethod("FVRFixedUpdate", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo nodeFixedUpdatePrefix = typeof(NodePatch).GetMethod("FixedUpdatePrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo nodeFixedUpdateTranspiler = typeof(NodePatch).GetMethod("FixedUpdateTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(nodeInitOriginal, harmony, false);
+            PatchController.Verify(nodeUpdateOriginal, harmony, false);
+            PatchController.Verify(nodeFixedUpdateOriginal, harmony, false);
+            harmony.Patch(nodeInitOriginal, new HarmonyMethod(nodeInitPrefix), new HarmonyMethod(nodeInitPostfix));
+            harmony.Patch(nodeUpdateOriginal, new HarmonyMethod(nodeUpdatePrefix));
+            try
+            {
+                harmony.Patch(nodeFixedUpdateOriginal, new HarmonyMethod(nodeFixedUpdatePrefix), null, new HarmonyMethod(nodeFixedUpdateTranspiler));
+            }
+            catch (Exception ex)
+            {
+                Mod.LogError("Exception caught applying ActionPatches.NodePatch: " + ex.Message + ":\n" + ex.StackTrace);
+            }
         }
     }
 
@@ -1422,6 +1455,8 @@ namespace H3MP.Patches
             toInsert1.Add(new CodeInstruction(OpCodes.Ldloc_3)); // Load gameObject
             toInsert1.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(FireSosigWeaponPatch), "GetDirection"))); // Call our GetDirection method
 
+            bool applied0 = false;
+            bool applied1 = false;
             bool skippedFirstPos = false;
             bool skippedFirstDir = false;
             for (int i = 0; i < instructionList.Count; ++i)
@@ -1432,6 +1467,7 @@ namespace H3MP.Patches
                     if (skippedFirstPos)
                     {
                         instructionList.InsertRange(i + 1, toInsert0);
+                        applied0 = true;
                     }
                     else
                     {
@@ -1444,6 +1480,7 @@ namespace H3MP.Patches
                     if (skippedFirstDir)
                     {
                         instructionList.InsertRange(i + 1, toInsert1);
+                        applied1 = true;
                         break;
                     }
                     else
@@ -1452,6 +1489,12 @@ namespace H3MP.Patches
                     }
                 }
             }
+
+            if (!applied0 || !applied1)
+            {
+                Mod.LogError("FireSosigWeaponPatch Transpiler not applied!");
+            }
+
             return instructionList;
         }
 
@@ -8682,6 +8725,208 @@ namespace H3MP.Patches
             }
 
             return true;
+        }
+    }
+
+    // Patches Construct_Node
+    class NodePatch
+    {
+        // Patches Init to prevent for non controllers 
+        static bool InitPrefix(Construct_Node __instance)
+        {
+            if (Mod.managerObject == null)
+            {
+                return true;
+            }
+
+            if (int.TryParse(__instance.Stems[__instance.Stems.Count - 1].name, out int refIndex))
+            {
+                TrackedNode trackedNode = TrackedObject.trackedReferences[refIndex] as TrackedNode;
+                if (trackedNode != null)
+                {
+                    return trackedNode.data.controller == GameManager.ID;
+                }
+            }
+
+            return true;
+        }
+
+        // Patches Init to collect data to send to non controllers 
+        static void InitPostfix(Construct_Node __instance, bool __result)
+        {
+            if (Mod.managerObject == null || !__result)
+            {
+                return;
+            }
+
+            if (int.TryParse(__instance.Stems[__instance.Stems.Count - 1].name, out int refIndex))
+            {
+                TrackedNode trackedNode = TrackedObject.trackedReferences[refIndex] as TrackedNode;
+                if (trackedNode != null && trackedNode.data.controller == GameManager.ID)
+                {
+                    trackedNode.nodeData.points = trackedNode.physicalNode.Points;
+                    trackedNode.nodeData.ups = trackedNode.physicalNode.Ups;
+
+                    if (ThreadManager.host)
+                    {
+                        ServerSend.NodeInit(trackedNode.data.trackedID, __instance.Points, __instance.Ups);
+                    }
+                    else if(trackedNode.data.trackedID != -1)
+                    {
+                        ClientSend.NodeInit(trackedNode.data.trackedID, __instance.Points, __instance.Ups);
+                    }
+                    else
+                    {
+                        if (!TrackedNode.unknownInit.Contains(trackedNode.data.localWaitingIndex))
+                        {
+                            TrackedNode.unknownInit.Add(trackedNode.data.localWaitingIndex);
+                        }
+                    }
+                }
+            }
+        }
+
+        // Patches FVRUpdate 
+        static bool UpdatePrefix(Construct_Node __instance)
+        {
+            if (Mod.managerObject == null)
+            {
+                return true;
+            }
+
+            if (int.TryParse(__instance.Stems[__instance.Stems.Count - 1].name, out int refIndex))
+            {
+                TrackedNode trackedNode = TrackedObject.trackedReferences[refIndex] as TrackedNode;
+                if (trackedNode != null)
+                {
+                    if (trackedNode.data.controller != GameManager.ID)
+                    {
+                        if (trackedNode.nodeData.underActiveControl || __instance.soundSilenceTimer < 3f)
+                        {
+                            if (!__instance.AudSource_Loop.isPlaying)
+                            {
+                                __instance.AudSource_Loop.Play();
+                            }
+                            __instance.AudSource_Loop.volume = Mathf.Lerp(0f, 0.4f, __instance.RB.velocity.magnitude / 1f);
+                            __instance.AudSource_Loop.pitch = Mathf.Lerp(0.85f, 1.15f, __instance.RB.velocity.magnitude / 1f);
+                        }
+                        else if (__instance.AudSource_Loop.isPlaying)
+                        {
+                            __instance.AudSource_Loop.Stop();
+                        }
+
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        // Patches FVRFixedUpdate 
+        static bool FixedUpdatePrefix(Construct_Node __instance)
+        {
+            if (Mod.managerObject == null)
+            {
+                return true;
+            }
+
+            if (int.TryParse(__instance.Stems[__instance.Stems.Count - 1].name, out int refIndex))
+            {
+                TrackedNode trackedNode = TrackedObject.trackedReferences[refIndex] as TrackedNode;
+                if (trackedNode != null)
+                {
+                    if (trackedNode.data.controller != GameManager.ID)
+                    {
+                        if (trackedNode.nodeData.underActiveControl)
+                        {
+                            if (__instance.damperRecoverTimer < 1f)
+                            {
+                                __instance.damperRecoverTimer += Time.deltaTime;
+                            }
+                            else
+                            {
+                                __instance.Joint.damper = 10f;
+                                __instance.RB.drag = 4f;
+                            }
+                            if (__instance.soundSilenceTimer < 3f)
+                            {
+                                __instance.soundSilenceTimer += Time.deltaTime;
+                            }
+                        }
+                        if (trackedNode.nodeData.underActiveControl || __instance.RB.velocity.magnitude > 2f)
+                        {
+                            __instance.PSystem.gameObject.SetActive(true);
+                        }
+                        else
+                        {
+                            __instance.PSystem.gameObject.SetActive(false);
+                        }
+                        __instance.UpdateCageStems();
+
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        // Patches FVRFixedUpdate to keep track of firing event
+        static IEnumerable<CodeInstruction> FixedUpdateTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+
+            // To get correct pos considering potential override
+            List<CodeInstruction> toInsert = new List<CodeInstruction>();
+            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load node instance
+            toInsert.Add(new CodeInstruction(OpCodes.Ldloc_2)); // Load velocity multiplier
+            toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load node instance
+            toInsert.Add(new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(Construct_Node), "m_firingDir"))); // Load firing direction
+            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(NodePatch), "Fire"))); // Call our Fire method
+
+            bool applied = false;
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+                if (instruction.opcode == OpCodes.Callvirt && instruction.operand.ToString().Contains("Fire"))
+                {
+                    instructionList.InsertRange(i + 1, toInsert);
+                    applied = true;
+                    break;
+                }
+            }
+
+            if (!applied)
+            {
+                Mod.LogError("NodePatch Transpiler not applied!");
+            }
+
+            return instructionList;
+        }
+
+        public static void Fire(Construct_Node instance, float velMult, Vector3 firingDir)
+        {
+            if (Mod.managerObject == null)
+            {
+                return;
+            }
+
+            if (int.TryParse(instance.Stems[instance.Stems.Count - 1].name, out int refIndex))
+            {
+                TrackedNode trackedNode = TrackedObject.trackedReferences[refIndex] as TrackedNode;
+                if (trackedNode != null && trackedNode.data.controller == GameManager.ID)
+                {
+                    if (ThreadManager.host)
+                    {
+                        ServerSend.NodeFire(trackedNode.data.trackedID, velMult, firingDir);
+                    }
+                    else if (trackedNode.data.trackedID != -1)
+                    {
+                        ClientSend.NodeFire(trackedNode.data.trackedID, velMult, firingDir);
+                    }
+                }
+            }
         }
     }
 }

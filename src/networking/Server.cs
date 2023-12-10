@@ -543,7 +543,9 @@ namespace H3MP.Networking
                 ServerHandle.IrisSetState,
                 ServerHandle.BrutBlockSystemStart,
                 ServerHandle.FloaterBeginDefusing,
-                ServerHandle.BatchedPackets
+                ServerHandle.BatchedPackets,
+                ServerHandle.NodeInit,
+                ServerHandle.NodeFire,
             };
 
             objects = new TrackedObjectData[100];

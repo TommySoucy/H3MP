@@ -4869,5 +4869,56 @@ namespace H3MP.Networking
                 }
             }
         }
+
+        public static void NodeInit(Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+
+            TrackedNodeData trackedNodeData = Client.objects[trackedID] as TrackedNodeData;
+            if (trackedNodeData != null)
+            {
+                trackedNodeData.points = new List<Vector3>();
+                int pointCount = packet.ReadByte();
+                for (int i = 0; i < pointCount; ++i)
+                {
+                    trackedNodeData.points.Add(packet.ReadVector3());
+                }
+                trackedNodeData.ups = new List<Vector3>();
+                int upsCount = packet.ReadByte();
+                for (int i = 0; i < upsCount; ++i)
+                {
+                    trackedNodeData.ups.Add(packet.ReadVector3());
+                }
+
+                if (trackedNodeData.physicalNode != null)
+                {
+                    trackedNodeData.physicalNode.physicalNode.initialPos = trackedNodeData.position;
+                    trackedNodeData.physicalNode.physicalNode.m_center = trackedNodeData.position;
+                    for (int j = 0; j < trackedNodeData.physicalNode.physicalNode.Cages.Count; j++)
+                    {
+                        trackedNodeData.physicalNode.physicalNode.Cages[j].SetParent(null);
+                    }
+                    trackedNodeData.physicalNode.physicalNode.UpdateCageStems();
+                }
+            }
+        }
+
+        public static void NodeFire(Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+
+            TrackedNodeData trackedNodeData = Client.objects[trackedID] as TrackedNodeData;
+            if (trackedNodeData != null &&trackedNodeData.physicalNode != null)
+            {
+                float velMult = packet.ReadFloat();
+                Vector3 dir = packet.ReadVector3();
+                GameObject gameObject = UnityEngine.Object.Instantiate<GameObject>(trackedNodeData.physicalNode.physicalNode.ProjPrefab, trackedNodeData.physicalNode.physicalNode.transform.position, Quaternion.LookRotation(dir));
+                BallisticProjectile component = gameObject.GetComponent<BallisticProjectile>();
+                component.Fire(300f * velMult, dir, null, false);
+                component.SetSource_IFF(0);
+
+                trackedNodeData.physicalNode.physicalNode.UpdateCageStems();
+            }
+        }
     }
 }

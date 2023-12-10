@@ -2772,5 +2772,51 @@ namespace H3MP.Networking
                 SendTCPData(packet);
             }
         }
+
+        public static void NodeInit(int trackedID, List<Vector3> points, List<Vector3> ups)
+        {
+            using (Packet packet = new Packet((int)ClientPackets.nodeInit))
+            {
+                packet.Write(trackedID);
+                if(points == null || points.Count == 0)
+                {
+                    packet.Write((byte)0);
+                }
+                else
+                {
+                    packet.Write((byte)points.Count);
+                    for(int i=0; i < points.Count; ++i)
+                    {
+                        packet.Write(points[i]);
+                    }
+                }
+                if(ups == null || ups.Count == 0)
+                {
+                    packet.Write((byte)0);
+                }
+                else
+                {
+                    packet.Write((byte)ups.Count);
+                    for(int i=0; i < ups.Count; ++i)
+                    {
+                        packet.Write(ups[i]);
+                    }
+                }
+
+                SendTCPData(packet);
+            }
+        }
+
+        public static void NodeFire(int trackedID, float velMult, Vector3 firingDir)
+        {
+            using (Packet packet = new Packet((int)ClientPackets.nodeFire))
+            {
+                packet.Write(trackedID);
+                packet.Write(velMult);
+                packet.Write(firingDir);
+
+                SendTCPData(packet);
+            }
+        }
     }
 }

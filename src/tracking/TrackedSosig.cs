@@ -33,25 +33,8 @@ namespace H3MP.Tracking
             GameObject trackedSosigRef = new GameObject();
             Scripts.TrackedObjectReference refScript = trackedSosigRef.AddComponent<Scripts.TrackedObjectReference>();
             trackedSosigRef.SetActive(false);
-            if (availableTrackedRefIndices.Count == 0)
-            {
-                GameObject[] tempRefs = trackedReferenceObjects;
-                trackedReferenceObjects = new GameObject[tempRefs.Length + 100];
-                for (int i = 0; i < tempRefs.Length; ++i)
-                {
-                    trackedReferenceObjects[i] = tempRefs[i];
-                }
-                TrackedObject[] tempObjects = trackedReferences;
-                trackedReferences = new TrackedObject[tempObjects.Length + 100];
-                for (int i = 0; i < tempObjects.Length; ++i)
-                {
-                    trackedReferences[i] = tempObjects[i];
-                }
-                for (int i = tempObjects.Length; i < trackedReferences.Length; ++i)
-                {
-                    availableTrackedRefIndices.Add(i);
-                }
-            }
+
+            CheckReferenceSize();
             int refIndex = availableTrackedRefIndices[availableTrackedRefIndices.Count - 1];
             availableTrackedRefIndices.RemoveAt(availableTrackedRefIndices.Count - 1);
             trackedReferenceObjects[refIndex] = trackedSosigRef;

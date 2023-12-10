@@ -52,6 +52,7 @@ namespace H3MP
         public static Dictionary<Construct_Floater, TrackedFloater> trackedFloaterByFloater = new Dictionary<Construct_Floater, TrackedFloater>();
         public static Dictionary<Construct_Iris, TrackedIris> trackedIrisByIris = new Dictionary<Construct_Iris, TrackedIris>();
         public static Dictionary<Construct_Sentinel, TrackedSentinel> trackedSentinelBySentinel = new Dictionary<Construct_Sentinel, TrackedSentinel>();
+        public static Dictionary<Construct_Node, TrackedNode> trackedNodeByNode = new Dictionary<Construct_Node, TrackedNode>();
         public static Dictionary<int, int> activeInstances = new Dictionary<int, int>();
         public static Dictionary<int, TNHInstance> TNHInstances = new Dictionary<int, TNHInstance>();
         public static List<int> playersAtLoadStart;
@@ -454,6 +455,7 @@ namespace H3MP
             trackedBrutBlockSystemByBrutBlockSystem.Clear();
             trackedIrisByIris.Clear();
             trackedSentinelBySentinel.Clear();
+            trackedNodeByNode.Clear();
             trackedObjectByShatterable.Clear();
             if (playersAtLoadStart != null)
             {

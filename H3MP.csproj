@@ -88,6 +88,8 @@
     <Compile Include="src\tracking\TrackedIrisData.cs" />
     <Compile Include="src\tracking\TrackedItem.cs" />
     <Compile Include="src\tracking\TrackedItemData.cs" />
+    <Compile Include="src\tracking\TrackedNode.cs" />
+    <Compile Include="src\tracking\TrackedNodeData.cs" />
     <Compile Include="src\tracking\TrackedObject.cs" />
     <Compile Include="src\tracking\TrackedObjectData.cs" />
     <Compile Include="src\tracking\TrackedPlayerBody.cs" />
