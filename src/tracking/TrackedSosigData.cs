@@ -49,6 +49,14 @@ namespace H3MP.Tracking
         public int[] inventory; // 0 and 1 primary and other hand, 2..n inventory slots
         public float previousJointLimit;
         public float jointLimit;
+        public bool previousUnconscious;
+        public bool unconscious;
+        public bool previousBlinded;
+        public bool blinded;
+        public bool previousConfused;
+        public bool confused;
+        public float previousSuppressionLevel;
+        public float suppressionLevel;
 
         public static KeyValuePair<int, TNH_Manager.SosigPatrolSquad> latestSosigPatrolSquad = new KeyValuePair<int, TNH_Manager.SosigPatrolSquad>(-1, null);
 
@@ -88,7 +96,11 @@ namespace H3MP.Tracking
             fallbackOrder = (Sosig.SosigOrder)packet.ReadByte();
             currentOrder = (Sosig.SosigOrder)packet.ReadByte();
             jointLimit = packet.ReadFloat();
-            
+            unconscious = packet.ReadBool();
+            blinded = packet.ReadBool();
+            confused = packet.ReadBool();
+            suppressionLevel = packet.ReadFloat();
+
             // Full
             byte sosigLinkDataLength = packet.ReadByte();
             if (sosigLinkDataLength > 0)
@@ -546,6 +558,10 @@ namespace H3MP.Tracking
             packet.Write((byte)fallbackOrder);
             packet.Write((byte)currentOrder);
             packet.Write(jointLimit);
+            packet.Write(unconscious);
+            packet.Write(blinded);
+            packet.Write(confused);
+            packet.Write(suppressionLevel);
 
             if (full)
             {
@@ -1008,6 +1024,14 @@ namespace H3MP.Tracking
             currentOrder = updatedSosig.currentOrder;
             previousJointLimit = jointLimit;
             jointLimit = updatedSosig.jointLimit;
+            previousUnconscious = unconscious;
+            unconscious = updatedSosig.unconscious;
+            previousBlinded = blinded;
+            blinded = updatedSosig.blinded;
+            previousConfused = confused;
+            confused = updatedSosig.confused;
+            previousSuppressionLevel = suppressionLevel;
+            suppressionLevel = updatedSosig.suppressionLevel;
 
             // Set physically
             if (physicalSosig != null)
@@ -1033,6 +1057,10 @@ namespace H3MP.Tracking
                 {
                     physicalSosig.physicalSosig.UpdateJoints(Mathf.InverseLerp(60f, physicalSosig.physicalSosig.m_maxJointLimit, jointLimit));
                 }
+                physicalSosig.physicalSosig.m_isUnconscious = unconscious;
+                physicalSosig.physicalSosig.m_isBlinded = blinded;
+                physicalSosig.physicalSosig.m_isConfused = confused;
+                physicalSosig.physicalSosig.m_suppressionLevel = suppressionLevel;
             }
         }
 
@@ -1083,6 +1111,14 @@ namespace H3MP.Tracking
                 previousJointLimit = jointLimit;
                 jointLimit = packet.ReadFloat();
                 ++debugStep;
+                previousUnconscious = unconscious;
+                unconscious = packet.ReadBool();
+                previousBlinded = blinded;
+                blinded = packet.ReadBool();
+                previousConfused = confused;
+                confused = packet.ReadBool();
+                previousSuppressionLevel = suppressionLevel;
+                suppressionLevel = packet.ReadFloat();
 
                 if (full)
                 {
@@ -1208,6 +1244,10 @@ namespace H3MP.Tracking
                 {
                     physicalSosig.physicalSosig.UpdateJoints(Mathf.InverseLerp(60f, physicalSosig.physicalSosig.m_maxJointLimit, jointLimit));
                 }
+                physicalSosig.physicalSosig.m_isUnconscious = unconscious;
+                physicalSosig.physicalSosig.m_isBlinded = blinded;
+                physicalSosig.physicalSosig.m_isConfused = confused;
+                physicalSosig.physicalSosig.m_suppressionLevel = suppressionLevel;
             }
         }
 
@@ -1220,11 +1260,21 @@ namespace H3MP.Tracking
                 return false;
             }
 
-            previousPos = position;
-            previousRot = rotation;
             position = physicalSosig.physicalSosig.CoreRB == null ? previousPos : physicalSosig.physicalSosig.CoreRB.position;
+            bool updatePosition = false;
+            if (Vector3.Distance(previousPos, position) > 0.02f)
+            {
+                previousPos = position;
+                updatePosition = true;
+            }
             velocity = previousPos == null ? Vector3.zero : position - previousPos;
             rotation = physicalSosig.physicalSosig.CoreRB == null ? previousRot : physicalSosig.physicalSosig.CoreRB.rotation;
+            bool updateRotation = false;
+            if (Quaternion.Angle(previousRot, rotation) > 5)
+            {
+                previousRot = rotation;
+                updateRotation = true;
+            }
             previousBodyPose = bodyPose;
             bodyPose = physicalSosig.physicalSosig.BodyPose;
             ammoStores = physicalSosig.physicalSosig.Inventory.m_ammoStores;
@@ -1293,17 +1343,26 @@ namespace H3MP.Tracking
             {
                 if (physicalSosig.physicalSosig.m_joints[i] != null)
                 {
-                    jointLimit = physicalSosig.physicalSosig.m_joints[i].lowTwistLimit.limit;
+                    jointLimit = physicalSosig.physicalSosig.m_joints[i].highTwistLimit.limit;
                     break;
                 }
             }
+            previousUnconscious = unconscious;
+            unconscious = physicalSosig.physicalSosig.IsUnconscious;
+            previousBlinded = blinded;
+            blinded = physicalSosig.physicalSosig.IsBlinded;
+            previousConfused = confused;
+            confused = physicalSosig.physicalSosig.IsConfused;
+            previousSuppressionLevel = suppressionLevel;
+            suppressionLevel = physicalSosig.physicalSosig.SuppressionLevel;
 
-            return updated || ammoStoresModified || modifiedLinkIntegrity || NeedsUpdate();
+            return updated || ammoStoresModified || modifiedLinkIntegrity || updatePosition || updateRotation || NeedsUpdate();
         }
 
         public override bool NeedsUpdate()
         {
-            return base.NeedsUpdate() || !previousPos.Equals(position) || !previousRot.Equals(rotation) || previousMustard != mustard || previousJointLimit != jointLimit;
+            return base.NeedsUpdate() || previousMustard != mustard || previousJointLimit != jointLimit || previousUnconscious != unconscious
+                   || previousBlinded != blinded || previousConfused != confused || previousSuppressionLevel != suppressionLevel;
         }
 
         public override void OnTrackedIDReceived(TrackedObjectData newData)
