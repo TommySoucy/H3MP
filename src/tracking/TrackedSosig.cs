@@ -65,7 +65,6 @@ namespace H3MP.Tracking
                 if (sosigData.previousPos != null && sosigData.velocity.magnitude < 0.5f)
                 {
                     Vector3 newPosition = Vector3.Lerp(physicalSosig.CoreRB.position, sosigData.position + sosigData.velocity, interpolationSpeed * Time.deltaTime);
-                    physicalSosig.Agent.transform.position = newPosition;
                     physicalSosig.CoreRB.position = newPosition;
                 }
                 else

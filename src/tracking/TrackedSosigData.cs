@@ -16,6 +16,8 @@ namespace H3MP.Tracking
         public Quaternion previousRot;
         public Vector3 position;
         public Quaternion rotation;
+        public Vector3 previousAgentPos;
+        public Vector3 agentPosition;
         public Vector3 velocity = Vector3.zero;
         public int[] previousAmmoStores;
         public int[] ammoStores;
@@ -70,6 +72,7 @@ namespace H3MP.Tracking
             // Update
             position = packet.ReadVector3();
             rotation = packet.ReadQuaternion();
+            agentPosition = packet.ReadVector3();
             mustard = packet.ReadFloat();
             byte ammoStoreLength = packet.ReadByte();
             if (ammoStoreLength > 0)
@@ -529,6 +532,7 @@ namespace H3MP.Tracking
 
             packet.Write(position);
             packet.Write(rotation);
+            packet.Write(agentPosition);
             packet.Write(mustard);
             if (ammoStores != null && ammoStores.Length > 0)
             {
@@ -1011,6 +1015,8 @@ namespace H3MP.Tracking
             position = updatedSosig.position;
             velocity = previousPos == null ? Vector3.zero : position - previousPos;
             rotation = updatedSosig.rotation;
+            previousAgentPos = agentPosition;
+            agentPosition = updatedSosig.agentPosition;
             previousAmmoStores = ammoStores;
             ammoStores = updatedSosig.ammoStores;
             previousMustard = mustard;
@@ -1036,6 +1042,7 @@ namespace H3MP.Tracking
             // Set physically
             if (physicalSosig != null)
             {
+                physicalSosig.physicalSosig.Agent.transform.position = agentPosition;
                 physicalSosig.physicalSosig.FallbackOrder = fallbackOrder;
                 physicalSosig.physicalSosig.Mustard = mustard;
                 //physicalObject.physicalSosigScript.CoreRB.position = position;
@@ -1077,6 +1084,8 @@ namespace H3MP.Tracking
                 position = packet.ReadVector3();
                 velocity = previousPos == null ? Vector3.zero : position - previousPos;
                 rotation = packet.ReadQuaternion();
+                previousAgentPos = agentPosition;
+                agentPosition = packet.ReadVector3();
                 previousMustard = mustard;
                 mustard = packet.ReadFloat();
                 previousAmmoStores = ammoStores;
@@ -1223,6 +1232,7 @@ namespace H3MP.Tracking
             // Set physically
             if (physicalSosig != null)
             {
+                physicalSosig.physicalSosig.Agent.transform.position = agentPosition;
                 physicalSosig.physicalSosig.FallbackOrder = fallbackOrder;
                 physicalSosig.physicalSosig.Mustard = mustard;
                 //physicalObject.physicalSosigScript.CoreRB.position = position;
@@ -1275,6 +1285,8 @@ namespace H3MP.Tracking
                 previousRot = rotation;
                 updateRotation = true;
             }
+            previousAgentPos = agentPosition;
+            agentPosition = physicalSosig.physicalSosig.Agent.transform.position;
             previousBodyPose = bodyPose;
             bodyPose = physicalSosig.physicalSosig.BodyPose;
             ammoStores = physicalSosig.physicalSosig.Inventory.m_ammoStores;
@@ -1361,7 +1373,7 @@ namespace H3MP.Tracking
 
         public override bool NeedsUpdate()
         {
-            return base.NeedsUpdate() || previousMustard != mustard || previousJointLimit != jointLimit || previousUnconscious != unconscious
+            return base.NeedsUpdate() || previousAgentPos != agentPosition || previousMustard != mustard || previousJointLimit != jointLimit || previousUnconscious != unconscious
                    || previousBlinded != blinded || previousConfused != confused || previousSuppressionLevel != suppressionLevel;
         }
 
