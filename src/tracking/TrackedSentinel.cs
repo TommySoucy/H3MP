@@ -38,6 +38,8 @@ namespace H3MP.Tracking
 
                 if (index > -1)
                 {
+                    data = new byte[] { (byte)index };
+
                     if (ThreadManager.host)
                     {
                         ServerSend.UberShatterableShatter(sentinelData.trackedID, point, dir, intensity, data);

@@ -8776,9 +8776,38 @@ namespace H3MP.Patches
                 }
                 else
                 {
-                    if(__instance.IState != Construct_Iris.IrisState.Dead && __instance.m_isShotEngaged)
+                    if(__instance.IState != Construct_Iris.IrisState.Dead)
                     {
-                        __instance.UpdateLaser();
+                        FieldInfo targetLaserField = typeof(Construct_Iris).GetField("TargetLaser", BindingFlags.Public | BindingFlags.Instance);
+                        Transform targetLaser = targetLaserField.GetValue(__instance) as Transform;
+                        if(targetLaser != null)
+                        {
+                            if (__instance.IState == Construct_Iris.IrisState.ChargingUp)
+                            {
+                                float z = 200f;
+                                Vector3 position = __instance.Muzzle.position;
+                                Vector3 forward = __instance.Muzzle.forward;
+                                if (Physics.Raycast(position, forward, out __instance.m_hit, 200f, __instance.LM_B))
+                                {
+                                    z = __instance.m_hit.distance;
+                                }
+                                targetLaser.position = __instance.Muzzle.position;
+                                targetLaser.rotation = __instance.Muzzle.rotation;
+                                targetLaser.localScale = new Vector3(targetLaser.localScale.x, targetLaser.localScale.y, z);
+                                if (!targetLaser.gameObject.activeSelf)
+                                {
+                                    targetLaser.gameObject.SetActive(true);
+                                }
+                            }
+                            else if (targetLaser.gameObject.activeSelf)
+                            {
+                                targetLaser.gameObject.SetActive(false);
+                            }
+                        }
+                        if (__instance.m_isShotEngaged)
+                        {
+                            __instance.UpdateLaser();
+                        }
                     }
                     return false;
                 }
