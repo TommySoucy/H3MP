@@ -6537,6 +6537,12 @@ namespace H3MP.Tracking
                             }
                             asM203.Attachment.AttachToMount(mount, true);
 
+                            // Adjust local position
+                            if (!transform.localPosition.Equals(itemData.position))
+                            {
+                                transform.localPosition = itemData.position;
+                            }
+
                             // Check if there were any children attachments waiting for us
                             if (toAttachByMountObjectID.TryGetValue(data.trackedID, out List<TrackedItem> list))
                             {
@@ -6916,6 +6922,12 @@ namespace H3MP.Tracking
                                 asGP25.Attachment.ScaleToMount(mount);
                             }
                             asGP25.Attachment.AttachToMount(mount, true);
+
+                            // Adjust local position
+                            if (!transform.localPosition.Equals(itemData.position))
+                            {
+                                transform.localPosition = itemData.position;
+                            }
 
                             // Check if there were any children attachments waiting for us
                             if (toAttachByMountObjectID.TryGetValue(data.trackedID, out List<TrackedItem> list))
@@ -7337,6 +7349,12 @@ namespace H3MP.Tracking
                                 asATF.Attachment.ScaleToMount(mount);
                             }
                             asATF.Attachment.AttachToMount(mount, true);
+
+                            // Adjust local position
+                            if (!transform.localPosition.Equals(itemData.position))
+                            {
+                                transform.localPosition = itemData.position;
+                            }
 
                             // Check if there were any children attachments waiting for us
                             if (toAttachByMountObjectID.TryGetValue(data.trackedID, out List<TrackedItem> list))
@@ -7793,6 +7811,12 @@ namespace H3MP.Tracking
                             }
                             asACBW.Attachment.AttachToMount(mount, true);
 
+                            // Adjust local position
+                            if (!transform.localPosition.Equals(itemData.position))
+                            {
+                                transform.localPosition = itemData.position;
+                            }
+
                             // Check if there were any children attachments waiting for us
                             if (toAttachByMountObjectID.TryGetValue(data.trackedID, out List<TrackedItem> list))
                             {
@@ -8216,6 +8240,12 @@ namespace H3MP.Tracking
                                 asABA.Attachment.ScaleToMount(mount);
                             }
                             asABA.Attachment.AttachToMount(mount, true);
+
+                            // Adjust local position
+                            if (!transform.localPosition.Equals(itemData.position))
+                            {
+                                transform.localPosition = itemData.position;
+                            }
 
                             // Check if there were any children attachments waiting for us
                             if (toAttachByMountObjectID.TryGetValue(data.trackedID, out List<TrackedItem> list))
@@ -10182,7 +10212,7 @@ namespace H3MP.Tracking
             preVals[2] = itemData.data[3];
             preVals[3] = itemData.data[4];
             BitConverter.GetBytes(asAttachment.CatchRot).CopyTo(itemData.data, 1);
-            modified |= (preVals[0] != itemData.data[1] || preVals[1] != itemData.data[2] || preVals[2] != itemData.data[3] || preVals[3] != itemData.data[4]);
+            modified |= (/*preVals[0] != itemData.data[1] || */preVals[1] != itemData.data[2] || preVals[2] != itemData.data[3] || preVals[3] != itemData.data[4]);
 
             preVals[0] = itemData.data[5];
             preVals[1] = itemData.data[6];
@@ -10203,21 +10233,21 @@ namespace H3MP.Tracking
                 preVals[2] = itemData.data[11];
                 preVals[3] = itemData.data[12];
                 BitConverter.GetBytes(1).CopyTo(itemData.data, 9);
-                modified |= (preVals[0] != itemData.data[9] || preVals[1] != itemData.data[10] || preVals[2] != itemData.data[11] || preVals[3] != itemData.data[12]);
+                modified |= (/*preVals[0] != itemData.data[9] || */preVals[1] != itemData.data[10] || preVals[2] != itemData.data[11] || preVals[3] != itemData.data[12]);
 
                 preVals[0] = itemData.data[13];
                 preVals[1] = itemData.data[14];
                 preVals[2] = itemData.data[15];
                 preVals[3] = itemData.data[16];
                 BitConverter.GetBytes(1).CopyTo(itemData.data, 13);
-                modified |= (preVals[0] != itemData.data[13] || preVals[1] != itemData.data[14] || preVals[2] != itemData.data[15] || preVals[3] != itemData.data[16]);
+                modified |= (/*preVals[0] != itemData.data[13] || */preVals[1] != itemData.data[14] || preVals[2] != itemData.data[15] || preVals[3] != itemData.data[16]);
 
                 preVals[0] = itemData.data[17];
                 preVals[1] = itemData.data[18];
                 preVals[2] = itemData.data[19];
                 preVals[3] = itemData.data[20];
                 BitConverter.GetBytes(1).CopyTo(itemData.data, 17);
-                modified |= (preVals[0] != itemData.data[17] || preVals[1] != itemData.data[18] || preVals[2] != itemData.data[19] || preVals[3] != itemData.data[20]);
+                modified |= (/*preVals[0] != itemData.data[17] || */preVals[1] != itemData.data[18] || preVals[2] != itemData.data[19] || preVals[3] != itemData.data[20]);
             }
             else
             {
@@ -10227,21 +10257,21 @@ namespace H3MP.Tracking
                 preVals[2] = itemData.data[11];
                 preVals[3] = itemData.data[12];
                 BitConverter.GetBytes(transform.parent.localScale.x).CopyTo(itemData.data, 9);
-                modified |= (preVals[0] != itemData.data[9] || preVals[1] != itemData.data[10] || preVals[2] != itemData.data[11] || preVals[3] != itemData.data[12]);
+                modified |= (/*preVals[0] != itemData.data[9] || */preVals[1] != itemData.data[10] || preVals[2] != itemData.data[11] || preVals[3] != itemData.data[12]);
 
                 preVals[0] = itemData.data[13];
                 preVals[1] = itemData.data[14];
                 preVals[2] = itemData.data[15];
                 preVals[3] = itemData.data[16];
                 BitConverter.GetBytes(transform.parent.localScale.y).CopyTo(itemData.data, 13);
-                modified |= (preVals[0] != itemData.data[13] || preVals[1] != itemData.data[14] || preVals[2] != itemData.data[15] || preVals[3] != itemData.data[16]);
+                modified |= (/*preVals[0] != itemData.data[13] || */preVals[1] != itemData.data[14] || preVals[2] != itemData.data[15] || preVals[3] != itemData.data[16]);
 
                 preVals[0] = itemData.data[17];
                 preVals[1] = itemData.data[18];
                 preVals[2] = itemData.data[19];
                 preVals[3] = itemData.data[20];
                 BitConverter.GetBytes(transform.parent.localScale.z).CopyTo(itemData.data, 17);
-                modified |= (preVals[0] != itemData.data[17] || preVals[1] != itemData.data[18] || preVals[2] != itemData.data[19] || preVals[3] != itemData.data[20]);
+                modified |= (/*preVals[0] != itemData.data[17] || */preVals[1] != itemData.data[18] || preVals[2] != itemData.data[19] || preVals[3] != itemData.data[20]);
             }
 
             return modified || (preIndex != itemData.data[0]);
@@ -10387,6 +10417,12 @@ namespace H3MP.Tracking
                             }
                             asAttachment.AttachToMount(mount, true);
 
+                            // Adjust local position
+                            if (!transform.localPosition.Equals(itemData.position))
+                            {
+                                transform.localPosition = itemData.position;
+                            }
+
                             // Check if there were any children attachments waiting for us
                             if (toAttachByMountObjectID.TryGetValue(data.trackedID, out List<TrackedItem> list))
                             {
@@ -10485,7 +10521,6 @@ namespace H3MP.Tracking
 
             // Write mountObjectID
             BitConverter.GetBytes(mountObjectID).CopyTo(itemData.data, 1);
-
             modified |= (preVals[0] != itemData.data[1] || preVals[1] != itemData.data[2] || preVals[2] != itemData.data[3] || preVals[3] != itemData.data[4]);
 
             // Write mount object scale
@@ -10497,21 +10532,21 @@ namespace H3MP.Tracking
                 preVals[2] = itemData.data[7];
                 preVals[3] = itemData.data[8];
                 BitConverter.GetBytes(1).CopyTo(itemData.data, 5);
-                modified |= (preVals[0] != itemData.data[5] || preVals[1] != itemData.data[6] || preVals[2] != itemData.data[7] || preVals[3] != itemData.data[8]);
+                modified |= (/*preVals[0] != itemData.data[5] || */preVals[1] != itemData.data[6] || preVals[2] != itemData.data[7] || preVals[3] != itemData.data[8]);
 
                 preVals[0] = itemData.data[9];
                 preVals[1] = itemData.data[10];
                 preVals[2] = itemData.data[11];
                 preVals[3] = itemData.data[12];
                 BitConverter.GetBytes(1).CopyTo(itemData.data, 9);
-                modified |= (preVals[0] != itemData.data[9] || preVals[1] != itemData.data[10] || preVals[2] != itemData.data[11] || preVals[3] != itemData.data[12]);
+                modified |= (/*preVals[0] != itemData.data[9] || */preVals[1] != itemData.data[10] || preVals[2] != itemData.data[11] || preVals[3] != itemData.data[12]);
 
                 preVals[0] = itemData.data[13];
                 preVals[1] = itemData.data[14];
                 preVals[2] = itemData.data[15];
                 preVals[3] = itemData.data[16];
                 BitConverter.GetBytes(1).CopyTo(itemData.data, 13);
-                modified |= (preVals[0] != itemData.data[13] || preVals[1] != itemData.data[14] || preVals[2] != itemData.data[15] || preVals[3] != itemData.data[16]);
+                modified |= (/*preVals[0] != itemData.data[13] || */preVals[1] != itemData.data[14] || preVals[2] != itemData.data[15] || preVals[3] != itemData.data[16]);
             }
             else
             {
@@ -10521,21 +10556,21 @@ namespace H3MP.Tracking
                 preVals[2] = itemData.data[7];
                 preVals[3] = itemData.data[8];
                 BitConverter.GetBytes(transform.parent.localScale.x).CopyTo(itemData.data, 5);
-                modified |= (preVals[0] != itemData.data[5] || preVals[1] != itemData.data[6] || preVals[2] != itemData.data[7] || preVals[3] != itemData.data[8]);
+                modified |= (/*preVals[0] != itemData.data[5] || */preVals[1] != itemData.data[6] || preVals[2] != itemData.data[7] || preVals[3] != itemData.data[8]);
 
                 preVals[0] = itemData.data[9];
                 preVals[1] = itemData.data[10];
                 preVals[2] = itemData.data[11];
                 preVals[3] = itemData.data[12];
                 BitConverter.GetBytes(transform.parent.localScale.y).CopyTo(itemData.data, 9);
-                modified |= (preVals[0] != itemData.data[9] || preVals[1] != itemData.data[10] || preVals[2] != itemData.data[11] || preVals[3] != itemData.data[12]);
+                modified |= (/*preVals[0] != itemData.data[9] || */preVals[1] != itemData.data[10] || preVals[2] != itemData.data[11] || preVals[3] != itemData.data[12]);
 
                 preVals[0] = itemData.data[13];
                 preVals[1] = itemData.data[14];
                 preVals[2] = itemData.data[15];
                 preVals[3] = itemData.data[16];
                 BitConverter.GetBytes(transform.parent.localScale.z).CopyTo(itemData.data, 13);
-                modified |= (preVals[0] != itemData.data[13] || preVals[1] != itemData.data[14] || preVals[2] != itemData.data[15] || preVals[3] != itemData.data[16]);
+                modified |= (/*preVals[0] != itemData.data[13] || */preVals[1] != itemData.data[14] || preVals[2] != itemData.data[15] || preVals[3] != itemData.data[16]);
             }
 
             // Do interface update
@@ -10554,7 +10589,7 @@ namespace H3MP.Tracking
 
             if (itemData.data == null || itemData.data.Length != newData.Length)
             {
-                itemData.data = new byte[1 + attachmentInterfaceDataSize];
+                itemData.data = new byte[17 + attachmentInterfaceDataSize];
                 itemData.data[0] = 255;
                 currentMountIndex = 255;
                 modified = true;
@@ -10669,6 +10704,12 @@ namespace H3MP.Tracking
                                 asAttachment.ScaleToMount(mount);
                             }
                             asAttachment.AttachToMount(mount, true);
+
+                            // Adjust local position
+                            if (!transform.localPosition.Equals(itemData.position))
+                            {
+                                transform.localPosition = itemData.position;
+                            }
 
                             // Check if there were any children attachments waiting for us
                             if (toAttachByMountObjectID.TryGetValue(data.trackedID, out List<TrackedItem> list))
@@ -10899,9 +10940,9 @@ namespace H3MP.Tracking
             AttachableBipodInterface asInterface = att.AttachmentInterface as AttachableBipodInterface;
 
             // Write expanded
-            byte preval = itemData.data[5];
-            itemData.data[5] = asInterface.Bipod.m_isBipodExpanded ? (byte)1 : (byte)0;
-            modified |= preval != itemData.data[5];
+            byte preval = itemData.data[17];
+            itemData.data[17] = asInterface.Bipod.m_isBipodExpanded ? (byte)1 : (byte)0;
+            modified |= preval != itemData.data[17];
         }
 
         private void UpdateGivenAttachableBipod(FVRFireArmAttachment att, byte[] newData, ref bool modified)
@@ -10909,7 +10950,7 @@ namespace H3MP.Tracking
             AttachableBipodInterface asInterface = att.AttachmentInterface as AttachableBipodInterface;
 
             // Set expanded
-            if ((newData[5] == 1 && !asInterface.Bipod.m_isBipodExpanded) || (newData[5] == 0 && asInterface.Bipod.m_isBipodExpanded))
+            if ((newData[17] == 1 && !asInterface.Bipod.m_isBipodExpanded) || (newData[17] == 0 && asInterface.Bipod.m_isBipodExpanded))
             {
                 asInterface.Bipod.Toggle();
                 modified = true;
@@ -10921,10 +10962,10 @@ namespace H3MP.Tracking
             FlagPoseSwitcher asInterface = att.AttachmentInterface as FlagPoseSwitcher;
 
             // Write index
-            byte preval0 = itemData.data[5];
-            byte preval1 = itemData.data[6];
-            BitConverter.GetBytes((short)asInterface.m_index).CopyTo(itemData.data, 5);
-            modified |= (preval0 != itemData.data[5] || preval1 != itemData.data[6]);
+            byte preval0 = itemData.data[17];
+            byte preval1 = itemData.data[18];
+            BitConverter.GetBytes((short)asInterface.m_index).CopyTo(itemData.data, 17);
+            modified |= (preval0 != itemData.data[17] || preval1 != itemData.data[18]);
         }
 
         private void UpdateGivenFlagPoseSwitcher(FVRFireArmAttachment att, byte[] newData, ref bool modified)
@@ -10932,7 +10973,7 @@ namespace H3MP.Tracking
             FlagPoseSwitcher asInterface = att.AttachmentInterface as FlagPoseSwitcher;
 
             // Set index
-            int newIndex = BitConverter.ToInt16(newData, 5);
+            int newIndex = BitConverter.ToInt16(newData, 17);
             if (newIndex != asInterface.m_index)
             {
                 asInterface.m_index = newIndex;
@@ -10947,9 +10988,9 @@ namespace H3MP.Tracking
             FlipSight asInterface = att.AttachmentInterface as FlipSight;
 
             // Write up
-            byte preval0 = itemData.data[5];
-            itemData.data[5] = asInterface.IsUp ? (byte)1 : (byte)0;
-            modified |= preval0 != itemData.data[5];
+            byte preval0 = itemData.data[17];
+            itemData.data[17] = asInterface.IsUp ? (byte)1 : (byte)0;
+            modified |= preval0 != itemData.data[17];
         }
 
         private void UpdateGivenFlipSight(FVRFireArmAttachment att, byte[] newData, ref bool modified)
@@ -10957,7 +10998,7 @@ namespace H3MP.Tracking
             FlipSight asInterface = att.AttachmentInterface as FlipSight;
 
             // Set up
-            if ((newData[5] == 1 && !asInterface.IsUp) || (newData[5] == 0 && asInterface.IsUp))
+            if ((newData[17] == 1 && !asInterface.IsUp) || (newData[17] == 0 && asInterface.IsUp))
             {
                 asInterface.Flip();
                 modified = true;
@@ -10969,9 +11010,9 @@ namespace H3MP.Tracking
             FlipSightY asInterface = att.AttachmentInterface as FlipSightY;
 
             // Write up
-            byte preval0 = itemData.data[5];
-            itemData.data[5] = asInterface.IsUp ? (byte)1 : (byte)0;
-            modified |= preval0 != itemData.data[5];
+            byte preval0 = itemData.data[17];
+            itemData.data[17] = asInterface.IsUp ? (byte)1 : (byte)0;
+            modified |= preval0 != itemData.data[17];
         }
 
         private void UpdateGivenFlipSightY(FVRFireArmAttachment att, byte[] newData, ref bool modified)
@@ -10979,7 +11020,7 @@ namespace H3MP.Tracking
             FlipSightY asInterface = att.AttachmentInterface as FlipSightY;
 
             // Set up
-            if ((newData[5] == 1 && !asInterface.IsUp) || (newData[5] == 0 && asInterface.IsUp))
+            if ((newData[17] == 1 && !asInterface.IsUp) || (newData[17] == 0 && asInterface.IsUp))
             {
                 asInterface.Flip();
                 modified = true;
@@ -10991,9 +11032,9 @@ namespace H3MP.Tracking
             LAM asInterface = att.AttachmentInterface as LAM;
 
             // Write state
-            byte preval0 = itemData.data[5];
-            itemData.data[5] = (byte)asInterface.LState;
-            modified |= preval0 != itemData.data[5];
+            byte preval0 = itemData.data[17];
+            itemData.data[17] = (byte)asInterface.LState;
+            modified |= preval0 != itemData.data[17];
         }
 
         private void UpdateGivenLAM(FVRFireArmAttachment att, byte[] newData, ref bool modified)
@@ -11001,9 +11042,9 @@ namespace H3MP.Tracking
             LAM asInterface = att.AttachmentInterface as LAM;
 
             // Set state
-            if ((LAM.LAMState)newData[5] != asInterface.LState)
+            if ((LAM.LAMState)newData[17] != asInterface.LState)
             {
-                asInterface.LState = (LAM.LAMState)newData[5];
+                asInterface.LState = (LAM.LAMState)newData[17];
 
                 if (asInterface.LState == LAM.LAMState.Off)
                 {
@@ -11049,9 +11090,9 @@ namespace H3MP.Tracking
             LaserPointer asInterface = att.AttachmentInterface as LaserPointer;
 
             // Write on
-            byte preval0 = itemData.data[5];
-            itemData.data[5] = asInterface.BeamHitPoint.activeSelf ? (byte)1 : (byte)0;
-            modified |= preval0 != itemData.data[5];
+            byte preval0 = itemData.data[17];
+            itemData.data[17] = asInterface.BeamHitPoint.activeSelf ? (byte)1 : (byte)0;
+            modified |= preval0 != itemData.data[17];
         }
 
         private void UpdateGivenLaserPointer(FVRFireArmAttachment att, byte[] newData, ref bool modified)
@@ -11059,7 +11100,7 @@ namespace H3MP.Tracking
             LaserPointer asInterface = att.AttachmentInterface as LaserPointer;
 
             // Set up
-            if ((newData[5] == 1 && !asInterface.BeamHitPoint.activeSelf) || (newData[5] == 0 && asInterface.BeamHitPoint.activeSelf))
+            if ((newData[17] == 1 && !asInterface.BeamHitPoint.activeSelf) || (newData[17] == 0 && asInterface.BeamHitPoint.activeSelf))
             {
                 asInterface.ToggleOn();
                 modified = true;
@@ -11071,9 +11112,9 @@ namespace H3MP.Tracking
             TacticalFlashlight asInterface = att.AttachmentInterface as TacticalFlashlight;
 
             // Write on
-            byte preval0 = itemData.data[5];
-            itemData.data[5] = asInterface.LightParts.activeSelf ? (byte)1 : (byte)0;
-            modified |= preval0 != itemData.data[5];
+            byte preval0 = itemData.data[17];
+            itemData.data[17] = asInterface.LightParts.activeSelf ? (byte)1 : (byte)0;
+            modified |= preval0 != itemData.data[17];
         }
 
         private void UpdateGivenTacticalFlashlight(FVRFireArmAttachment att, byte[] newData, ref bool modified)
@@ -11081,7 +11122,7 @@ namespace H3MP.Tracking
             TacticalFlashlight asInterface = att.AttachmentInterface as TacticalFlashlight;
 
             // Set up
-            if ((newData[5] == 1 && !asInterface.LightParts.activeSelf) || (newData[5] == 0 && asInterface.LightParts.activeSelf))
+            if ((newData[17] == 1 && !asInterface.LightParts.activeSelf) || (newData[17] == 0 && asInterface.LightParts.activeSelf))
             {
                 asInterface.ToggleOn();
                 modified = true;
