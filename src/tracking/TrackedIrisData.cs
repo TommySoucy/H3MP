@@ -167,7 +167,7 @@ namespace H3MP.Tracking
             }
 
             // Initially set itself
-            UpdateFromData(this);
+            UpdateFromData(this, true);
         }
 
         public override void UpdateFromData(TrackedObjectData updatedObject, bool full = false)
@@ -205,7 +205,9 @@ namespace H3MP.Tracking
                     {
                         if (physicalIris.physicalIris.Rings[i] != null && shattered[i] && !physicalIris.physicalIris.Rings[i].HasShattered())
                         {
+                            ++UberShatterableShatterPatch.skip;
                             physicalIris.physicalIris.Rings[i].Shatter(positions[i], Vector3.zero, 0);
+                            --UberShatterableShatterPatch.skip;
                         }
                     }
                 }
@@ -260,7 +262,9 @@ namespace H3MP.Tracking
                     {
                         if (physicalIris.physicalIris.Rings[i] != null && shattered[i] && !physicalIris.physicalIris.Rings[i].HasShattered())
                         {
+                            ++UberShatterableShatterPatch.skip;
                             physicalIris.physicalIris.Rings[i].Shatter(positions[i], Vector3.zero, 0);
+                            --UberShatterableShatterPatch.skip;
                         }
                     }
                 }
