@@ -212,6 +212,7 @@ namespace H3MP.Tracking
                     }
                 }
 
+                physicalIris.physicalIris.transform.position = positions[0];
                 for (int i = 0; i < positions.Length; ++i)
                 {
                     if (physicalIris.physicalIris.Rings[i] != null && physicalIris.physicalIris.Rings[i].gameObject.activeSelf)
@@ -269,7 +270,8 @@ namespace H3MP.Tracking
                     }
                 }
 
-                for(int i=0; i < positions.Length; ++i)
+                physicalIris.physicalIris.transform.position = positions[0];
+                for (int i=0; i < positions.Length; ++i)
                 {
                     if (physicalIris.physicalIris.Rings[i] != null && physicalIris.physicalIris.Rings[i].gameObject.activeSelf)
                     {

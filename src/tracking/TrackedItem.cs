@@ -6443,7 +6443,7 @@ namespace H3MP.Tracking
                     currentMountIndex = 255;
 
                     // Detach from mount will recover rigidbody, set as kinematic if not controller
-                    // TODO: Review: May not need to do this anymore due to RecoverRigidBodyPatch
+                    // TODO: Review: May not need to do this anymore due to PhysicalObjectRBPatch
                     if (data.controller != GameManager.ID)
                     {
                         Mod.SetKinematicRecursive(asM203.Attachment.transform, true);
@@ -6821,7 +6821,7 @@ namespace H3MP.Tracking
                     currentMountIndex = 255;
 
                     // Detach from mount will recover rigidbody, set as kinematic if not controller
-                    // TODO: Review: May not need to do this anymore due to RecoverRigidBodyPatch
+                    // TODO: Review: May not need to do this anymore due to PhysicalObjectRBPatch
                     if (data.controller != GameManager.ID)
                     {
                         Mod.SetKinematicRecursive(asGP25.Attachment.transform, true);
@@ -6845,7 +6845,7 @@ namespace H3MP.Tracking
                         currentMountIndex = 255;
 
                         // Detach from mount will recover rigidbody, set as kinematic if not controller
-                        // TODO: Review: May not need to do this anymore due to RecoverRigidBodyPatch
+                        // TODO: Review: May not need to do this anymore due to PhysicalObjectRBPatch
                         if (data.controller != GameManager.ID)
                         {
                             Mod.SetKinematicRecursive(asGP25.Attachment.transform, true);
@@ -7242,7 +7242,7 @@ namespace H3MP.Tracking
                     currentMountIndex = 255;
 
                     // Detach from mount will recover rigidbody, set as kinematic if not controller
-                    // TODO: Review: May not need to do this anymore due to RecoverRigidBodyPatch
+                    // TODO: Review: May not need to do this anymore due to PhysicalObjectRBPatch
                     if (data.controller != GameManager.ID)
                     {
                         Mod.SetKinematicRecursive(asATF.Attachment.transform, true);
@@ -7266,7 +7266,7 @@ namespace H3MP.Tracking
                         currentMountIndex = 255;
 
                         // Detach from mount will recover rigidbody, set as kinematic if not controller
-                        // TODO: Review: May not need to do this anymore due to RecoverRigidBodyPatch
+                        // TODO: Review: May not need to do this anymore due to PhysicalObjectRBPatch
                         if (data.controller != GameManager.ID)
                         {
                             Mod.SetKinematicRecursive(asATF.Attachment.transform, true);
@@ -7697,7 +7697,7 @@ namespace H3MP.Tracking
                     currentMountIndex = 255;
 
                     // Detach from mount will recover rigidbody, set as kinematic if not controller
-                    // TODO: Review: May not need to do this anymore due to RecoverRigidBodyPatch
+                    // TODO: Review: May not need to do this anymore due to PhysicalObjectRBPatch
                     if (data.controller != GameManager.ID)
                     {
                         Mod.SetKinematicRecursive(asACBW.Attachment.transform, true);
@@ -7721,7 +7721,7 @@ namespace H3MP.Tracking
                         currentMountIndex = 255;
 
                         // Detach from mount will recover rigidbody, set as kinematic if not controller
-                        // TODO: Review: May not need to do this anymore due to RecoverRigidBodyPatch
+                        // TODO: Review: May not need to do this anymore due to PhysicalObjectRBPatch
                         if (data.controller != GameManager.ID)
                         {
                             Mod.SetKinematicRecursive(asACBW.Attachment.transform, true);
@@ -8121,7 +8121,7 @@ namespace H3MP.Tracking
                     currentMountIndex = 255;
 
                     // Detach from mount will recover rigidbody, set as kinematic if not controller
-                    // TODO: Review: May not need to do this anymore due to RecoverRigidBodyPatch
+                    // TODO: Review: May not need to do this anymore due to PhysicalObjectRBPatch
                     if (data.controller != GameManager.ID)
                     {
                         Mod.SetKinematicRecursive(asABA.Attachment.transform, true);
@@ -8145,7 +8145,7 @@ namespace H3MP.Tracking
                         currentMountIndex = 255;
 
                         // Detach from mount will recover rigidbody, set as kinematic if not controller
-                        // TODO: Review: May not need to do this anymore due to RecoverRigidBodyPatch
+                        // TODO: Review: May not need to do this anymore due to PhysicalObjectRBPatch
                         if (data.controller != GameManager.ID)
                         {
                             Mod.SetKinematicRecursive(asABA.Attachment.transform, true);

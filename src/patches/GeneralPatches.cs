@@ -235,7 +235,14 @@ namespace H3MP.Patches
             if (trackedItem != null && trackedItem.data.controller != GameManager.ID)
             {
                 // If tracked and not controller, set kinematic
+                KinematicMarker marker = __instance.RootRigidbody.GetComponent<KinematicMarker>();
+                if (marker == null)
+                {
+                    marker = __instance.RootRigidbody.gameObject.AddComponent<KinematicMarker>();
+                }
+                ++KinematicPatch.skip;
                 __instance.RootRigidbody.isKinematic = true;
+                --KinematicPatch.skip;
             }
         }
     }
