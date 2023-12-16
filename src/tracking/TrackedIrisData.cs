@@ -217,6 +217,9 @@ namespace H3MP.Tracking
                         physicalIris.physicalIris.Rings[i].transform.position = positions[i];
                         physicalIris.physicalIris.Rings[i].transform.rotation = Quaternion.Euler(angles[i]);
                         physicalIris.physicalIris.Rings[i].transform.localScale = scales[i];
+                        physicalIris.physicalIris.RefPoints[i].transform.position = positions[i];
+                        physicalIris.physicalIris.RefPoints[i].transform.rotation = Quaternion.Euler(angles[i]);
+                        physicalIris.physicalIris.RefPoints[i].transform.localScale = scales[i];
                     }
                 }
             }
@@ -269,6 +272,9 @@ namespace H3MP.Tracking
                         physicalIris.physicalIris.Rings[i].transform.position = positions[i];
                         physicalIris.physicalIris.Rings[i].transform.rotation = Quaternion.Euler(angles[i]);
                         physicalIris.physicalIris.Rings[i].transform.localScale = scales[i];
+                        physicalIris.physicalIris.RefPoints[i].transform.position = positions[i];
+                        physicalIris.physicalIris.RefPoints[i].transform.rotation = Quaternion.Euler(angles[i]);
+                        physicalIris.physicalIris.RefPoints[i].transform.localScale = scales[i];
                     }
                 }
             }
