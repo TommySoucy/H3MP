@@ -2170,9 +2170,12 @@ namespace H3MP.Networking
                         }
                         break;
                     default:
-                        ++SosigPatch.sosigSetCurrentOrderSkip;
-                        trackedSosig.physicalSosig.physicalSosig.SetCurrentOrder(currentOrder);
-                        --SosigPatch.sosigSetCurrentOrderSkip;
+                        if (trackedSosig.physicalSosig != null)
+                        {
+                            ++SosigPatch.sosigSetCurrentOrderSkip;
+                            trackedSosig.physicalSosig.physicalSosig.SetCurrentOrder(currentOrder);
+                            --SosigPatch.sosigSetCurrentOrderSkip;
+                        }
                         break;
                 }
 

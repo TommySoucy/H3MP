@@ -75,11 +75,18 @@ namespace H3MP.Tracking
 
             GameManager.trackedIrisByIris.Add(trackedIris.physicalIris, trackedIris);
             GameManager.trackedObjectByObject.Add(trackedIris.physicalIris, trackedIris);
-            GameManager.trackedObjectByShatterable.Add(trackedIris.physicalIris.GetComponentInChildren<UberShatterable>(), trackedIris);
             for (int i = 0; i < trackedIris.physicalIris.Rings.Count; ++i)
             {
                 GameManager.trackedObjectByShatterable.Add(trackedIris.physicalIris.Rings[i], trackedIris);
             }
+
+            data.shattered = new bool[irisScript.Rings.Count];
+            data.previousPositions = new Vector3[irisScript.Rings.Count];
+            data.positions = new Vector3[irisScript.Rings.Count];
+            data.previousAngles = new Vector3[irisScript.Rings.Count];
+            data.angles = new Vector3[irisScript.Rings.Count];
+            data.previousScales = new Vector3[irisScript.Rings.Count];
+            data.scales = new Vector3[irisScript.Rings.Count];
 
             // Add to local list
             data.localTrackedID = GameManager.objects.Count;
@@ -122,15 +129,23 @@ namespace H3MP.Tracking
         {
             Mod.LogInfo("Instantiating iris at " + trackedID, false);
             GameObject prefab = null;
-            SosigSpawner sosigSpawner = GameObject.FindObjectOfType<SosigSpawner>();
-            if (sosigSpawner != null)
+            Construct_Iris_Volume irisVolume = GameObject.FindObjectOfType<Construct_Iris_Volume>();
+            if (irisVolume == null)
             {
-                prefab = sosigSpawner.SpawnerGroups[19].Furnitures[2];
+                SosigSpawner sosigSpawner = GameObject.FindObjectOfType<SosigSpawner>();
+                if (sosigSpawner != null)
+                {
+                    prefab = sosigSpawner.SpawnerGroups[19].Furnitures[2];
+                }
+                else
+                {
+                    Mod.LogError("Failed to instantiate iris: " + trackedID + ": Could not find suitable iris volume or sosig spawner to get prefab from");
+                    yield break;
+                }
             }
             else
             {
-                Mod.LogError("Failed to instantiate iris: " + trackedID + ": Could not find suitable sosig spawner to get prefab from");
-                yield break;
+                prefab = irisVolume.Iris_Prefab;
             }
 
             ++Mod.skipAllInstantiates;
@@ -146,7 +161,6 @@ namespace H3MP.Tracking
 
             GameManager.trackedIrisByIris.Add(physicalIris.physicalIris, physicalIris);
             GameManager.trackedObjectByObject.Add(physicalIris.physicalIris, physicalIris);
-            GameManager.trackedObjectByShatterable.Add(physicalIris.GetComponentInChildren<UberShatterable>(), physicalIris);
             for(int i = 0; i< physicalIris.physicalIris.Rings.Count; ++i)
             {
                 GameManager.trackedObjectByShatterable.Add(physicalIris.physicalIris.Rings[i], physicalIris);

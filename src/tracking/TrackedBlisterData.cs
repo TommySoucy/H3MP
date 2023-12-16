@@ -83,8 +83,16 @@ namespace H3MP.Tracking
             Construct_Blister_Volume blisterVolume = GameObject.FindObjectOfType<Construct_Blister_Volume>();
             if (blisterVolume == null)
             {
-                Mod.LogError("Failed to instantiate blister: " + trackedID+": Could not find suitable blister volume to get prefab from");
-                yield break;
+                SosigSpawner sosigSpawner = GameObject.FindObjectOfType<SosigSpawner>();
+                if (sosigSpawner != null)
+                {
+                    prefab = sosigSpawner.SpawnerGroups[19].Furnitures[1];
+                }
+                else
+                {
+                    Mod.LogError("Failed to instantiate blister: " + trackedID + ": Could not find suitable blister volume or SosigSpawner to get prefab from");
+                    yield break;
+                }
             }
             else
             {
@@ -107,7 +115,7 @@ namespace H3MP.Tracking
             GameManager.trackedObjectByShatterable.Add(physicalBlister.GetComponentInChildren<UberShatterable>(), physicalBlister);
 
             // Initially set itself
-            UpdateFromData(this);
+            UpdateFromData(this, true);
         }
 
         public override void UpdateFromData(TrackedObjectData updatedObject, bool full = false)

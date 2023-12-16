@@ -87,8 +87,16 @@ namespace H3MP.Tracking
             Construct_Floater_Volume floaterVolume = GameObject.FindObjectOfType<Construct_Floater_Volume>();
             if (floaterVolume == null)
             {
-                Mod.LogError("Failed to instantiate floater: " + trackedID + ": Could not find suitable floater volume to get prefab from");
-                yield break;
+                SosigSpawner sosigSpawner = GameObject.FindObjectOfType<SosigSpawner>();
+                if (sosigSpawner != null)
+                {
+                    prefab = sosigSpawner.SpawnerGroups[19].Furnitures[0];
+                }
+                else
+                {
+                    Mod.LogError("Failed to instantiate floater: " + trackedID + ": Could not find suitable floater volume or sosig spawner to get prefab from");
+                    yield break;
+                }
             }
             else
             {
