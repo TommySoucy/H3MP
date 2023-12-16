@@ -548,6 +548,8 @@ namespace H3MP.Networking
                 ServerHandle.NodeFire,
                 ServerHandle.HazeDamage,
                 ServerHandle.EncryptionFireGun,
+                ServerHandle.EncryptionNextPos,
+                ServerHandle.EncryptionShieldRot,
             };
 
             objects = new TrackedObjectData[100];

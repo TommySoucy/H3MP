@@ -4,7 +4,6 @@ using H3MP.Patches;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using static RootMotion.CameraController;
 
 namespace H3MP.Tracking
 {

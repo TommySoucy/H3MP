@@ -1802,7 +1802,7 @@ namespace H3MP.Networking
             }
         }
 
-        public static void EncryptionInit(int trackedID, List<int> indices, List<Vector3> points, Vector3 initialPos, int numHitsLeft)
+        public static void EncryptionInit(int trackedID, List<int> indices, Vector3 initialPos, int numHitsLeft)
         {
             using (Packet packet = new Packet((int)ClientPackets.encryptionInit))
             {
@@ -1817,18 +1817,6 @@ namespace H3MP.Networking
                     for(int i=0; i < indices.Count; ++i)
                     {
                         packet.Write(indices[i]);
-                    }
-                }
-                if(points == null || points.Count == 0)
-                {
-                    packet.Write(0);
-                }
-                else
-                {
-                    packet.Write(points.Count);
-                    for(int i=0; i < points.Count; ++i)
-                    {
-                        packet.Write(points[i]);
                     }
                 }
                 packet.Write(initialPos);
@@ -2859,6 +2847,28 @@ namespace H3MP.Networking
                         packet.Write(dirs[i]);
                     }
                 }
+
+                SendTCPData(packet);
+            }
+        }
+
+        public static void EncryptionNextPos(int trackedID, Vector3 previewPos)
+        {
+            using (Packet packet = new Packet((int)ClientPackets.encryptionNextPos))
+            {
+                packet.Write(trackedID);
+                packet.Write(previewPos);
+
+                SendTCPData(packet);
+            }
+        }
+
+        public static void EncryptionShieldRot(int trackedID, Quaternion shieldRot)
+        {
+            using (Packet packet = new Packet((int)ClientPackets.encryptionShieldRot))
+            {
+                packet.Write(trackedID);
+                packet.Write(shieldRot);
 
                 SendTCPData(packet);
             }

@@ -15,7 +15,6 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using Valve.Newtonsoft.Json.Linq;
 using Valve.VR;
-using static H3MP.Networking.ThreadManager;
 
 namespace H3MP
 {
@@ -62,6 +61,7 @@ namespace H3MP
         public static AudioEvent glassTotalMediumEvent;
         public static AudioEvent glassGroundShatterEvent;
         public static Dictionary<FVRSoundEnvironment, AudioEvent> distantShotSets;
+        public static SosigSpeechSet defaultSosigSpeechSet;
 
         // Menu refs
         public static Text mainStatusText;
@@ -1306,6 +1306,9 @@ namespace H3MP
                         break;
                 }
             }
+
+            // Load default Sosig speech set
+            defaultSosigSpeechSet = assetBundle.LoadAsset<SosigSpeechSet>("DefaultSpeechSet");
         }
 
         private void GetTrackedObjectTypes()

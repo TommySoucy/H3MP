@@ -1,6 +1,4 @@
-﻿using RootMotion.FinalIK;
-
-namespace H3MP.Networking
+﻿namespace H3MP.Networking
 {
     public class ISClientSend
     {

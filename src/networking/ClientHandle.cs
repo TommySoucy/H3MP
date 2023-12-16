@@ -1779,7 +1779,7 @@ namespace H3MP.Networking
             Sosig.SosigOrder currentOrder = (Sosig.SosigOrder)packet.ReadByte();
 
             TrackedSosigData trackedSosig = Client.objects[sosigTrackedID] as TrackedSosigData;
-            if (trackedSosig != null && trackedSosig.physicalSosig != null)
+            if (trackedSosig != null && trackedSosig.physicalSosig != null && trackedSosig.physicalSosig.physicalSosig.Speech != null)
             {
                 switch (currentOrder)
                 {
@@ -2760,56 +2760,27 @@ namespace H3MP.Networking
             {
                 indices.Add(packet.ReadInt());
             }
-            int pointCount = packet.ReadInt();
-            List<Vector3> points = new List<Vector3>();
-            for (int i = 0; i < pointCount; i++)
-            {
-                points.Add(packet.ReadVector3());
-            }
             Vector3 initialPos = packet.ReadVector3();
             int numHitsLeft = packet.ReadInt();
 
             TrackedEncryptionData trackedEncryption = Client.objects[trackedID] as TrackedEncryptionData;
             if (trackedEncryption != null)
             {
-                if (pointCount > 0)
+                for (int i = 0; i < indexCount; ++i)
                 {
-                    for (int i = 0; i < indexCount; ++i)
-                    {
-                        trackedEncryption.subTargsActive[indices[i]] = true;
-                        trackedEncryption.subTargPos[indices[i]] = points[i];
-                    }
-
-                    if (trackedEncryption.physicalEncryption != null)
-                    {
-                        ++EncryptionSpawnGrowthPatch.skip;
-                        for (int i = 0; i < indexCount; ++i)
-                        {
-                            Vector3 forward = points[i] - trackedEncryption.physicalEncryption.physicalEncryption.Tendrils[indices[i]].transform.position;
-                            trackedEncryption.physicalEncryption.physicalEncryption.SpawnGrowth(indices[i], points[i]);
-                            trackedEncryption.physicalEncryption.physicalEncryption.Tendrils[indices[i]].transform.localScale = new Vector3(0.2f, 0.2f, forward.magnitude * trackedEncryption.physicalEncryption.physicalEncryption.TendrilFloats[indices[i]]);
-                        }
-                        --EncryptionSpawnGrowthPatch.skip;
-                    }
+                    trackedEncryption.subTargsActive[indices[i]] = true;
                 }
-                else
+
+                if (trackedEncryption.physicalEncryption != null)
                 {
+                    ++EncryptionSpawnGrowthPatch.skip;
                     for (int i = 0; i < indexCount; ++i)
                     {
-                        trackedEncryption.subTargsActive[indices[i]] = true;
+                        trackedEncryption.physicalEncryption.physicalEncryption.SubTargs[indices[i]].SetActive(true);
                     }
+                    --EncryptionSpawnGrowthPatch.skip;
 
-                    if (trackedEncryption.physicalEncryption != null)
-                    {
-                        ++EncryptionSpawnGrowthPatch.skip;
-                        for (int i = 0; i < indexCount; ++i)
-                        {
-                            trackedEncryption.physicalEncryption.physicalEncryption.SubTargs[indices[i]].SetActive(true);
-                        }
-                        --EncryptionSpawnGrowthPatch.skip;
-
-                        trackedEncryption.physicalEncryption.physicalEncryption.m_numSubTargsLeft = indexCount;
-                    }
+                    trackedEncryption.physicalEncryption.physicalEncryption.m_numSubTargsLeft = indexCount;
                 }
 
                 trackedEncryption.initialPos = initialPos;
@@ -4965,6 +4936,38 @@ namespace H3MP.Networking
                 if (trackedEncryptionData.physicalEncryption.physicalEncryption.GunShotProfile != null)
                 {
                     trackedEncryptionData.physicalEncryption.physicalEncryption.PlayShotEvent(trackedEncryptionData.physicalEncryption.physicalEncryption.RefractiveMuzzles[0].position);
+                }
+            }
+        }
+
+        public static void EncryptionNextPos(Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+
+            TrackedEncryptionData trackedEncryptionData = Client.objects[trackedID] as TrackedEncryptionData;
+            if (trackedEncryptionData != null && trackedEncryptionData.physicalEncryption != null)
+            {
+                trackedEncryptionData.refractivePreviewPos = packet.ReadVector3();
+
+                if (trackedEncryptionData.physicalEncryption != null)
+                {
+                    trackedEncryptionData.physicalEncryption.physicalEncryption.RefractivePreview.position = trackedEncryptionData.refractivePreviewPos;
+                }
+            }
+        }
+
+        public static void EncryptionShieldRot(Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+
+            TrackedEncryptionData trackedEncryptionData = Client.objects[trackedID] as TrackedEncryptionData;
+            if (trackedEncryptionData != null && trackedEncryptionData.physicalEncryption != null)
+            {
+                trackedEncryptionData.refractiveShieldRot = packet.ReadQuaternion();
+
+                if (trackedEncryptionData.physicalEncryption != null)
+                {
+                    trackedEncryptionData.physicalEncryption.physicalEncryption.RefractiveShield.rotation = trackedEncryptionData.refractiveShieldRot;
                 }
             }
         }

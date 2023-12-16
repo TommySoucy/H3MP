@@ -6,7 +6,6 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using static RootMotion.FinalIK.IKSolver;
 
 namespace H3MP.Tracking
 {

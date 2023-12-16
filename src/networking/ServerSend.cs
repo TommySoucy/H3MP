@@ -3,7 +3,6 @@ using H3MP.Tracking;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using static RootMotion.FinalIK.IKSolver;
 
 namespace H3MP.Networking
 {
@@ -2979,7 +2978,7 @@ namespace H3MP.Networking
             }
         }
 
-        public static void EncryptionInit(int clientID, int trackedID, List<int> indices, List<Vector3> points, Vector3 initialPos, int numHitsLeft)
+        public static void EncryptionInit(int clientID, int trackedID, List<int> indices, Vector3 initialPos, int numHitsLeft)
         {
             using (Packet packet = new Packet((int)ServerPackets.encryptionInit))
             {
@@ -2994,18 +2993,6 @@ namespace H3MP.Networking
                     for (int i = 0; i < indices.Count; ++i)
                     {
                         packet.Write(indices[i]);
-                    }
-                }
-                if (points == null || points.Count == 0)
-                {
-                    packet.Write(0);
-                }
-                else
-                {
-                    packet.Write(points.Count);
-                    for (int i = 0; i < points.Count; ++i)
-                    {
-                        packet.Write(points[i]);
                     }
                 }
                 packet.Write(initialPos);
@@ -4833,6 +4820,42 @@ namespace H3MP.Networking
             else
             {
                 SendTCPDataToAll(clientID, packet);
+            }
+        }
+
+        public static void EncryptionNextPos(int trackedID, Vector3 previewPos, int clientID = 0)
+        {
+            using (Packet packet = new Packet((int)ServerPackets.encryptionNextPos))
+            {
+                packet.Write(trackedID);
+                packet.Write(previewPos);
+
+                if (clientID == 0)
+                {
+                    SendTCPDataToAll(packet);
+                }
+                else
+                {
+                    SendTCPDataToAll(clientID, packet);
+                }
+            }
+        }
+
+        public static void EncryptionShieldRot(int trackedID, Quaternion shieldRot, int clientID = 0)
+        {
+            using (Packet packet = new Packet((int)ServerPackets.encryptionShieldRot))
+            {
+                packet.Write(trackedID);
+                packet.Write(shieldRot);
+
+                if (clientID == 0)
+                {
+                    SendTCPDataToAll(packet);
+                }
+                else
+                {
+                    SendTCPDataToAll(clientID, packet);
+                }
             }
         }
     }

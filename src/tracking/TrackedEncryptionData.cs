@@ -3,6 +3,7 @@ using H3MP.Networking;
 using H3MP.Patches;
 using System.Collections;
 using System.Collections.Generic;
+using System.Reflection;
 using UnityEngine;
 
 namespace H3MP.Tracking
@@ -12,13 +13,15 @@ namespace H3MP.Tracking
         public TrackedEncryption physicalEncryption;
 
         public TNH_EncryptionType type;
+        public bool simple;
         public Vector3 previousPos;
         public Quaternion previousRot;
         public Vector3 position;
         public Quaternion rotation;
+        public Vector3 refractivePreviewPos;
+        public Quaternion refractiveShieldRot;
 
         public bool[] subTargsActive;
-        public Vector3[] subTargPos;
         public bool[] subTargGeosActive;
         public Vector3 previousAgilePointerScale;
         public Vector3 agilePointerScale;
@@ -43,6 +46,7 @@ namespace H3MP.Tracking
             isOrthagonalBeamFiring = packet.ReadBool();
 
             type = (TNH_EncryptionType)packet.ReadByte();
+            simple = packet.ReadBool();
             int length = packet.ReadInt();
             if (length > 0)
             {
@@ -50,15 +54,6 @@ namespace H3MP.Tracking
                 for (int i = 0; i < length; ++i)
                 {
                     subTargsActive[i] = packet.ReadBool();
-                }
-            }
-            length = packet.ReadInt();
-            if (length > 0)
-            {
-                subTargPos = new Vector3[length];
-                for (int i = 0; i < length; ++i)
-                {
-                    subTargPos[i] = packet.ReadVector3();
                 }
             }
             length = packet.ReadInt();
@@ -74,6 +69,8 @@ namespace H3MP.Tracking
             initialPos = packet.ReadVector3();
             cascadingIndex = packet.ReadByte();
             cascadingDepth = packet.ReadByte();
+            refractivePreviewPos = packet.ReadVector3();
+            refractiveShieldRot = packet.ReadQuaternion();
         }
 
         public static bool IsOfType(Transform t)
@@ -131,30 +128,11 @@ namespace H3MP.Tracking
         public override IEnumerator Instantiate()
         {
             GameObject prefab = null;
-            // Handle new versions/types
-            if ((int)type == 12)
-            {
-                SosigSpawner sosigSpawner = GameObject.FindObjectOfType<SosigSpawner>();
-                if (sosigSpawner != null)
-                {
-                    prefab = sosigSpawner.SpawnerGroups[18].Furnitures[6];
-                }
-            }
-            else if((int)type > 6)
-            {
-                SosigSpawner sosigSpawner = GameObject.FindObjectOfType<SosigSpawner>();
-                if (sosigSpawner != null)
-                {
-                    prefab = sosigSpawner.SpawnerGroups[18].Furnitures[(int)type];
-                }
-            }
-
-            // Try to get through the usual way
             if (prefab == null)
             {
                 if (GM.TNH_Manager == null)
                 {
-                    if(IM.OD.TryGetValue(EncryptionTypeToID(type), out FVRObject obj))
+                    if(IM.OD.TryGetValue(EncryptionTypeToID(type, simple), out FVRObject obj))
                     {
                         yield return obj.GetGameObjectAsync();
                         prefab = obj.GetGameObject();
@@ -162,9 +140,22 @@ namespace H3MP.Tracking
                 }
                 else
                 {
-                    if(GM.TNH_Manager.GetEncryptionPrefab(type) != null)
+                    if (simple)
                     {
-                        prefab = GM.TNH_Manager.GetEncryptionPrefab(type).GetGameObject();
+                        // TODO: Future: Change to GM.TNH_Manager.GetEncryptionPrefabSimple whenever Nathan decides to update gamelibs
+                        MethodInfo GetEncryptionPrefabSimple = typeof(TNH_Manager).GetMethod("GetEncryptionPrefabSimple", BindingFlags.Public | BindingFlags.Instance);
+                        FVRObject simpleEncryption = GetEncryptionPrefabSimple.Invoke(GM.TNH_Manager, new object[] { type }) as FVRObject;
+                        if (simpleEncryption != null)
+                        {
+                            prefab = simpleEncryption.GetGameObject();
+                        }
+                    }
+                    else
+                    {
+                        if (GM.TNH_Manager.GetEncryptionPrefab(type) != null)
+                        {
+                            prefab = GM.TNH_Manager.GetEncryptionPrefab(type).GetGameObject();
+                        }
                     }
                 }
             }
@@ -242,10 +233,6 @@ namespace H3MP.Tracking
             {
                 subTargsActive = new bool[physicalEncryption.physicalEncryption.SubTargs.Count];
             }
-            if(subTargPos == null)
-            {
-                subTargPos = new Vector3[physicalEncryption.physicalEncryption.GrowthPoints.Count];
-            }
             if (subTargGeosActive == null)
             {
                 subTargGeosActive = new bool[physicalEncryption.physicalEncryption.SubTargGeo.Count];
@@ -264,13 +251,15 @@ namespace H3MP.Tracking
             if (full)
             {
                 type = updatedEncryption.type;
+                simple = updatedEncryption.simple;
                 subTargsActive = updatedEncryption.subTargsActive;
-                subTargPos = updatedEncryption.subTargPos;
                 subTargGeosActive = updatedEncryption.subTargGeosActive;
                 numHitsLeft = updatedEncryption.numHitsLeft;
                 initialPos = updatedEncryption.initialPos;
                 cascadingIndex = updatedEncryption.cascadingIndex;
                 cascadingDepth = updatedEncryption.cascadingDepth;
+                refractivePreviewPos = updatedEncryption.refractivePreviewPos;
+                refractiveShieldRot = updatedEncryption.refractiveShieldRot;
             }
 
             previousAgilePointerScale = agilePointerScale;
@@ -343,49 +332,22 @@ namespace H3MP.Tracking
 
                 if (full)
                 {
-                    if (type == TNH_EncryptionType.Regenerative)
+                    if (subTargsActive.Length == physicalEncryption.physicalEncryption.SubTargs.Count)
                     {
-                        if (subTargsActive.Length == physicalEncryption.physicalEncryption.SubTargs.Count)
+                        int subTargsLeft = 0;
+                        for (int i = 0; i < subTargsActive.Length; ++i)
                         {
-                            int subTargsLeft = 0;
-                            for (int i = 0; i < subTargsActive.Length; ++i)
+                            if (subTargsActive[i])
                             {
-                                if (subTargsActive[i])
-                                {
-                                    Vector3 forward = subTargPos[i] - physicalEncryption.physicalEncryption.Tendrils[i].transform.position;
-                                    ++EncryptionSpawnGrowthPatch.skip;
-                                    physicalEncryption.physicalEncryption.SpawnGrowth(i, subTargPos[i]);
-                                    --EncryptionSpawnGrowthPatch.skip;
-                                    physicalEncryption.physicalEncryption.Tendrils[i].transform.localScale = new Vector3(0.2f, 0.2f, forward.magnitude * physicalEncryption.physicalEncryption.TendrilFloats[i]);
-                                    ++subTargsLeft;
-                                }
-                                else
-                                {
-                                    physicalEncryption.physicalEncryption.SubTargs[i].SetActive(false);
-                                }
+                                physicalEncryption.physicalEncryption.SubTargs[i].SetActive(true);
+                                ++subTargsLeft;
                             }
-                            physicalEncryption.physicalEncryption.m_numSubTargsLeft = subTargsLeft;
-                        }
-                    }
-                    else
-                    {
-                        if (subTargsActive.Length == physicalEncryption.physicalEncryption.SubTargs.Count)
-                        {
-                            int subTargsLeft = 0;
-                            for (int i = 0; i < subTargsActive.Length; ++i)
+                            else
                             {
-                                if (subTargsActive[i])
-                                {
-                                    physicalEncryption.physicalEncryption.SubTargs[i].SetActive(true);
-                                    ++subTargsLeft;
-                                }
-                                else
-                                {
-                                    physicalEncryption.physicalEncryption.SubTargs[i].SetActive(false);
-                                }
+                                physicalEncryption.physicalEncryption.SubTargs[i].SetActive(false);
                             }
-                            physicalEncryption.physicalEncryption.m_numSubTargsLeft = subTargsLeft;
                         }
+                        physicalEncryption.physicalEncryption.m_numSubTargsLeft = subTargsLeft;
                     }
                     if (subTargGeosActive.Length == physicalEncryption.physicalEncryption.SubTargGeo.Count)
                     {
@@ -419,6 +381,12 @@ namespace H3MP.Tracking
                         physicalEncryption.physicalEncryption.m_returnToSpawnLine = gameObject.transform;
                         physicalEncryption.physicalEncryption.UpdateLine();
                     }
+
+                    if(type == TNH_EncryptionType.Refractive)
+                    {
+                        physicalEncryption.physicalEncryption.RefractivePreview.position = refractivePreviewPos;
+                        physicalEncryption.physicalEncryption.RefractiveShield.rotation = refractiveShieldRot;
+                    }
                 }
             }
         }
@@ -439,6 +407,7 @@ namespace H3MP.Tracking
             if (full)
             {
                 type = (TNH_EncryptionType)packet.ReadByte();
+                simple = packet.ReadBool();
                 int length = packet.ReadInt();
                 if (length > 0)
                 {
@@ -446,15 +415,6 @@ namespace H3MP.Tracking
                     for (int i = 0; i < length; ++i)
                     {
                         subTargsActive[i] = packet.ReadBool();
-                    }
-                }
-                length = packet.ReadInt();
-                if (length > 0)
-                {
-                    subTargPos = new Vector3[length];
-                    for (int i = 0; i < length; ++i)
-                    {
-                        subTargPos[i] = packet.ReadVector3();
                     }
                 }
                 length = packet.ReadInt();
@@ -470,6 +430,8 @@ namespace H3MP.Tracking
                 initialPos = packet.ReadVector3();
                 cascadingIndex = packet.ReadByte();
                 cascadingDepth = packet.ReadByte();
+                refractivePreviewPos = packet.ReadVector3();
+                refractiveShieldRot = packet.ReadQuaternion();
             }
 
             if (physicalEncryption != null)
@@ -534,49 +496,22 @@ namespace H3MP.Tracking
 
                 if (full)
                 {
-                    if (type == TNH_EncryptionType.Regenerative)
+                    if (subTargsActive.Length == physicalEncryption.physicalEncryption.SubTargs.Count)
                     {
-                        if (subTargsActive.Length == physicalEncryption.physicalEncryption.SubTargs.Count)
+                        int subTargsLeft = 0;
+                        for (int i = 0; i < subTargsActive.Length; ++i)
                         {
-                            int subTargsLeft = 0;
-                            for (int i = 0; i < subTargsActive.Length; ++i)
+                            if (subTargsActive[i])
                             {
-                                if (subTargsActive[i])
-                                {
-                                    Vector3 forward = subTargPos[i] - physicalEncryption.physicalEncryption.Tendrils[i].transform.position;
-                                    ++EncryptionSpawnGrowthPatch.skip;
-                                    physicalEncryption.physicalEncryption.SpawnGrowth(i, subTargPos[i]);
-                                    --EncryptionSpawnGrowthPatch.skip;
-                                    physicalEncryption.physicalEncryption.Tendrils[i].transform.localScale = new Vector3(0.2f, 0.2f, forward.magnitude * physicalEncryption.physicalEncryption.TendrilFloats[i]);
-                                    ++subTargsLeft;
-                                }
-                                else
-                                {
-                                    physicalEncryption.physicalEncryption.SubTargs[i].SetActive(false);
-                                }
+                                physicalEncryption.physicalEncryption.SubTargs[i].SetActive(true);
+                                ++subTargsLeft;
                             }
-                            physicalEncryption.physicalEncryption.m_numSubTargsLeft = subTargsLeft;
-                        }
-                    }
-                    else
-                    {
-                        if (subTargsActive.Length == physicalEncryption.physicalEncryption.SubTargs.Count)
-                        {
-                            int subTargsLeft = 0;
-                            for (int i = 0; i < subTargsActive.Length; ++i)
+                            else
                             {
-                                if (subTargsActive[i])
-                                {
-                                    physicalEncryption.physicalEncryption.SubTargs[i].SetActive(true);
-                                    ++subTargsLeft;
-                                }
-                                else
-                                {
-                                    physicalEncryption.physicalEncryption.SubTargs[i].SetActive(false);
-                                }
+                                physicalEncryption.physicalEncryption.SubTargs[i].SetActive(false);
                             }
-                            physicalEncryption.physicalEncryption.m_numSubTargsLeft = subTargsLeft;
                         }
+                        physicalEncryption.physicalEncryption.m_numSubTargsLeft = subTargsLeft;
                     }
                     if (subTargGeosActive.Length == physicalEncryption.physicalEncryption.SubTargGeo.Count)
                     {
@@ -610,6 +545,12 @@ namespace H3MP.Tracking
                         physicalEncryption.physicalEncryption.m_returnToSpawnLine = gameObject.transform;
                         physicalEncryption.physicalEncryption.UpdateLine();
                     }
+
+                    if (type == TNH_EncryptionType.Refractive)
+                    {
+                        physicalEncryption.physicalEncryption.RefractivePreview.position = refractivePreviewPos;
+                        physicalEncryption.physicalEncryption.RefractiveShield.rotation = refractiveShieldRot;
+                    }
                 }
             }
         }
@@ -626,23 +567,12 @@ namespace H3MP.Tracking
             if (full)
             {
                 type = physicalEncryption.physicalEncryption.Type;
-                if(type == TNH_EncryptionType.Regenerative)
-                {
-                    if (physicalEncryption.physicalEncryption.name.Contains("Encryption_7_RegenerativeV2"))
-                    {
-                        type = (TNH_EncryptionType)12;
-                    }
-                }
+                simple = physicalEncryption.name.Contains("_Simple");
                 subTargsActive = new bool[physicalEncryption.physicalEncryption.SubTargs.Count];
-                subTargPos = new Vector3[physicalEncryption.physicalEncryption.GrowthPoints.Count];
                 subTargGeosActive = new bool[physicalEncryption.physicalEncryption.SubTargGeo.Count];
                 for (int i = 0; i < physicalEncryption.physicalEncryption.SubTargs.Count; ++i)
                 {
                     subTargsActive[i] = physicalEncryption.physicalEncryption.SubTargs[i].activeSelf;
-                }
-                for (int i = 0; i < physicalEncryption.physicalEncryption.GrowthPoints.Count; ++i)
-                {
-                    subTargPos[i] = physicalEncryption.physicalEncryption.GrowthPoints[i];
                 }
                 for (int i = 0; i < physicalEncryption.physicalEncryption.SubTargGeo.Count; ++i)
                 {
@@ -652,6 +582,8 @@ namespace H3MP.Tracking
                 initialPos = physicalEncryption.physicalEncryption.initialPos;
                 cascadingIndex = (byte)EncryptionPatch.cascadingDestroyIndex;
                 cascadingDepth = (byte)EncryptionPatch.cascadingDestroyDepth;
+                refractivePreviewPos = physicalEncryption.physicalEncryption.RefractivePreview.position;
+                refractiveShieldRot = physicalEncryption.physicalEncryption.RefractiveShield.rotation;
             }
 
             previousAgilePointerScale = agilePointerScale;
@@ -694,6 +626,7 @@ namespace H3MP.Tracking
             if (full)
             {
                 packet.Write((byte)type);
+                packet.Write(simple);
                 if (subTargsActive == null || subTargsActive.Length == 0)
                 {
                     packet.Write(0);
@@ -704,18 +637,6 @@ namespace H3MP.Tracking
                     for (int i = 0; i < subTargsActive.Length; ++i)
                     {
                         packet.Write(subTargsActive[i]);
-                    }
-                }
-                if (subTargPos == null || subTargPos.Length == 0)
-                {
-                    packet.Write(0);
-                }
-                else
-                {
-                    packet.Write(subTargPos.Length);
-                    for (int i = 0; i < subTargPos.Length; ++i)
-                    {
-                        packet.Write(subTargPos[i]);
                     }
                 }
                 if (subTargGeosActive == null || subTargGeosActive.Length == 0)
@@ -734,17 +655,18 @@ namespace H3MP.Tracking
                 packet.Write(initialPos);
                 packet.Write(cascadingIndex);
                 packet.Write(cascadingDepth);
+                packet.Write(refractivePreviewPos);
+                packet.Write(refractiveShieldRot);
             }
         }
 
-        public static string EncryptionTypeToID(TNH_EncryptionType type, string name = null)
+        public static string EncryptionTypeToID(TNH_EncryptionType type, bool simple)
         {
             switch (type)
             {
                 case TNH_EncryptionType.Static:
                     return "TNH_EncryptionTarget_1_Static";
                 case TNH_EncryptionType.Hardened:
-                    // TODO: Future: The new Hardened is named EncryptionTarget_2_Hardened_V2. Will need to replace once implemented if ID is similarly different
                     return "TNH_EncryptionTarget_2_Hardened";
                 case TNH_EncryptionType.Swarm:
                     return "TNH_EncryptionTarget_3_Swarm";
@@ -755,19 +677,15 @@ namespace H3MP.Tracking
                 case TNH_EncryptionType.Agile:
                     return "TNH_EncryptionTarget_6_Agile";
                 case TNH_EncryptionType.Regenerative:
-                    // TODO: Future: The new regenerative is named EncryptionTarget_7_RegenerativeV2. Will need to replace once implemented if ID is similarly different
-                    return "TNH_EncryptionTarget_7_Regenerative";
+                    return "TNH_EncryptionTarget_7_Regenerative"+(simple ? "_Simple":"");
                 case TNH_EncryptionType.Polymorphic:
-                    // TODO: Future: Once implemented, check if returned ID is correct
-                    return "TNH_EncryptionTarget_8_Polymorphic";
+                    return "TNH_EncryptionTarget_8_Polymorphic" + (simple ? "_Simple" : "");
                 case TNH_EncryptionType.Cascading:
-                    // TODO: Future: Once implemented, check if returned ID is correct
-                    return "TNH_EncryptionTarget_9_Cascading_Main";
+                    return "TNH_EncryptionTarget_9_Cascading" + (simple ? "_Simple" : "");
                 case TNH_EncryptionType.Orthagonal:
-                    // TODO: Future: Once implemented, check if returned ID is correct
-                    return "TNH_EncryptionTarget_10_Orthagonal";
+                    return "TNH_EncryptionTarget_10_Orthagonal" + (simple ? "_Simple" : "");
                 case TNH_EncryptionType.Refractive:
-                    return "TNH_EncryptionTarget_1_Static";
+                    return "TNH_EncryptionTarget_11_Refractive";
                 default:
                     Mod.LogError("EncryptionTypeToID unhandled type: "+type);
                     return "TNH_EncryptionTarget_1_Static";
@@ -780,10 +698,9 @@ namespace H3MP.Tracking
 
             if (localTrackedID != -1 && TrackedEncryption.unknownInit.ContainsKey(localWaitingIndex))
             {
-                List<int> indices = TrackedEncryption.unknownInit[localWaitingIndex].Key;
-                List<Vector3> points = TrackedEncryption.unknownInit[localWaitingIndex].Value;
+                List<int> indices = TrackedEncryption.unknownInit[localWaitingIndex];
 
-                ClientSend.EncryptionInit(trackedID, indices, points, initialPos, this.numHitsLeft);
+                ClientSend.EncryptionInit(trackedID, indices, initialPos, this.numHitsLeft);
 
                 TrackedEncryption.unknownInit.Remove(localWaitingIndex);
             }
@@ -848,6 +765,18 @@ namespace H3MP.Tracking
 
                 TrackedEncryption.unknownUpdateDisplay.Remove(localWaitingIndex);
             }
+            if (localTrackedID != -1 && TrackedEncryption.unknownPreviewPos.TryGetValue(localWaitingIndex, out Vector3 previewPos))
+            {
+                ClientSend.EncryptionNextPos(trackedID, previewPos);
+
+                TrackedEncryption.unknownPreviewPos.Remove(localWaitingIndex);
+            }
+            if (localTrackedID != -1 && TrackedEncryption.unknownShieldRot.TryGetValue(localWaitingIndex, out Quaternion shieldRot))
+            {
+                ClientSend.EncryptionShieldRot(trackedID, shieldRot);
+
+                TrackedEncryption.unknownShieldRot.Remove(localWaitingIndex);
+            }
         }
 
         public override void RemoveFromLocal()
@@ -864,6 +793,8 @@ namespace H3MP.Tracking
                 TrackedEncryption.unknownSpawnSubTargGeo.Remove(localWaitingIndex);
                 TrackedEncryption.unknownDisableSubTarg.Remove(localWaitingIndex);
                 TrackedEncryption.unknownUpdateDisplay.Remove(localWaitingIndex);
+                TrackedEncryption.unknownPreviewPos.Remove(localWaitingIndex);
+                TrackedEncryption.unknownShieldRot.Remove(localWaitingIndex);
 
                 // If not tracked, make sure we remove from tracked lists in case object was unawoken
                 if (physicalEncryption != null && physicalEncryption.physicalEncryption != null)

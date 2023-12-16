@@ -11,13 +11,15 @@ namespace H3MP.Tracking
         public TrackedEncryptionData encryptionData;
 
         // Unknown tracked ID queues
-        public static Dictionary<uint, KeyValuePair<List<int>, List<Vector3>>> unknownInit = new Dictionary<uint, KeyValuePair<List<int>, List<Vector3>>>();
+        public static Dictionary<uint, List<int>> unknownInit = new Dictionary<uint, List<int>>();
         public static Dictionary<uint, List<int>> unknownSpawnSubTarg = new Dictionary<uint, List<int>>();
         public static Dictionary<uint, List<int>> unknownSpawnSubTargGeo = new Dictionary<uint, List<int>>();
         public static Dictionary<uint, List<int>> unknownDisableSubTarg = new Dictionary<uint, List<int>>();
         public static Dictionary<uint, List<KeyValuePair<int, Vector3>>> unknownSpawnGrowth = new Dictionary<uint, List<KeyValuePair<int, Vector3>>>();
         public static Dictionary<uint, List<KeyValuePair<int, Vector3>>> unknownResetGrowth = new Dictionary<uint, List<KeyValuePair<int, Vector3>>>();
         public static Dictionary<uint, int> unknownUpdateDisplay = new Dictionary<uint, int>();
+        public static Dictionary<uint, Vector3> unknownPreviewPos = new Dictionary<uint, Vector3>();
+        public static Dictionary<uint, Quaternion> unknownShieldRot = new Dictionary<uint, Quaternion>();
 
         // TrackedEncryptionReferences array
         // Used by Encryptions who need to get access to their TrackedEncryption very often (On Update for example)

@@ -537,6 +537,8 @@ namespace H3MP
             TrackedEncryption.unknownSpawnSubTarg.Clear();
             TrackedEncryption.unknownSpawnSubTargGeo.Clear();
             TrackedEncryption.unknownUpdateDisplay.Clear();
+            TrackedEncryption.unknownPreviewPos.Clear();
+            TrackedEncryption.unknownShieldRot.Clear();
 
             TrackedFloater.unknownFloaterBeginExploding.Clear();
             TrackedFloater.unknownFloaterBeginDefusing.Clear();

@@ -688,6 +688,10 @@ namespace H3MP.Patches
             MethodInfo EncryptionPatchDestroyTranspiler = typeof(EncryptionPatch).GetMethod("DestroyTranspiler", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo EncryptionPatchFireGunOriginal = typeof(TNH_EncryptionTarget).GetMethod("FireGun", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo EncryptionPatchFireGunPrefix = typeof(EncryptionPatch).GetMethod("FireGunPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo EncryptionPatchSetNextPosOriginal = typeof(TNH_EncryptionTarget).GetMethod("SetNextPos", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo EncryptionPatchSetNextPosPostfix = typeof(EncryptionPatch).GetMethod("SetNextPosPostfix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo EncryptionPatchWarpToNextPositionOriginal = typeof(TNH_EncryptionTarget).GetMethod("WarpToNextPosition", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo EncryptionPatchWarpToNextPositionPostfix = typeof(EncryptionPatch).GetMethod("WarpToNextPositionPostfix", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(EncryptionPatchUpdateOriginal, harmony, true);
             PatchController.Verify(EncryptionPatchFixedUpdateOriginal, harmony, true);
@@ -695,6 +699,8 @@ namespace H3MP.Patches
             PatchController.Verify(EncryptionPatchUpdateDisplayOriginal, harmony, true);
             PatchController.Verify(EncryptionPatchDestroyOriginal, harmony, true);
             PatchController.Verify(EncryptionPatchFireGunOriginal, harmony, true);
+            PatchController.Verify(EncryptionPatchSetNextPosOriginal, harmony, true);
+            PatchController.Verify(EncryptionPatchWarpToNextPositionOriginal, harmony, true);
             try 
             { 
                 harmony.Patch(EncryptionPatchUpdateOriginal, new HarmonyMethod(EncryptionPatchUpdatePrefix), null, new HarmonyMethod(EncryptionPatchUpdateTranspiler));
@@ -715,6 +721,8 @@ namespace H3MP.Patches
                 Mod.LogError("Exception caught applying ActionPatches.EncryptionPatch on EncryptionPatchDestroyOriginal: " + ex.Message + ":\n" + ex.StackTrace);
             }
             harmony.Patch(EncryptionPatchFireGunOriginal, new HarmonyMethod(EncryptionPatchFireGunPrefix));
+            harmony.Patch(EncryptionPatchSetNextPosOriginal, null, new HarmonyMethod(EncryptionPatchSetNextPosPostfix));
+            harmony.Patch(EncryptionPatchWarpToNextPositionOriginal, null, new HarmonyMethod(EncryptionPatchWarpToNextPositionPostfix));
 
             ++patchIndex; // 42
 
@@ -6108,7 +6116,6 @@ namespace H3MP.Patches
                     if (__instance.UsesRefractiveTeleportation && __instance.RefractivePreview != null)
                     {
                         __instance.RefractivePreview.SetParent(null);
-                        __instance.SetNextPos();
                     }
                     if (___UsesRegeneratingSubtargs)
                     {
@@ -6142,23 +6149,7 @@ namespace H3MP.Patches
             if (Mod.managerObject != null && trackedEncryption != null && trackedEncryption.data.controller == GameManager.ID)
             {
                 List<int> indices = null;
-                List<Vector3> points = null;
-                if (__instance.Type == TNH_EncryptionType.Regenerative && __instance.UsesRegenerativeSubTarg)
-                {
-                    indices = new List<int>();
-                    points = new List<Vector3>();
-                    for (int i = 0; i < __instance.SubTargs.Count; ++i)
-                    {
-                        if (__instance.SubTargs[i].activeSelf)
-                        {
-                            trackedEncryption.encryptionData.subTargsActive[i] = true;
-                            trackedEncryption.encryptionData.subTargPos[i] = __instance.GrowthPoints[i];
-                            indices.Add(i);
-                            points.Add(__instance.SubTargs[i].transform.position);
-                        }
-                    }
-                }
-                else if (__instance.Type == TNH_EncryptionType.Recursive || __instance.Type == TNH_EncryptionType.Polymorphic)
+                if (__instance.Type == TNH_EncryptionType.Recursive || __instance.Type == TNH_EncryptionType.Polymorphic)
                 {
                     indices = new List<int>();
                     for (int i = 0; i < __instance.SubTargs.Count; ++i)
@@ -6175,7 +6166,7 @@ namespace H3MP.Patches
 
                 if (ThreadManager.host)
                 {
-                    ServerSend.EncryptionInit(0, trackedEncryption.data.trackedID, indices, points, trackedEncryption.encryptionData.initialPos, trackedEncryption.encryptionData.numHitsLeft);
+                    ServerSend.EncryptionInit(0, trackedEncryption.data.trackedID, indices, trackedEncryption.encryptionData.initialPos, trackedEncryption.encryptionData.numHitsLeft);
                 }
                 else
                 {
@@ -6183,16 +6174,16 @@ namespace H3MP.Patches
                     {
                         if (TrackedEncryption.unknownInit.ContainsKey(trackedEncryption.data.localWaitingIndex))
                         {
-                            TrackedEncryption.unknownInit[trackedEncryption.data.localWaitingIndex] = new KeyValuePair<List<int>, List<Vector3>>(indices, points);
+                            TrackedEncryption.unknownInit[trackedEncryption.data.localWaitingIndex] = indices;
                         }
                         else
                         {
-                            TrackedEncryption.unknownInit.Add(trackedEncryption.data.localWaitingIndex, new KeyValuePair<List<int>, List<Vector3>>(indices, points));
+                            TrackedEncryption.unknownInit.Add(trackedEncryption.data.localWaitingIndex, indices);
                         }
                     }
                     else
                     {
-                        ClientSend.EncryptionInit(trackedEncryption.data.trackedID, indices, points, trackedEncryption.encryptionData.initialPos, trackedEncryption.encryptionData.numHitsLeft);
+                        ClientSend.EncryptionInit(trackedEncryption.data.trackedID, indices, trackedEncryption.encryptionData.initialPos, trackedEncryption.encryptionData.numHitsLeft);
                     }
                 }
             }
@@ -6345,6 +6336,82 @@ namespace H3MP.Patches
             }
 
             return true;
+        }
+
+        static void SetNextPosPostfix(TNH_EncryptionTarget __instance)
+        {
+            if (Mod.managerObject == null)
+            {
+                return;
+            }
+
+            if (__instance.SpawnPoints != null && __instance.SpawnPoints.Count > 0 && int.TryParse(__instance.SpawnPoints[__instance.SpawnPoints.Count - 1].name, out int index))
+            {
+                TrackedEncryption trackedEncryption = TrackedEncryption.trackedEncryptionReferences[index];
+                if (trackedEncryption != null)
+                {
+                    // Note: SetNextPos will never be called if uncontrolled, so here we assume we control
+                    trackedEncryption.encryptionData.refractivePreviewPos = __instance.RefractivePreview.position;
+
+                    if (ThreadManager.host)
+                    {
+                        ServerSend.EncryptionNextPos(trackedEncryption.data.trackedID, trackedEncryption.encryptionData.refractivePreviewPos);
+                    }
+                    else if(trackedEncryption.data.trackedID != -1)
+                    {
+                        ClientSend.EncryptionNextPos(trackedEncryption.data.trackedID, trackedEncryption.encryptionData.refractivePreviewPos);
+                    }
+                    else
+                    {
+                        if (TrackedEncryption.unknownPreviewPos.ContainsKey(trackedEncryption.data.localWaitingIndex))
+                        {
+                            TrackedEncryption.unknownPreviewPos[trackedEncryption.data.localWaitingIndex] = trackedEncryption.encryptionData.refractivePreviewPos;
+                        }
+                        else
+                        {
+                            TrackedEncryption.unknownPreviewPos.Add(trackedEncryption.data.localWaitingIndex, trackedEncryption.encryptionData.refractivePreviewPos);
+                        }
+                    }
+                }
+            }
+        }
+
+        static void WarpToNextPositionPostfix(TNH_EncryptionTarget __instance)
+        {
+            if (Mod.managerObject == null)
+            {
+                return;
+            }
+
+            if (__instance.SpawnPoints != null && __instance.SpawnPoints.Count > 0 && int.TryParse(__instance.SpawnPoints[__instance.SpawnPoints.Count - 1].name, out int index))
+            {
+                TrackedEncryption trackedEncryption = TrackedEncryption.trackedEncryptionReferences[index];
+                if (trackedEncryption != null)
+                {
+                    // Note: WarpToNextPosition will never be called if uncontrolled, so here we assume we control
+                    trackedEncryption.encryptionData.refractiveShieldRot = __instance.RefractiveShield.rotation;
+
+                    if (ThreadManager.host)
+                    {
+                        ServerSend.EncryptionShieldRot(trackedEncryption.data.trackedID, trackedEncryption.encryptionData.refractiveShieldRot);
+                    }
+                    else if(trackedEncryption.data.trackedID != -1)
+                    {
+                        ClientSend.EncryptionShieldRot(trackedEncryption.data.trackedID, trackedEncryption.encryptionData.refractiveShieldRot);
+                    }
+                    else
+                    {
+                        if (TrackedEncryption.unknownShieldRot.ContainsKey(trackedEncryption.data.localWaitingIndex))
+                        {
+                            TrackedEncryption.unknownShieldRot[trackedEncryption.data.localWaitingIndex] = trackedEncryption.encryptionData.refractiveShieldRot;
+                        }
+                        else
+                        {
+                            TrackedEncryption.unknownShieldRot.Add(trackedEncryption.data.localWaitingIndex, trackedEncryption.encryptionData.refractiveShieldRot);
+                        }
+                    }
+                }
+            }
         }
     }
 

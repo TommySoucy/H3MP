@@ -294,6 +294,13 @@ namespace H3MP.Tracking
             if (physicalItem.physicalItem.ObjectWrapper != null)
             {
                 itemID = physicalItem.physicalItem.ObjectWrapper.ItemID;
+
+                // TODO: Future: Once Wiener barrel get correct object wrapper, we can remove this
+                if(itemID.Equals("BrutBarrelExplosive") && physicalItem.name.Contains("Wieners"))
+                {
+                    itemID = "BrutBarrelWieners";
+                }
+
                 return;
             }
             if (physicalItem.physicalItem.IDSpawnedFrom != null)

@@ -212,7 +212,9 @@ namespace H3MP.Networking
         nodeInit = 199,
         nodeFire = 200,
         hazeDamage = 201,
-        encryptionFireGun = 202
+        encryptionFireGun = 202,
+        encryptionNextPos = 203,
+        encryptionShieldRot = 204
     }
 
     /// <summary>Sent from client to server.</summary>
@@ -411,7 +413,9 @@ namespace H3MP.Networking
         nodeInit = 190,
         nodeFire = 191,
         hazeDamage = 192,
-        encryptionFireGun = 193
+        encryptionFireGun = 193,
+        encryptionNextPos = 194,
+        encryptionShieldRot = 195
     }
 
     public class Packet : IDisposable
@@ -751,7 +755,6 @@ namespace H3MP.Networking
             Write(config.NoFreshTargetTime);
             Write(config.DoesAggroOnFriendlyFire);
             Write(config.UsesLinkSpawns);
-            Write(config.OverrideSpeech);
             Write(config.TimeInSkirmishToAlert);
         }
         /// <summary>Adds a TNHInstance to the packet.</summary>
@@ -1260,7 +1263,6 @@ namespace H3MP.Networking
             config.NoFreshTargetTime = ReadFloat();
             config.DoesAggroOnFriendlyFire = ReadBool();
             config.UsesLinkSpawns = ReadBool();
-            config.OverrideSpeech = ReadBool();
             config.TimeInSkirmishToAlert = ReadFloat();
 
             return config;

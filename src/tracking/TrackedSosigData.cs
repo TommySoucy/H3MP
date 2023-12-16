@@ -324,7 +324,6 @@ namespace H3MP.Tracking
             data.configTemplate.CanBeSevered = sosigScript.CanBeSevered;
             data.configTemplate.CanBeStabbed = sosigScript.CanBeStabbed;
             data.configTemplate.MaxJointLimit = sosigScript.m_maxJointLimit;
-            data.configTemplate.OverrideSpeech = sosigScript.Speech;
             data.configTemplate.LinkDamageMultipliers = new List<float>();
             data.configTemplate.LinkStaggerMultipliers = new List<float>();
             data.configTemplate.StartingLinkIntegrity = new List<Vector2>();
@@ -731,6 +730,10 @@ namespace H3MP.Tracking
 
             SosigConfigurePatch.skipConfigure = true;
             physicalSosig.physicalSosig.Configure(configTemplate);
+            if(physicalSosig.physicalSosig.Speech == null)
+            {
+                physicalSosig.physicalSosig.Speech = Mod.defaultSosigSpeechSet;
+            }
 
             GameManager.trackedSosigBySosig.Add(physicalSosig.physicalSosig, physicalSosig);
             GameManager.trackedObjectByObject.Add(physicalSosig.physicalSosig, physicalSosig);
