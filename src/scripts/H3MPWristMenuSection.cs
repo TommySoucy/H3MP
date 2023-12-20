@@ -2,7 +2,9 @@
 using H3MP.Networking;
 using H3MP.Patches;
 using H3MP.Tracking;
+using HarmonyLib;
 using System.Collections.Generic;
+using System.Reflection;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -22,6 +24,7 @@ namespace H3MP.Scripts
         public static Text radarModeText;
         public static Text radarColorText;
         public static Text maxHealthText;
+        public static bool disabledHoldSosigs;
 
         public override void Enable()
         {
@@ -83,7 +86,7 @@ namespace H3MP.Scripts
             InitButton(new List<int>() { 5 }, new List<Vector3>() { new Vector3(155, 50, 0) }, new Vector2(150, 150), new Vector2(45, 45), OnNextMaxHealthClicked, ">", out textOut);
             InitButton(new List<int>() { 5 }, new List<Vector3>() { new Vector3(-155, 50, 0) }, new Vector2(150, 150), new Vector2(45, 45), OnPreviousMaxHealthClicked, "<", out textOut);
             InitButton(new List<int>() { 5 }, new List<Vector3>() { new Vector3(0, -50, 0) }, new Vector2(1200, 150), new Vector2(340, 45), OnSetRespawnPointClicked, "Set respawn point", out textOut);
-            InitButton(new List<int>() { 5 }, new List<Vector3>() { new Vector3(0, -50, 0) }, new Vector2(1200, 150), new Vector2(340, 45), OnDisableSosigsClicked, "Debug: Disable Sosigs", out textOut);
+            InitButton(new List<int>() { 5 }, new List<Vector3>() { new Vector3(0, -50, 0) }, new Vector2(1200, 150), new Vector2(340, 45), OnDisableHoldSosigsClicked, "Debug: Disable Hold Sosigs", out textOut);
             InitButton(new List<int>() { 4 }, new List<Vector3>() { new Vector3(215, -140, 0) }, new Vector2(240, 240), new Vector2(70, 70), OnNextOptionsClicked, "Next", out textOut);
             InitButton(new List<int>() { 5 }, new List<Vector3>() { new Vector3(-215, -140, 0) }, new Vector2(240, 240), new Vector2(70, 70), OnPrevOptionsClicked, "Prev", out textOut);
         }
@@ -871,7 +874,7 @@ namespace H3MP.Scripts
             }
         }
 
-        private void OnDisableSosigsClicked(Text textRef)
+        private void OnDisableHoldSosigsClicked(Text textRef)
         {
             SM.PlayGlobalUISound(SM.GlobalUISound.Beep, transform.position);
             Sosig[] sosigs = FindObjectsOfType<Sosig>();
@@ -882,6 +885,8 @@ namespace H3MP.Scripts
                     sosigs[i].SetCurrentOrder(Sosig.SosigOrder.Disabled);
                 }
             }
+
+            disabledHoldSosigs = !disabledHoldSosigs;
         }
 
         private void ProcessPlayerPrefabIndex(int index, Text text)
