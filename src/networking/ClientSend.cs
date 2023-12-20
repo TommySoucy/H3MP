@@ -2873,5 +2873,30 @@ namespace H3MP.Networking
                 SendTCPData(packet);
             }
         }
+
+        public static void SentinelInit(int trackedID, List<Vector3> points, int currentPointIndex, int targetPointIndex, bool movingUp)
+        {
+            using (Packet packet = new Packet((int)ClientPackets.sentinelInit))
+            {
+                packet.Write(trackedID);
+                if(points == null || points.Count == 0)
+                {
+                    packet.Write((byte)0);
+                }
+                else
+                {
+                    packet.Write((byte)points.Count);
+                    for(int i=0; i < points.Count; ++i)
+                    {
+                        packet.Write(points[i]);
+                    }
+                }
+                packet.Write((byte)currentPointIndex);
+                packet.Write((byte)targetPointIndex);
+                packet.Write(movingUp);
+
+                SendTCPData(packet);
+            }
+        }
     }
 }

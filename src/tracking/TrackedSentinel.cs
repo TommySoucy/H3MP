@@ -11,6 +11,27 @@ namespace H3MP.Tracking
         public Construct_Sentinel physicalSentinel;
         public TrackedSentinelData sentinelData;
 
+        public static List<uint> unknownInit = new List<uint>();
+
+        public override void Awake()
+        {
+            base.Awake();
+
+            GameObject trackedRef = new GameObject();
+            Scripts.TrackedObjectReference refScript = trackedRef.AddComponent<Scripts.TrackedObjectReference>();
+            trackedRef.SetActive(false);
+
+            CheckReferenceSize();
+            int refIndex = availableTrackedRefIndices[availableTrackedRefIndices.Count - 1];
+            availableTrackedRefIndices.RemoveAt(availableTrackedRefIndices.Count - 1);
+            trackedReferenceObjects[refIndex] = trackedRef;
+            trackedReferences[refIndex] = this;
+            trackedRef.name = refIndex.ToString();
+            refScript.refIndex = refIndex;
+            physicalSentinel = GetComponent<Construct_Sentinel>();
+            physicalSentinel.PlatePoints.Add(trackedRef.transform);
+        }
+
         public override bool HandleShatter(UberShatterable shatterable, Vector3 point, Vector3 dir, float intensity, bool received, int clientID, byte[] data)
         {
             if (received)

@@ -2,6 +2,7 @@
 using H3MP.Networking;
 using H3MP.Patches;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace H3MP.Tracking
@@ -15,6 +16,11 @@ namespace H3MP.Tracking
         public Quaternion previousRot;
         public Quaternion rotation;
 
+        public int currentPointIndex;
+        public int targetPointIndex;
+        public bool isMovingUpIndicies;
+        public List<Vector3> patrolPoints;
+
         public TrackedSentinelData()
         {
 
@@ -25,6 +31,17 @@ namespace H3MP.Tracking
             // Update
             position = packet.ReadVector3();
             rotation = packet.ReadQuaternion();
+
+            // Full
+            patrolPoints = new List<Vector3>();
+            int pointCount = packet.ReadByte();
+            for(int i=0; i < pointCount; ++i)
+            {
+                patrolPoints.Add(packet.ReadVector3());
+            }
+            currentPointIndex = packet.ReadByte();
+            targetPointIndex = packet.ReadByte();
+            isMovingUpIndicies = packet.ReadBool();
         }
 
         public static bool IsOfType(Transform t)
@@ -81,6 +98,25 @@ namespace H3MP.Tracking
 
             packet.Write(position);
             packet.Write(rotation);
+
+            if (full)
+            {
+                if(patrolPoints == null || patrolPoints.Count == 0)
+                {
+                    packet.Write((byte)0);
+                }
+                else
+                {
+                    packet.Write((byte)patrolPoints.Count);
+                    for(int i=0; i < patrolPoints.Count; ++i)
+                    {
+                        packet.Write(patrolPoints[i]);
+                    }
+                }
+                packet.Write((byte)currentPointIndex);
+                packet.Write((byte)targetPointIndex);
+                packet.Write(isMovingUpIndicies);
+            }
         }
 
         public override IEnumerator Instantiate()
@@ -118,7 +154,7 @@ namespace H3MP.Tracking
             }
 
             // Initially set itself
-            UpdateFromData(this);
+            UpdateFromData(this, true);
         }
 
         public override void UpdateFromData(TrackedObjectData updatedObject, bool full = false)
@@ -132,11 +168,44 @@ namespace H3MP.Tracking
             previousRot = rotation;
             rotation = updatedSentinel.rotation;
 
+            if (full)
+            {
+                patrolPoints = updatedSentinel.patrolPoints;
+                currentPointIndex = updatedSentinel.currentPointIndex;
+                targetPointIndex = updatedSentinel.targetPointIndex;
+                isMovingUpIndicies = updatedSentinel.isMovingUpIndicies;
+            }
+
             // Set physically
             if (physicalSentinel != null)
             {
                 physicalSentinel.physicalSentinel.transform.position = position;
                 physicalSentinel.physicalSentinel.transform.rotation = rotation;
+
+                if (full)
+                {
+                    if(physicalSentinel.physicalSentinel.PatrolPoints == null)
+                    {
+                        physicalSentinel.physicalSentinel.PatrolPoints = new List<Transform>();
+                    }
+                    else
+                    {
+                        for (int i = 0; i < physicalSentinel.physicalSentinel.PatrolPoints.Count; ++i)
+                        {
+                            GameObject.Destroy(physicalSentinel.physicalSentinel.PatrolPoints[i].gameObject);
+                        }
+                        physicalSentinel.physicalSentinel.PatrolPoints.Clear();
+                    }
+                    for (int i=0; i < patrolPoints.Count; ++i)
+                    {
+                        GameObject newPatrolPoint = new GameObject("Sentinel "+trackedID+" patrol point "+i);
+                        newPatrolPoint.transform.position = patrolPoints[i];
+                        physicalSentinel.physicalSentinel.PatrolPoints.Add(newPatrolPoint.transform);
+                    }
+                    physicalSentinel.physicalSentinel.curPointIndex = currentPointIndex;
+                    physicalSentinel.physicalSentinel.tarPointIndex = targetPointIndex;
+                    physicalSentinel.physicalSentinel.isMovingUpIndicies = isMovingUpIndicies;
+                }
             }
         }
 
@@ -149,11 +218,56 @@ namespace H3MP.Tracking
             previousRot = rotation;
             rotation = packet.ReadQuaternion();
 
+            if (full)
+            {
+                if(patrolPoints == null)
+                {
+                    patrolPoints = new List<Vector3>();
+                }
+                else
+                {
+                    patrolPoints.Clear();
+                }
+                int patrolPointCount = packet.ReadByte();
+                for (int i = 0; i < patrolPointCount; ++i)
+                {
+                    patrolPoints.Add(packet.ReadVector3());
+                }
+                currentPointIndex = packet.ReadByte();
+                targetPointIndex = packet.ReadByte();
+                isMovingUpIndicies = packet.ReadBool();
+            }
+
             // Set physically
             if (physicalSentinel != null)
             {
                 physicalSentinel.physicalSentinel.transform.position = position;
                 physicalSentinel.physicalSentinel.transform.rotation = rotation;
+
+                if (full)
+                {
+                    if (physicalSentinel.physicalSentinel.PatrolPoints == null)
+                    {
+                        physicalSentinel.physicalSentinel.PatrolPoints = new List<Transform>();
+                    }
+                    else
+                    {
+                        for (int i = 0; i < physicalSentinel.physicalSentinel.PatrolPoints.Count; ++i)
+                        {
+                            GameObject.Destroy(physicalSentinel.physicalSentinel.PatrolPoints[i].gameObject);
+                        }
+                        physicalSentinel.physicalSentinel.PatrolPoints.Clear();
+                    }
+                    for (int i = 0; i < patrolPoints.Count; ++i)
+                    {
+                        GameObject newPatrolPoint = new GameObject("Sentinel " + trackedID + " patrol point " + i);
+                        newPatrolPoint.transform.position = patrolPoints[i];
+                        physicalSentinel.physicalSentinel.PatrolPoints.Add(newPatrolPoint.transform);
+                    }
+                    physicalSentinel.physicalSentinel.curPointIndex = currentPointIndex;
+                    physicalSentinel.physicalSentinel.tarPointIndex = targetPointIndex;
+                    physicalSentinel.physicalSentinel.isMovingUpIndicies = isMovingUpIndicies;
+                }
             }
         }
 
@@ -171,7 +285,41 @@ namespace H3MP.Tracking
             position = physicalSentinel.physicalSentinel.transform.position;
             rotation = physicalSentinel.physicalSentinel.transform.rotation;
 
+            if (full)
+            {
+                if (patrolPoints == null)
+                {
+                    patrolPoints = new List<Vector3>();
+                }
+                else
+                {
+                    patrolPoints.Clear();
+                }
+                if(physicalSentinel.physicalSentinel.PatrolPoints != null)
+                {
+                    for (int i = 0; i < physicalSentinel.physicalSentinel.PatrolPoints.Count; ++i)
+                    {
+                        patrolPoints.Add(physicalSentinel.physicalSentinel.PatrolPoints[i].position);
+                    }
+                }
+                currentPointIndex = physicalSentinel.physicalSentinel.curPointIndex;
+                targetPointIndex = physicalSentinel.physicalSentinel.tarPointIndex;
+                isMovingUpIndicies = physicalSentinel.physicalSentinel.isMovingUpIndicies;
+            }
+
             return updated || !previousPos.Equals(position) || !previousRot.Equals(rotation);
+        }
+
+        public override void OnTrackedIDReceived(TrackedObjectData newData)
+        {
+            base.OnTrackedIDReceived(newData);
+
+            if (localTrackedID != -1 && TrackedSentinel.unknownInit.Contains(localWaitingIndex))
+            {
+                ClientSend.SentinelInit(trackedID, patrolPoints, currentPointIndex, targetPointIndex, isMovingUpIndicies);
+
+                TrackedSentinel.unknownInit.Remove(localWaitingIndex);
+            }
         }
 
         public override void RemoveFromLocal()

@@ -226,7 +226,6 @@ namespace H3MP.Networking
                 // If so, it means we have enough data to build a packet we can process
                 while(packetLength > 0 && packetLength <= receivedData.UnreadLength())
                 {
-                    // TODO: // When player state handler dont forget int ID = packet.ReadInt();
                     readLength = false;
                     // So here we take all the data for that new packet
                     byte[] packetBytes = receivedData.ReadBytes(packetLength);
@@ -669,6 +668,7 @@ namespace H3MP.Networking
                 ClientHandle.EncryptionFireGun,
                 ClientHandle.EncryptionNextPos,
                 ClientHandle.EncryptionShieldRot,
+                ClientHandle.SentinelInit,
             };
 
             // All vanilla scenes can be synced by default

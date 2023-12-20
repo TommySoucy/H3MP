@@ -5548,5 +5548,58 @@ namespace H3MP.Networking
                 ServerSend.EncryptionShieldRot(trackedID, trackedEncryptionData.refractiveShieldRot, clientID);
             }
         }
+
+        public static void SentinelInit(int clientID, Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+
+            TrackedSentinelData trackedSentinelData = Server.objects[trackedID] as TrackedSentinelData;
+            if (trackedSentinelData != null)
+            {
+                if (trackedSentinelData.patrolPoints == null)
+                {
+                    trackedSentinelData.patrolPoints = new List<Vector3>();
+                }
+                else
+                {
+                    trackedSentinelData.patrolPoints.Clear();
+                }
+                int pointCount = packet.ReadByte();
+                for (int i = 0; i < pointCount; ++i)
+                {
+                    trackedSentinelData.patrolPoints.Add(packet.ReadVector3());
+                }
+                trackedSentinelData.currentPointIndex = packet.ReadByte();
+                trackedSentinelData.targetPointIndex = packet.ReadByte();
+                trackedSentinelData.isMovingUpIndicies = packet.ReadBool();
+
+                if (trackedSentinelData.physical != null)
+                {
+                    if (trackedSentinelData.physicalSentinel.physicalSentinel.PatrolPoints == null)
+                    {
+                        trackedSentinelData.physicalSentinel.physicalSentinel.PatrolPoints = new List<Transform>();
+                    }
+                    else
+                    {
+                        for (int i = 0; i < trackedSentinelData.physicalSentinel.physicalSentinel.PatrolPoints.Count; ++i)
+                        {
+                            GameObject.Destroy(trackedSentinelData.physicalSentinel.physicalSentinel.PatrolPoints[i].gameObject);
+                        }
+                        trackedSentinelData.physicalSentinel.physicalSentinel.PatrolPoints.Clear();
+                    }
+                    for (int i = 0; i < trackedSentinelData.patrolPoints.Count; ++i)
+                    {
+                        GameObject newPatrolPoint = new GameObject("Sentinel " + trackedID + " patrol point " + i);
+                        newPatrolPoint.transform.position = trackedSentinelData.patrolPoints[i];
+                        trackedSentinelData.physicalSentinel.physicalSentinel.PatrolPoints.Add(newPatrolPoint.transform);
+                    }
+                    trackedSentinelData.physicalSentinel.physicalSentinel.curPointIndex = trackedSentinelData.currentPointIndex;
+                    trackedSentinelData.physicalSentinel.physicalSentinel.tarPointIndex = trackedSentinelData.targetPointIndex;
+                    trackedSentinelData.physicalSentinel.physicalSentinel.isMovingUpIndicies = trackedSentinelData.isMovingUpIndicies;
+                }
+
+                ServerSend.SentinelInit(trackedID, trackedSentinelData.patrolPoints, trackedSentinelData.currentPointIndex, trackedSentinelData.targetPointIndex, trackedSentinelData.isMovingUpIndicies, clientID);
+            }
+        }
     }
 }

@@ -546,6 +546,10 @@ namespace H3MP
 
             TrackedIris.unknownIrisShatter.Clear();
             TrackedIris.unknownIrisSetState.Clear();
+
+            TrackedNode.unknownInit.Clear();
+
+            TrackedSentinel.unknownInit.Clear();
         }
 
         public static void UpdatePlayerState(int ID, Vector3 position, Quaternion rotation, Vector3 headPos, Quaternion headRot, Vector3 torsoPos, Quaternion torsoRot,

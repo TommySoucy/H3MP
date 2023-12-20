@@ -4,6 +4,7 @@ using H3MP.Networking;
 using H3MP.Patches;
 using H3MP.Scripts;
 using H3MP.Tracking;
+using HarmonyLib;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -673,6 +674,13 @@ namespace H3MP
                                 Mod.LogInfo("\tDebug: Load to Institution Preview");
                                 SteamVR_LoadLevel.Begin("Institution_Preview", false, 0.5f, 0f, 0f, 0f, 1f);
                                 break;
+                            case 34: // Patch ViveHand.PollInput to prevent exception when debugging with no headset
+                                Mod.LogInfo("\tDebug: Patch ViveHand.PollInput");
+                                Harmony harmony = new Harmony("VIP.TommySoucy.H3MPDebug");
+                                MethodInfo original = typeof(FVRViveHand).GetMethod("PollInput", BindingFlags.Public | BindingFlags.Instance);
+                                MethodInfo prefix = typeof(Mod).GetMethod("PollInputPrefix", BindingFlags.Public | BindingFlags.Static);
+                                harmony.Patch(original, new HarmonyMethod(prefix));
+                                break;
                         }
                     }
                 }
@@ -860,6 +868,11 @@ namespace H3MP
                 return Instantiate(obj.GetGameObject(), Camera.main.transform.position + Camera.main.transform.forward, Quaternion.identity);
             }
             return null;
+        }
+
+        public static bool PollInputPrefix()
+        {
+            return false;
         }
 #endif
 

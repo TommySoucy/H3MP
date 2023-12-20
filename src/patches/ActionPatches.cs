@@ -1186,6 +1186,23 @@ namespace H3MP.Patches
             PatchController.Verify(hazeFixedUpdateOriginal, harmony, false);
             harmony.Patch(hazeUpdateOriginal, new HarmonyMethod(hazeUpdatePrefix));
             harmony.Patch(hazeFixedUpdateOriginal, new HarmonyMethod(hazeFixedUpdatePrefix));
+
+            ++patchIndex; // 72
+
+            // SentinelPatch
+            MethodInfo sentinelAwakeOriginal = typeof(Construct_Sentinel).GetMethod("Awake", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo sentinelAwakePrefix = typeof(SentinelPatch).GetMethod("AwakePrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo sentinelInitOriginal = typeof(Construct_Sentinel).GetMethod("Init", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo sentinelInitPostfix = typeof(SentinelPatch).GetMethod("InitPostfix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo sentinelFixedUpdateOriginal = typeof(Construct_Sentinel).GetMethod("FixedUpdate", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo sentinelFixedUpdatePrefix = typeof(SentinelPatch).GetMethod("FixedUpdatePrefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(sentinelInitOriginal, harmony, false);
+            PatchController.Verify(sentinelAwakeOriginal, harmony, false);
+            PatchController.Verify(sentinelFixedUpdateOriginal, harmony, false);
+            harmony.Patch(sentinelInitOriginal, null, new HarmonyMethod(sentinelInitPostfix));
+            harmony.Patch(sentinelAwakeOriginal, new HarmonyMethod(sentinelAwakePrefix));
+            harmony.Patch(sentinelFixedUpdateOriginal, new HarmonyMethod(sentinelFixedUpdatePrefix));
         }
     }
 
@@ -9259,6 +9276,139 @@ namespace H3MP.Patches
                     if (trackedHaze != null)
                     {
                         return trackedHaze.data.controller == GameManager.ID;
+                    }
+                }
+            }
+
+            return true;
+        }
+    }
+
+    // Patches Construct_Sentinel
+    class SentinelPatch
+    {
+        // Patches Awake to prevent processing of last plate point if is it a reference 
+        static bool AwakePrefix(Construct_Sentinel __instance)
+        {
+            if (Mod.managerObject == null)
+            {
+                return true;
+            }
+
+            int limit = __instance.PlatePoints.Count;
+            if (__instance.PlatePoints[__instance.PlatePoints.Count - 1] == null || int.TryParse(__instance.PlatePoints[__instance.PlatePoints.Count - 1].name, out int refIndex))
+            {
+                --limit;
+            }
+            for (int i = 0; i < limit; i++)
+            {
+                GameObject gameObject = UnityEngine.Object.Instantiate<GameObject>(__instance.PlatePrefabs[UnityEngine.Random.Range(0, __instance.PlatePrefabs.Count)], __instance.PlatePoints[i].position, __instance.PlatePoints[i].rotation);
+                UberShatterable component = gameObject.GetComponent<UberShatterable>();
+                __instance.Plates.Add(component);
+                __instance.oscils.Add(UnityEngine.Random.Range(0f, 6.2831855f));
+            }
+            for (int j = 0; j < __instance.Scanbeams.Count; j++)
+            {
+                __instance.Scanbeams[j].SetParent(null);
+            }
+
+            return false;
+        }
+
+        static void InitPostfix(Construct_Sentinel __instance, List<Transform> points, int cp)
+        {
+            if (Mod.managerObject == null)
+            {
+                return;
+            }
+
+            if(__instance.PlatePoints[__instance.PlatePoints.Count - 1] != null && int.TryParse(__instance.PlatePoints[__instance.PlatePoints.Count - 1].name, out int refIndex))
+            {
+                TrackedSentinel trackedSentinel = TrackedObject.trackedReferences[refIndex] as TrackedSentinel;
+                if (trackedSentinel != null && trackedSentinel.data.controller == GameManager.ID)
+                {
+                    if(trackedSentinel.sentinelData.patrolPoints == null)
+                    {
+                        trackedSentinel.sentinelData.patrolPoints = new List<Vector3>();
+                    }
+                    else
+                    {
+                        trackedSentinel.sentinelData.patrolPoints.Clear();
+                    }
+                    for(int i=0; i < points.Count; ++i)
+                    {
+                        trackedSentinel.sentinelData.patrolPoints.Add(points[i].position);
+                    }
+                    trackedSentinel.sentinelData.currentPointIndex = cp;
+                    trackedSentinel.sentinelData.targetPointIndex = __instance.tarPointIndex;
+                    trackedSentinel.sentinelData.isMovingUpIndicies = __instance.isMovingUpIndicies;
+
+                    if (ThreadManager.host)
+                    {
+                        ServerSend.SentinelInit(trackedSentinel.data.trackedID, trackedSentinel.sentinelData.patrolPoints, trackedSentinel.sentinelData.currentPointIndex, trackedSentinel.sentinelData.targetPointIndex, trackedSentinel.sentinelData.isMovingUpIndicies);
+                    }
+                    else if(trackedSentinel.data.trackedID != -1)
+                    {
+                        ClientSend.SentinelInit(trackedSentinel.data.trackedID, trackedSentinel.sentinelData.patrolPoints, trackedSentinel.sentinelData.currentPointIndex, trackedSentinel.sentinelData.targetPointIndex, trackedSentinel.sentinelData.isMovingUpIndicies);
+                    }
+                    else
+                    {
+                        if (!TrackedNode.unknownInit.Contains(trackedSentinel.data.localWaitingIndex))
+                        {
+                            TrackedNode.unknownInit.Add(trackedSentinel.data.localWaitingIndex);
+                        }
+                    }
+                }
+            }
+        }
+
+        // Patches FixedUpdate to only allow necessary part for non controller
+        static bool FixedUpdatePrefix(Construct_Sentinel __instance)
+        {
+            if (Mod.managerObject == null)
+            {
+                return true;
+            }
+
+            if (__instance.PlatePoints[__instance.PlatePoints.Count - 1] != null && int.TryParse(__instance.PlatePoints[__instance.PlatePoints.Count - 1].name, out int refIndex))
+            {
+                TrackedSentinel trackedSentinel = TrackedObject.trackedReferences[refIndex] as TrackedSentinel;
+                if(trackedSentinel != null)
+                {
+                    if (trackedSentinel.data.controller == GameManager.ID)
+                    {
+                        return true;
+                    }
+                    else
+                    {
+                        if (__instance.m_isDead)
+                        {
+                            return false;
+                        }
+                        float deltaTime = Time.deltaTime;
+                        for (int i = 0; i < __instance.Plates.Count; i++)
+                        {
+                            if (__instance.Plates[i] != null && __instance.Plates[i].RB != null)
+                            {
+                                Vector3 a = __instance.PlatePoints[i].position - __instance.Plates[i].transform.position;
+                                float num;
+                                Vector3 a2;
+                                (__instance.PlatePoints[i].rotation * Quaternion.Inverse(__instance.Plates[i].transform.rotation)).ToAngleAxis(out num, out a2);
+                                Vector3 target = a * 900f * deltaTime;
+                                __instance.Plates[i].RB.velocity = Vector3.MoveTowards(__instance.Plates[i].RB.velocity, target, 150f * deltaTime);
+                                if (num > 180f)
+                                {
+                                    num -= 360f;
+                                }
+                                if (num != 0f)
+                                {
+                                    Vector3 target2 = deltaTime * num * a2 * 6f;
+                                    __instance.Plates[i].RB.angularVelocity = Vector3.MoveTowards(__instance.Plates[i].RB.angularVelocity, target2, 50f * Time.fixedDeltaTime);
+                                }
+                            }
+                        }
+
+                        return false;
                     }
                 }
             }
