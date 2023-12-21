@@ -531,14 +531,14 @@ namespace H3MP
                                 break;
                             case 16: // Dump item IDs
                                 Mod.LogInfo("\tDebug: Dumping item IDs");
-                                foreach(KeyValuePair<string, FVRObject> entry in IM.OD)
+                                foreach (KeyValuePair<string, FVRObject> entry in IM.OD)
                                 {
                                     Mod.LogInfo(entry.Key);
                                 }
                                 break;
                             case 17: // Toggle null driver debug controls
                                 nullDriverControls = !nullDriverControls;
-                                Mod.LogInfo("\tDebug: Null driver controls: "+nullDriverControls);
+                                Mod.LogInfo("\tDebug: Null driver controls: " + nullDriverControls);
                                 if (nullDriverControls)
                                 {
                                     nullDriverVerticalRot = 90;
@@ -546,7 +546,7 @@ namespace H3MP
                                 }
                                 break;
                             case 18: // Resolve sub domain
-                                Mod.LogInfo("\tDebug: Sub domain h3mp.tommysoucy.vip resolved to: "+ Dns.GetHostAddresses("h3mp.tommysoucy.vip")[0].ToString());
+                                Mod.LogInfo("\tDebug: Sub domain h3mp.tommysoucy.vip resolved to: " + Dns.GetHostAddresses("h3mp.tommysoucy.vip")[0].ToString());
                                 break;
                             case 19: // Load to grillhouse
                                 Mod.LogInfo("\tDebug: Load to grillhouse");
@@ -588,7 +588,7 @@ namespace H3MP
                                 Mod.LogInfo("\tDebug: Register test custom packet");
                                 if (ThreadManager.host)
                                 {
-                                    if(Mod.registeredCustomPacketIDs.TryGetValue("TestCustomPacketID", out int customPacketID))
+                                    if (Mod.registeredCustomPacketIDs.TryGetValue("TestCustomPacketID", out int customPacketID))
                                     {
                                         testCustomPacketID = customPacketID;
                                     }
@@ -596,7 +596,7 @@ namespace H3MP
                                     {
                                         testCustomPacketID = Server.RegisterCustomPacketType("TestCustomPacketID");
                                     }
-                                    
+
                                     /// CUSTOMIZATION
                                     /// Note that if this packet is a UDP update packet, additionally to adding a handler
                                     /// in Mod.customPacketHandlers, you should also implement a packet preprocessor
@@ -685,7 +685,10 @@ namespace H3MP
                                 Mod.LogInfo("\tDebug: Toggle vulnerability");
                                 SM.PlayGlobalUISound(SM.GlobalUISound.Beep, transform.position);
                                 H3MPWristMenuSection.invulnerable = !H3MPWristMenuSection.invulnerable;
-                                H3MPWristMenuSection.invulnerableText.text = "Debug: Invulnerable: " + H3MPWristMenuSection.invulnerable;
+                                if (H3MPWristMenuSection.invulnerableText != null)
+                                {
+                                    H3MPWristMenuSection.invulnerableText.text = "Debug: Invulnerable: " + H3MPWristMenuSection.invulnerable;
+                                }
                                 break;
                         }
                     }
