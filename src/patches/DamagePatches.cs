@@ -928,11 +928,17 @@ namespace H3MP.Patches
             ++patchIndex; // 61
 
             // PlayerHitboxDamagePatch
-            MethodInfo playerHitboxDamageOriginal = typeof(FVRPlayerHitbox).GetMethod("Damage", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo playerHitboxDamageFloatOriginal = typeof(FVRPlayerHitbox).GetMethod("Damage", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(float) }, null);
+            MethodInfo playerHitboxDamageObjectOriginal = typeof(FVRPlayerHitbox).GetMethod("Damage", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(Damage) }, null);
+            MethodInfo playerHitboxDamageStructOriginal = typeof(FVRPlayerHitbox).GetMethod("Damage", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(DamageDealt) }, null);
             MethodInfo playerHitboxDamagePrefix = typeof(PlayerHitboxDamagePatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
 
-            PatchController.Verify(playerHitboxDamageOriginal, harmony, false);
-            harmony.Patch(playerHitboxDamageOriginal, new HarmonyMethod(playerHitboxDamagePrefix));
+            PatchController.Verify(playerHitboxDamageFloatOriginal, harmony, false);
+            PatchController.Verify(playerHitboxDamageObjectOriginal, harmony, false);
+            PatchController.Verify(playerHitboxDamageStructOriginal, harmony, false);
+            harmony.Patch(playerHitboxDamageFloatOriginal, new HarmonyMethod(playerHitboxDamagePrefix));
+            harmony.Patch(playerHitboxDamageObjectOriginal, new HarmonyMethod(playerHitboxDamagePrefix));
+            harmony.Patch(playerHitboxDamageStructOriginal, new HarmonyMethod(playerHitboxDamagePrefix));
         }
     }
 

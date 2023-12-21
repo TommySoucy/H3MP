@@ -4236,10 +4236,15 @@ namespace H3MP.Patches
         static bool ProcessCollisionPrefix(Sosig __instance)
         {
             // Skip if not connected
-            if (Mod.managerObject == null || __instance == null)
+            if (Mod.managerObject == null)
             {
-                Mod.LogInfo("Sosig ProcessCollisionPrefix: __instance null?: " + (__instance == null));
                 return true;
+            }
+
+            if(__instance == null)
+            {
+                Mod.LogWarning("Sosig ProcessCollisionPrefix: __instance null");
+                return false;
             }
 
             TrackedSosig trackedSosig = GameManager.trackedSosigBySosig.ContainsKey(__instance) ? GameManager.trackedSosigBySosig[__instance] : __instance.GetComponent<TrackedSosig>();
