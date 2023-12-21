@@ -924,6 +924,15 @@ namespace H3MP.Patches
 
             PatchController.Verify(hazeDamageOriginal, harmony, false);
             harmony.Patch(hazeDamageOriginal, new HarmonyMethod(hazeDamagePrefix));
+
+            ++patchIndex; // 61
+
+            // PlayerHitboxDamagePatch
+            MethodInfo playerHitboxDamageOriginal = typeof(FVRPlayerHitbox).GetMethod("Damage", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo playerHitboxDamagePrefix = typeof(PlayerHitboxDamagePatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(playerHitboxDamageOriginal, harmony, false);
+            harmony.Patch(playerHitboxDamageOriginal, new HarmonyMethod(playerHitboxDamagePrefix));
         }
     }
 
@@ -4400,6 +4409,15 @@ namespace H3MP.Patches
                 }
             }
             return true;
+        }
+    }
+
+    // Patches FVRPlayerHitbox.Damage to control damage taken
+    class PlayerHitboxDamagePatch
+    {
+        static bool Prefix()
+        {
+            return !H3MPWristMenuSection.invulnerable;
         }
     }
 }

@@ -681,6 +681,12 @@ namespace H3MP
                                 MethodInfo prefix = typeof(Mod).GetMethod("PollInputPrefix", BindingFlags.Public | BindingFlags.Static);
                                 harmony.Patch(original, new HarmonyMethod(prefix));
                                 break;
+                            case 35: // Toggle vulnerability
+                                Mod.LogInfo("\tDebug: Toggle vulnerability");
+                                SM.PlayGlobalUISound(SM.GlobalUISound.Beep, transform.position);
+                                H3MPWristMenuSection.invulnerable = !H3MPWristMenuSection.invulnerable;
+                                H3MPWristMenuSection.invulnerableText.text = "Debug: Invulnerable: " + H3MPWristMenuSection.invulnerable;
+                                break;
                         }
                     }
                 }
