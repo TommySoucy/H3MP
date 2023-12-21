@@ -112,7 +112,11 @@ namespace H3MP.Tracking
                 }
                 if (physicalEncryption.FlashOnDestroy)
                 {
-                    FXM.InitiateMuzzleFlash(transform.position, Vector3.up, physicalEncryption.FlashIntensity, physicalEncryption.FlashColor, physicalEncryption.FlashRange);
+                    FXM FXMInstance = ManagerSingleton<FXM>.Instance;
+                    if(FXMInstance.MuzzleFireLight != null && FXMInstance.MuzzleFireLightOG != null)
+                    {
+                        FXM.InitiateMuzzleFlash(transform.position, Vector3.up, physicalEncryption.FlashIntensity, physicalEncryption.FlashColor, physicalEncryption.FlashRange);
+                    }
                 }
                 if(physicalEncryption.m_point != null)
                 {

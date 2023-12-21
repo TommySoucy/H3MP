@@ -382,7 +382,7 @@ namespace H3MP.Tracking
                         physicalEncryption.physicalEncryption.UpdateLine();
                     }
 
-                    if(type == TNH_EncryptionType.Refractive)
+                    if (type == TNH_EncryptionType.Refractive)
                     {
                         physicalEncryption.physicalEncryption.RefractivePreview.position = refractivePreviewPos;
                         physicalEncryption.physicalEncryption.RefractiveShield.rotation = refractiveShieldRot;
@@ -568,22 +568,31 @@ namespace H3MP.Tracking
             {
                 type = physicalEncryption.physicalEncryption.Type;
                 simple = physicalEncryption.name.Contains("_Simple");
-                subTargsActive = new bool[physicalEncryption.physicalEncryption.SubTargs.Count];
-                subTargGeosActive = new bool[physicalEncryption.physicalEncryption.SubTargGeo.Count];
-                for (int i = 0; i < physicalEncryption.physicalEncryption.SubTargs.Count; ++i)
+                subTargsActive = new bool[physicalEncryption.physicalEncryption.SubTargs == null ? 0 : physicalEncryption.physicalEncryption.SubTargs.Count];
+                subTargGeosActive = new bool[physicalEncryption.physicalEncryption.SubTargGeo == null ? 0 : physicalEncryption.physicalEncryption.SubTargGeo.Count];
+                if(physicalEncryption.physicalEncryption.SubTargs != null)
                 {
-                    subTargsActive[i] = physicalEncryption.physicalEncryption.SubTargs[i].activeSelf;
+                    for (int i = 0; i < physicalEncryption.physicalEncryption.SubTargs.Count; ++i)
+                    {
+                        subTargsActive[i] = physicalEncryption.physicalEncryption.SubTargs[i].activeSelf;
+                    }
                 }
-                for (int i = 0; i < physicalEncryption.physicalEncryption.SubTargGeo.Count; ++i)
+                if(physicalEncryption.physicalEncryption.SubTargGeo != null)
                 {
-                    subTargGeosActive[i] = physicalEncryption.physicalEncryption.SubTargGeo[i].gameObject.activeSelf;
+                    for (int i = 0; i < physicalEncryption.physicalEncryption.SubTargGeo.Count; ++i)
+                    {
+                        subTargGeosActive[i] = physicalEncryption.physicalEncryption.SubTargGeo[i].gameObject.activeSelf;
+                    }
                 }
                 numHitsLeft = physicalEncryption.physicalEncryption.m_numHitsLeft;
                 initialPos = physicalEncryption.physicalEncryption.initialPos;
                 cascadingIndex = (byte)EncryptionPatch.cascadingDestroyIndex;
                 cascadingDepth = (byte)EncryptionPatch.cascadingDestroyDepth;
-                refractivePreviewPos = physicalEncryption.physicalEncryption.RefractivePreview.position;
-                refractiveShieldRot = physicalEncryption.physicalEncryption.RefractiveShield.rotation;
+                if(type == TNH_EncryptionType.Refractive)
+                {
+                    refractivePreviewPos = physicalEncryption.physicalEncryption.RefractivePreview.position;
+                    refractiveShieldRot = physicalEncryption.physicalEncryption.RefractiveShield.rotation;
+                }
             }
 
             previousAgilePointerScale = agilePointerScale;
