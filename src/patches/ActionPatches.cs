@@ -4236,8 +4236,9 @@ namespace H3MP.Patches
         static bool ProcessCollisionPrefix(Sosig __instance)
         {
             // Skip if not connected
-            if (Mod.managerObject == null)
+            if (Mod.managerObject == null || __instance == null)
             {
+                Mod.LogInfo("Sosig ProcessCollisionPrefix: __instance null?: " + (__instance == null));
                 return true;
             }
 
