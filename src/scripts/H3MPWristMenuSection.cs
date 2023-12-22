@@ -90,6 +90,7 @@ namespace H3MP.Scripts
             InitButton(new List<int>() { 5 }, new List<Vector3>() { new Vector3(0, 0, 0) }, new Vector2(1200, 150), new Vector2(340, 45), OnSetRespawnPointClicked, "Set respawn point", out textOut);
             InitButton(new List<int>() { 5 }, new List<Vector3>() { new Vector3(0, -50, 0) }, new Vector2(1200, 150), new Vector2(340, 45), OnDisableHoldSosigsClicked, "Debug: Disable Hold Sosigs", out textOut);
             InitButton(new List<int>() { 5 }, new List<Vector3>() { new Vector3(0, -100, 0) }, new Vector2(1200, 150), new Vector2(340, 45), OnInvulnerableClicked, "Debug: Invulnerable: "+invulnerable, out invulnerableText);
+            InitButton(new List<int>() { 5 }, new List<Vector3>() { new Vector3(0, -150, 0) }, new Vector2(1200, 150), new Vector2(340, 45), OnTPToPlayerClicked, "Debug: TP to player", out textOut);
             InitButton(new List<int>() { 4 }, new List<Vector3>() { new Vector3(215, -140, 0) }, new Vector2(240, 240), new Vector2(70, 70), OnNextOptionsClicked, "Next", out textOut);
             InitButton(new List<int>() { 5 }, new List<Vector3>() { new Vector3(-215, -140, 0) }, new Vector2(240, 240), new Vector2(70, 70), OnPrevOptionsClicked, "Prev", out textOut);
         }
@@ -897,6 +898,13 @@ namespace H3MP.Scripts
             SM.PlayGlobalUISound(SM.GlobalUISound.Beep, transform.position);
             invulnerable = !invulnerable;
             invulnerableText.text = "Debug: Invulnerable: " + invulnerable;
+        }
+
+        private void OnTPToPlayerClicked(Text textRef)
+        {
+            SM.PlayGlobalUISound(SM.GlobalUISound.Beep, transform.position);
+            int randomPlayer = GameManager.playersPresent[Random.Range(0, GameManager.playersPresent.Count - 1)];
+            GM.CurrentMovementManager.TeleportToPoint(GameManager.players[randomPlayer].head.position, true);
         }
 
         private void ProcessPlayerPrefabIndex(int index, Text text)
