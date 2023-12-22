@@ -902,9 +902,16 @@ namespace H3MP.Scripts
 
         private void OnTPToPlayerClicked(Text textRef)
         {
-            SM.PlayGlobalUISound(SM.GlobalUISound.Beep, transform.position);
-            int randomPlayer = GameManager.playersPresent[Random.Range(0, GameManager.playersPresent.Count - 1)];
-            GM.CurrentMovementManager.TeleportToPoint(GameManager.players[randomPlayer].head.position, true);
+            if(GameManager.playersPresent.Count == 0)
+            {
+                SM.PlayGlobalUISound(SM.GlobalUISound.Error, transform.position);
+            }
+            else
+            {
+                SM.PlayGlobalUISound(SM.GlobalUISound.Beep, transform.position);
+                int randomPlayer = GameManager.playersPresent[Random.Range(0, GameManager.playersPresent.Count - 1)];
+                GM.CurrentMovementManager.TeleportToPoint(GameManager.players[randomPlayer].head.position, true);
+            }
         }
 
         private void ProcessPlayerPrefabIndex(int index, Text text)
