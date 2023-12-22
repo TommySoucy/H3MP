@@ -1039,6 +1039,15 @@ namespace H3MP.Patches
                                 UnityEngine.Object.Destroy(supplyPoint.m_panel);
                                 supplyPoint.m_panel = null;
                             }
+                            for (int i = supplyPoint.m_panels.Count - 1; i >= 0; i--)
+                            {
+                                if (supplyPoint.m_panels[i] != null)
+                                {
+                                    UnityEngine.Object.Destroy(supplyPoint.m_panels[j]);
+                                }
+                                supplyPoint.m_panels.RemoveAt(j);
+                            }
+                            supplyPoint.m_panels.Clear();
                         }
                         Mod.currentTNHInstance.manager.DispatchScore();
 
@@ -1421,6 +1430,15 @@ namespace H3MP.Patches
                             UnityEngine.Object.Destroy(supplyPoint.m_panel);
                             supplyPoint.m_panel = null;
                         }
+                        for (int i = supplyPoint.m_panels.Count - 1; i >= 0; i--)
+                        {
+                            if (supplyPoint.m_panels[i] != null)
+                            {
+                                UnityEngine.Object.Destroy(supplyPoint.m_panels[j]);
+                            }
+                            supplyPoint.m_panels.RemoveAt(j);
+                        }
+                        supplyPoint.m_panels.Clear();
                     }
 
                     return false;
@@ -1483,29 +1501,39 @@ namespace H3MP.Patches
                     for (int j = 0; j < Mod.currentTNHInstance.manager.SupplyPoints.Count; j++)
                     {
                         // DeleteAllActiveEntities
-                        Mod.currentTNHInstance.manager.SupplyPoints[j].m_activeSosigs.Clear();
-                        Mod.currentTNHInstance.manager.SupplyPoints[j].m_activeTurrets.Clear();
-                        if (Mod.currentTNHInstance.manager.SupplyPoints[j].m_trackedObjects.Count > 0)
+                        TNH_SupplyPoint supplyPoint = Mod.currentTNHInstance.manager.SupplyPoints[j];
+                        supplyPoint.m_activeSosigs.Clear();
+                        supplyPoint.m_activeTurrets.Clear();
+                        if (supplyPoint.m_trackedObjects.Count > 0)
                         {
-                            for (int i = Mod.currentTNHInstance.manager.SupplyPoints[j].m_trackedObjects.Count - 1; i >= 0; i--)
+                            for (int i = supplyPoint.m_trackedObjects.Count - 1; i >= 0; i--)
                             {
-                                if (Mod.currentTNHInstance.manager.SupplyPoints[j].m_trackedObjects[i] != null)
+                                if (supplyPoint.m_trackedObjects[i] != null)
                                 {
-                                    UnityEngine.Object.Destroy(Mod.currentTNHInstance.manager.SupplyPoints[j].m_trackedObjects[i]);
+                                    UnityEngine.Object.Destroy(supplyPoint.m_trackedObjects[i]);
                                 }
                             }
                         }
-                        if (Mod.currentTNHInstance.manager.SupplyPoints[j].m_constructor != null)
+                        if (supplyPoint.m_constructor != null)
                         {
-                            Mod.currentTNHInstance.manager.SupplyPoints[j].m_constructor.GetComponent<TNH_ObjectConstructor>().ClearCase();
-                            UnityEngine.Object.Destroy(Mod.currentTNHInstance.manager.SupplyPoints[j].m_constructor);
-                            Mod.currentTNHInstance.manager.SupplyPoints[j].m_constructor = null;
+                            supplyPoint.m_constructor.GetComponent<TNH_ObjectConstructor>().ClearCase();
+                            UnityEngine.Object.Destroy(supplyPoint.m_constructor);
+                            supplyPoint.m_constructor = null;
                         }
-                        if (Mod.currentTNHInstance.manager.SupplyPoints[j].m_panel != null)
+                        if (supplyPoint.m_panel != null)
                         {
-                            UnityEngine.Object.Destroy(Mod.currentTNHInstance.manager.SupplyPoints[j].m_panel);
-                            Mod.currentTNHInstance.manager.SupplyPoints[j].m_panel = null;
+                            UnityEngine.Object.Destroy(supplyPoint.m_panel);
+                            supplyPoint.m_panel = null;
                         }
+                        for (int i = supplyPoint.m_panels.Count - 1; i >= 0; i--)
+                        {
+                            if (supplyPoint.m_panels[i] != null)
+                            {
+                                UnityEngine.Object.Destroy(supplyPoint.m_panels[j]);
+                            }
+                            supplyPoint.m_panels.RemoveAt(j);
+                        }
+                        supplyPoint.m_panels.Clear();
                     }
                     Mod.currentTNHInstance.manager.EnqueueLine(TNH_VoiceLineID.AI_ReturningToInterface);
                     GM.CurrentMovementManager.TeleportToPoint(GM.CurrentSceneSettings.DeathResetPoint.position, true);
