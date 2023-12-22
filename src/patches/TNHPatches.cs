@@ -2742,9 +2742,11 @@ namespace H3MP.Patches
         public static bool inSpawnDefenses;
         public static bool inSpawnBoxes;
         public static int supplyPointIndex;
+        public static TNH_SupplyPoint supplyPointInstance;
 
         static bool SpawnTakeEnemyGroupPrefix(TNH_SupplyPoint __instance)
         {
+            supplyPointInstance = __instance;
             if (Mod.managerObject == null || Mod.currentTNHInstance == null)
             {
                 return true;
@@ -2771,11 +2773,13 @@ namespace H3MP.Patches
 
         static void SpawnTakeEnemyGroupPostfix()
         {
+            supplyPointInstance = null;
             inSpawnTakeEnemyGroup = false;
         }
 
         static bool SpawnDefensesPrefix(TNH_SupplyPoint __instance)
         {
+            supplyPointInstance = __instance;
             if (Mod.managerObject == null || Mod.currentTNHInstance == null)
             {
                 return true;
@@ -2802,11 +2806,13 @@ namespace H3MP.Patches
 
         static void SpawnDefensesPostfix()
         {
+            supplyPointInstance = null;
             inSpawnDefenses = false;
         }
 
         static bool SpawnBoxesPrefix(TNH_SupplyPoint __instance)
         {
+            supplyPointInstance = __instance;
             if (Mod.managerObject == null || Mod.currentTNHInstance == null)
             {
                 return true;
@@ -2831,13 +2837,89 @@ namespace H3MP.Patches
             return false;
         }
 
-        static void SpawnBoxesPostfix()
+        static void SpawnBoxesPostfix(TNH_SupplyPoint __instance)
         {
+            supplyPointInstance = null;
             inSpawnBoxes = false;
+
+            if (Mod.managerObject == null || Mod.currentTNHInstance == null)
+            {
+                return;
+            }
+            else if(__instance.M.UsesUberShatterableCrates) // Sync ubershatterable crate contents
+            {
+                for(int i=0; i < __instance.m_spawnBoxes.Count; ++i)
+                {
+                    UberShatterable uberShatterable = __instance.m_spawnBoxes[i].GetComponent<UberShatterable>();
+                    if (uberShatterable != null)
+                    {
+                        for(int j=0; j < uberShatterable.SpawnOnShatter.Count; ++j)
+                        {
+                            if (uberShatterable.SpawnOnShatter[j] == __instance.M.ResourceLib.Prefab_Token)
+                            {
+                                TrackedItem trackedItem = __instance.m_spawnBoxes[i].GetComponent<TrackedItem>();
+                                if (trackedItem != null)
+                                {
+                                    trackedItem.itemData.additionalData[38] = 1;
+
+                                    if (ThreadManager.host)
+                                    {
+                                        ServerSend.ShatterableCrateSetHoldingToken(trackedItem.data.trackedID);
+                                    }
+                                    else if(trackedItem.data.trackedID != -1)
+                                    {
+                                        ClientSend.ShatterableCrateSetHoldingToken(trackedItem.data.trackedID);
+                                    }
+                                    else
+                                    {
+                                        if (TrackedItem.unknownCrateHolding.TryGetValue(trackedItem.data.localWaitingIndex, out byte current) && current == 0)
+                                        {
+                                            TrackedItem.unknownCrateHolding[trackedItem.data.localWaitingIndex] = 2;
+                                        }
+                                        else
+                                        {
+                                            TrackedItem.unknownCrateHolding.Add(trackedItem.data.localWaitingIndex, 1);
+                                        }
+                                    }
+                                }
+                            }
+                            else if(uberShatterable.SpawnOnShatter[j] == __instance.M.ResourceLib.Prefab_HealthMinor)
+                            {
+                                TrackedItem trackedItem = __instance.m_spawnBoxes[i].GetComponent<TrackedItem>();
+                                if (trackedItem != null)
+                                {
+                                    trackedItem.itemData.additionalData[37] = 1;
+
+                                    if (ThreadManager.host)
+                                    {
+                                        ServerSend.ShatterableCrateSetHoldingHealth(trackedItem.data.trackedID);
+                                    }
+                                    else if (trackedItem.data.trackedID != -1)
+                                    {
+                                        ClientSend.ShatterableCrateSetHoldingHealth(trackedItem.data.trackedID);
+                                    }
+                                    else
+                                    {
+                                        if (TrackedItem.unknownCrateHolding.TryGetValue(trackedItem.data.localWaitingIndex, out byte current) && current == 1)
+                                        {
+                                            TrackedItem.unknownCrateHolding[trackedItem.data.localWaitingIndex] = 2;
+                                        }
+                                        else
+                                        {
+                                            TrackedItem.unknownCrateHolding.Add(trackedItem.data.localWaitingIndex, 0);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         static bool TNHTweaker_SpawnTakeEnemyGroupPrefix(TNH_SupplyPoint point)
         {
+            supplyPointInstance = point;
             if (Mod.managerObject == null || Mod.currentTNHInstance == null)
             {
                 return true;
@@ -2864,11 +2946,13 @@ namespace H3MP.Patches
 
         static void TNHTweaker_SpawnTakeEnemyGroupPostfix()
         {
+            supplyPointInstance = null;
             inSpawnTakeEnemyGroup = false;
         }
 
         static bool TNHTweaker_SpawnDefensesPrefix(TNH_SupplyPoint point)
         {
+            supplyPointInstance = point;
             if (Mod.managerObject == null || Mod.currentTNHInstance == null)
             {
                 return true;
@@ -2895,11 +2979,13 @@ namespace H3MP.Patches
 
         static void TNHTweaker_SpawnDefensesPostfix()
         {
+            supplyPointInstance = null;
             inSpawnDefenses = false;
         }
 
         static bool TNHTweaker_SpawnBoxesPrefix(TNH_SupplyPoint point)
         {
+            supplyPointInstance = point;
             if (Mod.managerObject == null || Mod.currentTNHInstance == null)
             {
                 return true;
@@ -2924,9 +3010,84 @@ namespace H3MP.Patches
             return false;
         }
 
-        static void TNHTweaker_SpawnBoxesPostfix()
+        static void TNHTweaker_SpawnBoxesPostfix(TNH_SupplyPoint point)
         {
+            supplyPointInstance = null;
             inSpawnBoxes = false;
+
+            if (Mod.managerObject == null || Mod.currentTNHInstance == null)
+            {
+                return;
+            }
+            else if (point.M.UsesUberShatterableCrates) // Sync ubershatterable crate contents
+            {
+                for (int i = 0; i < point.m_spawnBoxes.Count; ++i)
+                {
+                    UberShatterable uberShatterable = point.m_spawnBoxes[i].GetComponent<UberShatterable>();
+                    if (uberShatterable != null)
+                    {
+                        for (int j = 0; j < uberShatterable.SpawnOnShatter.Count; ++j)
+                        {
+                            if (uberShatterable.SpawnOnShatter[j] == point.M.ResourceLib.Prefab_Token)
+                            {
+                                TrackedItem trackedItem = point.m_spawnBoxes[i].GetComponent<TrackedItem>();
+                                if (trackedItem != null)
+                                {
+                                    trackedItem.itemData.additionalData[38] = 1;
+
+                                    if (ThreadManager.host)
+                                    {
+                                        ServerSend.ShatterableCrateSetHoldingToken(trackedItem.data.trackedID);
+                                    }
+                                    else if (trackedItem.data.trackedID != -1)
+                                    {
+                                        ClientSend.ShatterableCrateSetHoldingToken(trackedItem.data.trackedID);
+                                    }
+                                    else
+                                    {
+                                        if (TrackedItem.unknownCrateHolding.TryGetValue(trackedItem.data.localWaitingIndex, out byte current) && current == 0)
+                                        {
+                                            TrackedItem.unknownCrateHolding[trackedItem.data.localWaitingIndex] = 2;
+                                        }
+                                        else
+                                        {
+                                            TrackedItem.unknownCrateHolding.Add(trackedItem.data.localWaitingIndex, 1);
+                                        }
+                                    }
+                                }
+                            }
+                            else if (uberShatterable.SpawnOnShatter[j] == point.M.ResourceLib.Prefab_HealthMinor)
+                            {
+                                TrackedItem trackedItem = point.m_spawnBoxes[i].GetComponent<TrackedItem>();
+                                if (trackedItem != null)
+                                {
+                                    trackedItem.itemData.additionalData[37] = 1;
+
+                                    if (ThreadManager.host)
+                                    {
+                                        ServerSend.ShatterableCrateSetHoldingHealth(trackedItem.data.trackedID);
+                                    }
+                                    else if (trackedItem.data.trackedID != -1)
+                                    {
+                                        ClientSend.ShatterableCrateSetHoldingHealth(trackedItem.data.trackedID);
+                                    }
+                                    else
+                                    {
+                                        if (TrackedItem.unknownCrateHolding.TryGetValue(trackedItem.data.localWaitingIndex, out byte current) && current == 1)
+                                        {
+                                            TrackedItem.unknownCrateHolding[trackedItem.data.localWaitingIndex] = 2;
+                                        }
+                                        else
+                                        {
+                                            TrackedItem.unknownCrateHolding.Add(trackedItem.data.localWaitingIndex, 0);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 

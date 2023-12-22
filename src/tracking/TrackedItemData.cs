@@ -216,9 +216,45 @@ namespace H3MP.Tracking
             }
             else if(physicalItem.dataObject is UberShatterable)
             {
-                additionalData = new byte[2];
-                additionalData[0] = (physicalItem.dataObject as UberShatterable).m_hasShattered ? (byte)1 : (byte)0;
+                /* FORMAT: 
+                0: Shattered bool
+                1: Got shatter data bool
+                2: Point x float
+                6: Point y float
+                10: Point z float
+                14: Direction x float
+                18: Direction y float
+                22: Direction z float
+                26: Direction z float
+                30: Intensity float
+                34: TNH ubershatterable crate bool
+                35: Supply point index short
+                37: Contains health bool
+                38: Contains token bool
+                 */
+                UberShatterable uberShatterable = physicalItem.dataObject as UberShatterable;
+                additionalData = new byte[39];
+                additionalData[0] = uberShatterable.m_hasShattered ? (byte)1 : (byte)0;
                 additionalData[1] = 0; // Do not have destruction data
+                additionalData[34] = TNH_SupplyPointPatch.inSpawnBoxes ? (byte)1 : (byte)0;
+                if (TNH_SupplyPointPatch.inSpawnBoxes)
+                {
+                    BitConverter.GetBytes((short)TNH_SupplyPointPatch.supplyPointIndex).CopyTo(additionalData, 35);
+                }
+                if(TNH_SupplyPointPatch.supplyPointInstance != null)
+                {
+                    for (int i = 0; i < uberShatterable.SpawnOnShatter.Count; ++i)
+                    {
+                        if (uberShatterable.SpawnOnShatter[i] == TNH_SupplyPointPatch.supplyPointInstance.M.ResourceLib.Prefab_HealthMinor)
+                        {
+                            additionalData[37] = 1;
+                        }
+                        if (uberShatterable.SpawnOnShatter[i] == TNH_SupplyPointPatch.supplyPointInstance.M.ResourceLib.Prefab_Token)
+                        {
+                            additionalData[38] = 1;
+                        }
+                    }
+                }
             }
             else if(physicalItem.dataObject is FVRFireArmAttachment)
             {
@@ -567,6 +603,36 @@ namespace H3MP.Tracking
             }
             else if(physicalItem.dataObject is UberShatterable)
             {
+                if(additionalData[34] == 1)
+                {
+                    UberShatterable uberShatterable = physicalItem.dataObject as UberShatterable;
+                    if (additionalData[37] == 1)
+                    {
+                        if (uberShatterable != null && GM.TNH_Manager != null)
+                        {
+                            uberShatterable.SpawnOnShatter.Clear();
+                            uberShatterable.SpawnOnShatter.Add(GM.TNH_Manager.ResourceLib.Prefab_Crate_Full);
+                            uberShatterable.SpawnOnShatterPoints.Add(uberShatterable.transform);
+                            uberShatterable.SpawnOnShatterRotTypes.Add(UberShatterable.SpawnOnShatterRotationType.StrikeDir);
+                            uberShatterable.SpawnOnShatter.Add(GM.TNH_Manager.ResourceLib.Prefab_HealthMinor);
+                            uberShatterable.SpawnOnShatterPoints.Add(uberShatterable.transform);
+                            uberShatterable.SpawnOnShatterRotTypes.Add(UberShatterable.SpawnOnShatterRotationType.Identity);
+                        }
+                    }
+                    else if(additionalData[38] == 1)
+                    {
+                        if (uberShatterable != null && GM.TNH_Manager != null)
+                        {
+                            uberShatterable.SpawnOnShatter.Clear();
+                            uberShatterable.SpawnOnShatter.Add(GM.TNH_Manager.ResourceLib.Prefab_Crate_Full);
+                            uberShatterable.SpawnOnShatterPoints.Add(uberShatterable.transform);
+                            uberShatterable.SpawnOnShatterRotTypes.Add(UberShatterable.SpawnOnShatterRotationType.StrikeDir);
+                            uberShatterable.SpawnOnShatter.Add(GM.TNH_Manager.ResourceLib.Prefab_Token);
+                            uberShatterable.SpawnOnShatterPoints.Add(uberShatterable.transform);
+                            uberShatterable.SpawnOnShatterRotTypes.Add(UberShatterable.SpawnOnShatterRotationType.Identity);
+                        }
+                    }
+                }
                 if (additionalData[0] == 1)
                 {
                     if(additionalData[1] == 0)

@@ -1424,20 +1424,7 @@ namespace H3MP.Networking
                 {
                     trackedObject.physical.HandleShatter(null, packet.ReadVector3(), packet.ReadVector3(), packet.ReadFloat(), true, clientID, packet.ReadBytes(packet.ReadInt()));
                 }
-                //trackedItem.additionalData = new byte[30];
-                //trackedItem.additionalData[0] = 1;
-                //trackedItem.additionalData[1] = 1;
-                //for (int i = 2, j = 0; i < 30; ++i, ++j)
-                //{
-                //    trackedItem.additionalData[i] = packet.readableBuffer[packet.readPos + j];
-                //}
 
-                //if (trackedItem.physical != null)
-                //{
-                //    ++UberShatterableShatterPatch.skip;
-                //    (trackedItem.physicalItem.dataObject as UberShatterable).Shatter(packet.ReadVector3(), packet.ReadVector3(), packet.ReadFloat());
-                //    --UberShatterableShatterPatch.skip;
-                //}
                 ServerSend.UberShatterableShatter(clientID, packet);
             }
         }
@@ -2948,13 +2935,36 @@ namespace H3MP.Networking
 
             if (Server.objects[trackedID] != null)
             {
-                (Server.objects[trackedID] as TrackedItemData).additionalData[3] = 1;
-
-                if (Server.objects[trackedID].physical != null)
+                TrackedItemData trackedItemData = Server.objects[trackedID] as TrackedItemData;
+                if (trackedItemData.additionalData.Length == 39)
                 {
-                    ++TNH_ShatterableCrateSetHoldingHealthPatch.skip;
-                    Server.objects[trackedID].physical.GetComponent<TNH_ShatterableCrate>().SetHoldingHealth(GM.TNH_Manager);
-                    --TNH_ShatterableCrateSetHoldingHealthPatch.skip;
+                    trackedItemData.additionalData[37] = 1;
+
+                    if (trackedItemData.physical != null)
+                    {
+                        UberShatterable uberShatterable = trackedItemData.physicalItem.dataObject as UberShatterable;
+                        if(uberShatterable != null && GM.TNH_Manager != null)
+                        {
+                            uberShatterable.SpawnOnShatter.Clear();
+                            uberShatterable.SpawnOnShatter.Add(GM.TNH_Manager.ResourceLib.Prefab_Crate_Full);
+                            uberShatterable.SpawnOnShatterPoints.Add(uberShatterable.transform);
+                            uberShatterable.SpawnOnShatterRotTypes.Add(UberShatterable.SpawnOnShatterRotationType.StrikeDir);
+                            uberShatterable.SpawnOnShatter.Add(GM.TNH_Manager.ResourceLib.Prefab_HealthMinor);
+                            uberShatterable.SpawnOnShatterPoints.Add(uberShatterable.transform);
+                            uberShatterable.SpawnOnShatterRotTypes.Add(UberShatterable.SpawnOnShatterRotationType.Identity);
+                        }
+                    }
+                }
+                else
+                {
+                    trackedItemData.additionalData[3] = 1;
+
+                    if (trackedItemData.physical != null)
+                    {
+                        ++TNH_ShatterableCrateSetHoldingHealthPatch.skip;
+                        trackedItemData.physical.GetComponent<TNH_ShatterableCrate>().SetHoldingHealth(GM.TNH_Manager);
+                        --TNH_ShatterableCrateSetHoldingHealthPatch.skip;
+                    }
                 }
             }
 
@@ -2967,13 +2977,36 @@ namespace H3MP.Networking
 
             if (Server.objects[trackedID] != null)
             {
-                (Server.objects[trackedID] as TrackedItemData).additionalData[4] = 1;
-
-                if (Server.objects[trackedID].physical != null)
+                TrackedItemData trackedItemData = Server.objects[trackedID] as TrackedItemData;
+                if (trackedItemData.additionalData.Length == 39)
                 {
-                    ++TNH_ShatterableCrateSetHoldingTokenPatch.skip;
-                    Server.objects[trackedID].physical.GetComponent<TNH_ShatterableCrate>().SetHoldingToken(GM.TNH_Manager);
-                    --TNH_ShatterableCrateSetHoldingTokenPatch.skip;
+                    trackedItemData.additionalData[38] = 1;
+
+                    if (trackedItemData.physical != null)
+                    {
+                        UberShatterable uberShatterable = trackedItemData.physicalItem.dataObject as UberShatterable;
+                        if (uberShatterable != null && GM.TNH_Manager != null)
+                        {
+                            uberShatterable.SpawnOnShatter.Clear();
+                            uberShatterable.SpawnOnShatter.Add(GM.TNH_Manager.ResourceLib.Prefab_Crate_Full);
+                            uberShatterable.SpawnOnShatterPoints.Add(uberShatterable.transform);
+                            uberShatterable.SpawnOnShatterRotTypes.Add(UberShatterable.SpawnOnShatterRotationType.StrikeDir);
+                            uberShatterable.SpawnOnShatter.Add(GM.TNH_Manager.ResourceLib.Prefab_Token);
+                            uberShatterable.SpawnOnShatterPoints.Add(uberShatterable.transform);
+                            uberShatterable.SpawnOnShatterRotTypes.Add(UberShatterable.SpawnOnShatterRotationType.Identity);
+                        }
+                    }
+                }
+                else
+                {
+                    trackedItemData.additionalData[4] = 1;
+
+                    if (trackedItemData.physical != null)
+                    {
+                        ++TNH_ShatterableCrateSetHoldingTokenPatch.skip;
+                        trackedItemData.physical.GetComponent<TNH_ShatterableCrate>().SetHoldingToken(GM.TNH_Manager);
+                        --TNH_ShatterableCrateSetHoldingTokenPatch.skip;
+                    }
                 }
             }
 

@@ -12437,17 +12437,15 @@ namespace H3MP.Tracking
 
         private bool HandleShatterableShatter(UberShatterable shatterable, Vector3 point, Vector3 dir, float intensity, bool received, int clientID, byte[] data)
         {
-            List<byte> newAdditionalData = new List<byte>();
-            newAdditionalData.Add(1);
-            newAdditionalData.Add(1);
-            newAdditionalData.AddRange(BitConverter.GetBytes(point.x));
-            newAdditionalData.AddRange(BitConverter.GetBytes(point.y));
-            newAdditionalData.AddRange(BitConverter.GetBytes(point.z));
-            newAdditionalData.AddRange(BitConverter.GetBytes(dir.x));
-            newAdditionalData.AddRange(BitConverter.GetBytes(dir.y));
-            newAdditionalData.AddRange(BitConverter.GetBytes(dir.z));
-            newAdditionalData.AddRange(BitConverter.GetBytes(intensity));
-            itemData.additionalData = newAdditionalData.ToArray();
+            itemData.additionalData[0] = (byte)1;
+            itemData.additionalData[1] = (byte)1;
+            BitConverter.GetBytes(point.x).CopyTo(itemData.additionalData, 2);
+            BitConverter.GetBytes(point.y).CopyTo(itemData.additionalData, 6);
+            BitConverter.GetBytes(point.z).CopyTo(itemData.additionalData, 10);
+            BitConverter.GetBytes(dir.x).CopyTo(itemData.additionalData, 14);
+            BitConverter.GetBytes(dir.y).CopyTo(itemData.additionalData, 18);
+            BitConverter.GetBytes(dir.z).CopyTo(itemData.additionalData, 22);
+            BitConverter.GetBytes(intensity).CopyTo(itemData.additionalData, 26);
 
             if (received)
             {
