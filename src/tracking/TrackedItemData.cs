@@ -656,7 +656,7 @@ namespace H3MP.Tracking
             {
                 Brut_GasCuboid asGC = physicalItem.dataObject as Brut_GasCuboid;
                 asGC.m_isHandleBrokenOff = additionalData[0] == 1;
-                asGC.Handle.SetActive(asGC.m_isHandleBrokenOff);
+                asGC.Handle.SetActive(!asGC.m_isHandleBrokenOff);
                 for (int i = 0; i < additionalData[1]; ++i) 
                 {
                     int startIndex = i * 24 + 2;
