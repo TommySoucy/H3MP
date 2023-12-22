@@ -129,6 +129,13 @@ namespace H3MP.Patches
 
             ++patchIndex; // 11
 
+            // ScorePatch
+            MethodInfo scoreStartOriginal = typeof(TNH_ScoreDisplay).GetMethod("Start", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo scoreStartPostfix = typeof(ScorePatch).GetMethod("StartPostfix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(scoreStartOriginal, harmony, true);
+            harmony.Patch(scoreStartOriginal, null, new HarmonyMethod(scoreStartPostfix));
+
             //// TeleportToPointPatch
             //MethodInfo teleportToPointPatchOriginal = typeof(FVRMovementManager).GetMethod("TeleportToPoint", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(Vector3), typeof(bool) }, null);
             //MethodInfo teleportToPointPatchPrefix = typeof(TeleportToPointPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
@@ -661,6 +668,15 @@ namespace H3MP.Patches
             }
 
             GameManager.RaisePlayerBodyInit(__instance);
+        }
+    }
+
+    // Patches TNH_ScoreDisplay.Start to prevent scoring
+    class ScorePatch
+    {
+        static void StartPostfix(TNH_ScoreDisplay __instance)
+        {
+            __instance.m_usingSteamworks = false;
         }
     }
 
