@@ -60,6 +60,12 @@ namespace H3MP.Tracking
             data.localTrackedID = GameManager.objects.Count;
             GameManager.objects.Add(data);
 
+            // Call an init update because the one in awake won't be called because data was not set yet
+            if (trackedBlister.awoken)
+            {
+                trackedBlister.data.Update(true);
+            }
+
             Mod.LogInfo("Made blister " + trackedBlister.name + " tracked", false);
 
             return trackedBlister;
