@@ -5470,5 +5470,19 @@ namespace H3MP.Networking
                 }
             }
         }
+
+        public static void AlertSosigs(Packet packet)
+        {
+            string scene = packet.ReadString();
+            int instance = packet.ReadInt();
+            if (GameManager.scene.Equals(scene) && GameManager.instance == instance)
+            {
+                Vector3 position = packet.ReadVector3();
+                SM.PlayCoreSound(FVRPooledAudioType.GenericClose, Mod.sosigAlertAlarm, position);
+                ++OnSosigAlertPatch.skip;
+                GM.CurrentSceneSettings.OnSosigAlert(null, position);
+                --OnSosigAlertPatch.skip;
+            }
+        }
     }
 }

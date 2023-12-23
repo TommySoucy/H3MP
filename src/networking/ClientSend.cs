@@ -2898,5 +2898,17 @@ namespace H3MP.Networking
                 SendTCPData(packet);
             }
         }
+
+        public static void AlertSosigs(string scene, int instance, Vector3 position)
+        {
+            using (Packet packet = new Packet((int)ClientPackets.alertSosigs))
+            {
+                packet.Write(scene);
+                packet.Write(instance);
+                packet.Write(position);
+
+                SendTCPData(packet);
+            }
+        }
     }
 }

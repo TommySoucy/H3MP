@@ -215,7 +215,8 @@ namespace H3MP.Networking
         encryptionFireGun = 202,
         encryptionNextPos = 203,
         encryptionShieldRot = 204,
-        sentinelInit = 205
+        sentinelInit = 205,
+        alertSosigs = 206
     }
 
     /// <summary>Sent from client to server.</summary>
@@ -417,7 +418,8 @@ namespace H3MP.Networking
         encryptionFireGun = 193,
         encryptionNextPos = 194,
         encryptionShieldRot = 195,
-        sentinelInit = 196
+        sentinelInit = 196,
+        alertSosigs = 197
     }
 
     public class Packet : IDisposable

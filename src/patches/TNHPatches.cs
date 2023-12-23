@@ -375,6 +375,15 @@ namespace H3MP.Patches
 
             PatchController.Verify(SceneLoaderPatchLoadMGOriginal, harmony, true);
             harmony.Patch(SceneLoaderPatchLoadMGOriginal, new HarmonyMethod(SceneLoaderPatchLoadMGPrefix));
+
+            ++patchIndex; // 9
+
+            // OnSosigAlertPatch
+            MethodInfo sceneSettingssosigAlertOriginal = typeof(SceneLoader).GetMethod("OnSosigAlert", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo sceneSettingssosigAlertPrefix = typeof(OnSosigAlertPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(sceneSettingssosigAlertOriginal, harmony, true);
+            harmony.Patch(sceneSettingssosigAlertOriginal, new HarmonyMethod(sceneSettingssosigAlertPrefix));
         }
     }
 
@@ -3212,6 +3221,32 @@ namespace H3MP.Patches
             }
 
             return true;
+        }
+    }
+
+    // Patches FVRSceneSettings.OnSosigAlert to make everyone alert their sosigs
+    class OnSosigAlertPatch
+    {
+        public static int skip;
+
+        static void Prefix(FVRSceneSettings __instance, Vector3 p)
+        {
+            // If we are in a TNH instance hosted by a spectator host but spectator host is not yet in the game
+            if (Mod.managerObject != null || skip > 0)
+            {
+                return;
+            }
+
+            if (ThreadManager.host)
+            {
+                List<int> filtered = new List<int>(GameManager.playersPresent);
+                filtered.Remove(0);
+                ServerSend.AlertSosigs(GameManager.playersPresent, GameManager.scene, GameManager.instance, p);
+            }
+            else
+            {
+                ClientSend.AlertSosigs(GameManager.scene, GameManager.instance, p);
+            }
         }
     }
 }

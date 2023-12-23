@@ -63,6 +63,7 @@ namespace H3MP
         public static AudioEvent glassGroundShatterEvent;
         public static Dictionary<FVRSoundEnvironment, AudioEvent> distantShotSets;
         public static SosigSpeechSet defaultSosigSpeechSet;
+        public static AudioEvent sosigAlertAlarm;
 
         // Menu refs
         public static Text mainStatusText;
@@ -1336,6 +1337,10 @@ namespace H3MP
 
             // Load default Sosig speech set
             defaultSosigSpeechSet = assetBundle.LoadAsset<SosigSpeechSet>("DefaultSpeechSet");
+
+            // Load TNH Sosig alert alarm sound
+            sosigAlertAlarm = new AudioEvent();
+            sosigAlertAlarm.Clips.Add(assetBundle.LoadAsset<AudioClip>("Blister_LaserAlarm"));
         }
 
         private void GetTrackedObjectTypes()

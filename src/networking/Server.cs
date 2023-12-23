@@ -556,6 +556,7 @@ namespace H3MP.Networking
                 ServerHandle.EncryptionNextPos,
                 ServerHandle.EncryptionShieldRot,
                 ServerHandle.SentinelInit,
+                ServerHandle.AlertSosigs,
             };
 
             objects = new TrackedObjectData[100];

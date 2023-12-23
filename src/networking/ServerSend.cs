@@ -4890,5 +4890,17 @@ namespace H3MP.Networking
                 }
             }
         }
+
+        public static void AlertSosigs(List<int> players, string scene, int instance, Vector3 position)
+        {
+            using (Packet packet = new Packet((int)ServerPackets.alertSosigs))
+            {
+                packet.Write(scene);
+                packet.Write(instance);
+                packet.Write(position);
+
+                SendTCPData(players, packet);
+            }
+        }
     }
 }
