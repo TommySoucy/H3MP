@@ -130,11 +130,11 @@ namespace H3MP.Patches
             ++patchIndex; // 11
 
             // ScorePatch
-            MethodInfo scoreStartOriginal = typeof(TNH_ScoreDisplay).GetMethod("Start", BindingFlags.NonPublic | BindingFlags.Instance);
-            MethodInfo scoreStartPostfix = typeof(ScorePatch).GetMethod("StartPostfix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo initializedOriginal = typeof(SteamManager).GetMethod("get_Initialized", BindingFlags.Public | BindingFlags.Static);
+            MethodInfo initializedPrefix = typeof(ScorePatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
 
-            PatchController.Verify(scoreStartOriginal, harmony, true);
-            harmony.Patch(scoreStartOriginal, null, new HarmonyMethod(scoreStartPostfix));
+            PatchController.Verify(initializedOriginal, harmony, false);
+            harmony.Patch(initializedOriginal, new HarmonyMethod(initializedPrefix));
 
             //// TeleportToPointPatch
             //MethodInfo teleportToPointPatchOriginal = typeof(FVRMovementManager).GetMethod("TeleportToPoint", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(Vector3), typeof(bool) }, null);
@@ -673,12 +673,12 @@ namespace H3MP.Patches
         }
     }
 
-    // Patches TNH_ScoreDisplay.Start to prevent scoring
+    // Patches SteamManager.get_Initialized to prevent scoring
     class ScorePatch
     {
-        static void StartPostfix(TNH_ScoreDisplay __instance)
+        static void Prefix(ref bool __result)
         {
-            __instance.m_usingSteamworks = false;
+            __result = false;
         }
     }
 
