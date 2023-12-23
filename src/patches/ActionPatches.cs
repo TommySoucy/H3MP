@@ -8635,7 +8635,7 @@ namespace H3MP.Patches
                         {
                             if (ThreadManager.host)
                             {
-                                ServerSend.FloaterBeginExploding(trackedFloater.data.trackedID, control);
+                                ServerSend.FloaterBeginExploding(trackedFloater.data.trackedID, control, trackedFloater.data.controller);
                             }
                             else if (trackedFloater.data.trackedID != -1)
                             {
