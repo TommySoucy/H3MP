@@ -379,7 +379,7 @@ namespace H3MP.Patches
             ++patchIndex; // 9
 
             // OnSosigAlertPatch
-            MethodInfo sceneSettingssosigAlertOriginal = typeof(SceneLoader).GetMethod("OnSosigAlert", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo sceneSettingssosigAlertOriginal = typeof(FVRSceneSettings).GetMethod("OnSosigAlert", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo sceneSettingssosigAlertPrefix = typeof(OnSosigAlertPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(sceneSettingssosigAlertOriginal, harmony, true);

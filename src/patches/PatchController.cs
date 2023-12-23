@@ -244,9 +244,9 @@ namespace H3MP.Patches
                 ++patchGroupIndex;
                 TNHPatches.DoPatching(harmony, ref patchIndex);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                Mod.LogError("PATCHING EXCEPTION AT "+patchGroupIndex+"-"+patchIndex);
+                Mod.LogError("PATCHING EXCEPTION AT "+patchGroupIndex+"-"+patchIndex+":\n"+ex.Message+":\n"+ex.StackTrace);
             }
 
             ProcessPatchResult();
