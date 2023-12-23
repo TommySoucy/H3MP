@@ -44,7 +44,11 @@ namespace H3MP.Tracking
             // Remove from tracked lists, which has to be done no matter what OnDestroy because we will not have the physical object anymore
             GameManager.trackedFloaterByFloater.Remove(physicalFloater);
             GameManager.trackedObjectByDamageable.Remove(physicalFloater);
-            GameManager.trackedObjectByDamageable.Remove(physicalFloater.GetComponentInChildren<Construct_Floater_Core>());
+            IFVRDamageable damageable = physicalFloater.GetComponentInChildren<Construct_Floater_Core>();
+            if (damageable != null)
+            {
+                GameManager.trackedObjectByDamageable.Remove(damageable);
+            }
 
             base.OnDestroy();
         }

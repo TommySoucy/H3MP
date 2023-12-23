@@ -251,7 +251,11 @@ namespace H3MP.Tracking
                 {
                     GameManager.trackedFloaterByFloater.Remove(physicalFloater.physicalFloater);
                     GameManager.trackedObjectByDamageable.Remove(physicalFloater.physicalFloater);
-                    GameManager.trackedObjectByDamageable.Remove(physicalFloater.GetComponentInChildren<Construct_Floater_Core>());
+                    IFVRDamageable damageable = physicalFloater.GetComponentInChildren<Construct_Floater_Core>();
+                    if (damageable != null)
+                    {
+                        GameManager.trackedObjectByDamageable.Remove(damageable);
+                    }
                 }
             }
         }

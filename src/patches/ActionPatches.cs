@@ -8700,21 +8700,30 @@ namespace H3MP.Patches
         static bool ExplodePrefix(Construct_Floater __instance)
         {
             TrackedFloater trackedFloater = GameManager.trackedFloaterByFloater.TryGetValue(__instance, out trackedFloater) ? trackedFloater : null;
-            if (trackedFloater != null && trackedFloater.data.controller == GameManager.ID)
+            if (trackedFloater != null)
             {
-                if (ThreadManager.host)
+                IFVRDamageable damageable = trackedFloater.GetComponentInChildren<Construct_Floater_Core>();
+                if(damageable != null)
                 {
-                    ServerSend.FloaterExplode(trackedFloater.data.trackedID, __instance.isExplosionDefuse);
+                    GameManager.trackedObjectByDamageable.Remove(damageable);
                 }
-                else if (trackedFloater.data.trackedID != -1)
+
+                if(trackedFloater.data.controller == GameManager.ID)
                 {
-                    ClientSend.FloaterExplode(trackedFloater.data.trackedID, __instance.isExplosionDefuse);
-                }
-                else // Note that this is only possible if we are the controller
-                {
-                    TrackedFloater.unknownFloaterBeginExploding.Remove(trackedFloater.data.localWaitingIndex);
-                    TrackedFloater.unknownFloaterBeginDefusing.Remove(trackedFloater.data.localWaitingIndex);
-                    TrackedFloater.unknownFloaterExplode.Add(trackedFloater.data.localWaitingIndex, __instance.isExplosionDefuse);
+                    if (ThreadManager.host)
+                    {
+                        ServerSend.FloaterExplode(trackedFloater.data.trackedID, __instance.isExplosionDefuse);
+                    }
+                    else if (trackedFloater.data.trackedID != -1)
+                    {
+                        ClientSend.FloaterExplode(trackedFloater.data.trackedID, __instance.isExplosionDefuse);
+                    }
+                    else // Note that this is only possible if we are the controller
+                    {
+                        TrackedFloater.unknownFloaterBeginExploding.Remove(trackedFloater.data.localWaitingIndex);
+                        TrackedFloater.unknownFloaterBeginDefusing.Remove(trackedFloater.data.localWaitingIndex);
+                        TrackedFloater.unknownFloaterExplode.Add(trackedFloater.data.localWaitingIndex, __instance.isExplosionDefuse);
+                    }
                 }
             }
 
