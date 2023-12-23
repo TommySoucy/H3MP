@@ -664,6 +664,7 @@ namespace H3MP.Patches
             // TNH
             if (Mod.TNHSpectating)
             {
+                GM.CurrentPlayerBody.SetPlayerIFF(-3);
                 __instance.RightHand.GetComponent<FVRViveHand>().Mode = FVRViveHand.HandMode.Menu;
                 __instance.LeftHand.GetComponent<FVRViveHand>().Mode = FVRViveHand.HandMode.Menu;
             }

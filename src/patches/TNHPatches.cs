@@ -979,10 +979,14 @@ namespace H3MP.Patches
                             Mod.TNHSpectating = true;
                             Mod.DropAllItems();
 
-                            if(GM.CurrentPlayerBody != null)
+                            if (GM.CurrentPlayerBody != null)
                             {
-                                GM.CurrentPlayerBody.RightHand.GetComponent<FVRViveHand>().Mode = FVRViveHand.HandMode.Menu;
-                                GM.CurrentPlayerBody.LeftHand.GetComponent<FVRViveHand>().Mode = FVRViveHand.HandMode.Menu;
+                                GM.CurrentPlayerBody.SetPlayerIFF(-3);
+                                if (GM.CurrentPlayerBody.RightHand != null && GM.CurrentPlayerBody.LeftHand != null)
+                                {
+                                    GM.CurrentPlayerBody.RightHand.GetComponent<FVRViveHand>().Mode = FVRViveHand.HandMode.Menu;
+                                    GM.CurrentPlayerBody.LeftHand.GetComponent<FVRViveHand>().Mode = FVRViveHand.HandMode.Menu;
+                                }
                             }
                         }
 

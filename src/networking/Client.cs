@@ -989,9 +989,14 @@ namespace H3MP.Networking
             }
             Mod.currentTNHInstance = null;
             Mod.TNHSpectating = false;
-            if (GM.CurrentPlayerBody != null && GM.CurrentPlayerBody.RightHand != null && GM.CurrentPlayerBody.LeftHand != null)
+            if (GM.CurrentPlayerBody != null)
             {
-                GM.CurrentPlayerBody.EnableHands();
+                GM.CurrentPlayerBody.SetPlayerIFF(GM.CurrentSceneSettings.DefaultPlayerIFF);
+                if (GM.CurrentPlayerBody.RightHand != null && GM.CurrentPlayerBody.LeftHand != null)
+                {
+                    GM.CurrentPlayerBody.RightHand.GetComponent<FVRViveHand>().Mode = FVRViveHand.HandMode.Neutral;
+                    GM.CurrentPlayerBody.LeftHand.GetComponent<FVRViveHand>().Mode = FVRViveHand.HandMode.Neutral;
+                }
             }
             Mod.currentTNHInstancePlayers = null;
             Mod.joinTNHInstances = null;

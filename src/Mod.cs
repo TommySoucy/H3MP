@@ -298,9 +298,14 @@ namespace H3MP
             TNHMenuLPJ = true;
             TNHOnDeathSpectate = true;
             TNHSpectating = false;
-            if (GM.CurrentPlayerBody != null && GM.CurrentPlayerBody.RightHand != null && GM.CurrentPlayerBody.LeftHand != null)
+            if (GM.CurrentPlayerBody != null)
             {
-                GM.CurrentPlayerBody.EnableHands();
+                GM.CurrentPlayerBody.SetPlayerIFF(GM.CurrentSceneSettings.DefaultPlayerIFF);
+                if (GM.CurrentPlayerBody.RightHand != null && GM.CurrentPlayerBody.LeftHand != null)
+                {
+                    GM.CurrentPlayerBody.RightHand.GetComponent<FVRViveHand>().Mode = FVRViveHand.HandMode.Neutral;
+                    GM.CurrentPlayerBody.LeftHand.GetComponent<FVRViveHand>().Mode = FVRViveHand.HandMode.Neutral;
+                }
             }
             setLatestInstance = false;
             currentTNHInstance = null;
@@ -1776,9 +1781,14 @@ namespace H3MP
             }
             Mod.currentTNHInstance = null;
             Mod.TNHSpectating = false;
-            if (GM.CurrentPlayerBody != null && GM.CurrentPlayerBody.RightHand != null && GM.CurrentPlayerBody.LeftHand != null)
+            if (GM.CurrentPlayerBody != null)
             {
-                GM.CurrentPlayerBody.EnableHands();
+                GM.CurrentPlayerBody.SetPlayerIFF(GM.CurrentSceneSettings.DefaultPlayerIFF);
+                if (GM.CurrentPlayerBody.RightHand != null && GM.CurrentPlayerBody.LeftHand != null)
+                {
+                    GM.CurrentPlayerBody.RightHand.GetComponent<FVRViveHand>().Mode = FVRViveHand.HandMode.Neutral;
+                    GM.CurrentPlayerBody.LeftHand.GetComponent<FVRViveHand>().Mode = FVRViveHand.HandMode.Neutral;
+                }
             }
 
             TNHStatusText.text = "Solo";
@@ -2769,9 +2779,14 @@ namespace H3MP
                     if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == player.instance)
                     {
                         Mod.TNHSpectating = false;
-                        if (GM.CurrentPlayerBody != null && GM.CurrentPlayerBody.RightHand != null && GM.CurrentPlayerBody.LeftHand != null)
+                        if (GM.CurrentPlayerBody != null)
                         {
-                            GM.CurrentPlayerBody.EnableHands();
+                            GM.CurrentPlayerBody.SetPlayerIFF(GM.CurrentSceneSettings.DefaultPlayerIFF);
+                            if (GM.CurrentPlayerBody.RightHand != null && GM.CurrentPlayerBody.LeftHand != null)
+                            {
+                                GM.CurrentPlayerBody.RightHand.GetComponent<FVRViveHand>().Mode = FVRViveHand.HandMode.Neutral;
+                                GM.CurrentPlayerBody.LeftHand.GetComponent<FVRViveHand>().Mode = FVRViveHand.HandMode.Neutral;
+                            }
                         }
                     }
                 }

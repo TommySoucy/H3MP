@@ -298,9 +298,14 @@ namespace H3MP.Networking
             if (ID == GameManager.ID)
             {
                 Mod.TNHSpectating = false;
-                if (GM.CurrentPlayerBody != null && GM.CurrentPlayerBody.RightHand != null && GM.CurrentPlayerBody.LeftHand != null)
+                if (GM.CurrentPlayerBody != null)
                 {
-                    GM.CurrentPlayerBody.EnableHands();
+                    GM.CurrentPlayerBody.SetPlayerIFF(GM.CurrentSceneSettings.DefaultPlayerIFF);
+                    if (GM.CurrentPlayerBody.RightHand != null && GM.CurrentPlayerBody.LeftHand != null)
+                    {
+                        GM.CurrentPlayerBody.RightHand.GetComponent<FVRViveHand>().Mode = FVRViveHand.HandMode.Neutral;
+                        GM.CurrentPlayerBody.LeftHand.GetComponent<FVRViveHand>().Mode = FVRViveHand.HandMode.Neutral;
+                    }
                 }
 
                 if (manager != null)
@@ -365,9 +370,14 @@ namespace H3MP.Networking
 
                 // We make the following checks because we could be resetting because we are changing scene, meaning the vanilla playerbody 
                 // may have been destroyed
-                if(GM.CurrentPlayerBody != null && GM.CurrentPlayerBody.RightHand != null && GM.CurrentPlayerBody.LeftHand != null)
+                if (GM.CurrentPlayerBody != null)
                 {
-                    GM.CurrentPlayerBody.EnableHands();
+                    GM.CurrentPlayerBody.SetPlayerIFF(GM.CurrentSceneSettings.DefaultPlayerIFF);
+                    if (GM.CurrentPlayerBody.RightHand != null && GM.CurrentPlayerBody.LeftHand != null)
+                    {
+                        GM.CurrentPlayerBody.RightHand.GetComponent<FVRViveHand>().Mode = FVRViveHand.HandMode.Neutral;
+                        GM.CurrentPlayerBody.LeftHand.GetComponent<FVRViveHand>().Mode = FVRViveHand.HandMode.Neutral;
+                    }
                 }
             }
         }
