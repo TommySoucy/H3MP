@@ -105,6 +105,27 @@ namespace H3MP.Patches
             }
 
             ++patchIndex; // 8
+
+            // HandCurrentHoveredQuickBeltSlotSetPatch
+            MethodInfo handCurrentHoveredQuickBeltSlotSetOriginal = typeof(FVRViveHand).GetMethod("set_CurrentHoveredQuickbeltSlot", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo handCurrentHoveredQuickBeltSlotSetPrefix = typeof(HandCurrentHoveredQuickBeltSlotSetPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo handCurrentHoveredQuickBeltSlotSetPostfix = typeof(HandCurrentHoveredQuickBeltSlotSetPatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo handCurrentHoveredQuickBeltSlotDirtySetOriginal = typeof(FVRViveHand).GetMethod("set_CurrentHoveredQuickbeltSlotDirty", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo handCurrentHoveredQuickBeltSlotDirtySetPostfix = typeof(HandCurrentHoveredQuickBeltSlotSetPatch).GetMethod("DirtyPostfix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(handCurrentHoveredQuickBeltSlotSetOriginal, harmony, false);
+            PatchController.Verify(handCurrentHoveredQuickBeltSlotDirtySetOriginal, harmony, false);
+            harmony.Patch(handCurrentHoveredQuickBeltSlotSetOriginal, new HarmonyMethod(handCurrentHoveredQuickBeltSlotSetPrefix), new HarmonyMethod(handCurrentHoveredQuickBeltSlotSetPostfix));
+            harmony.Patch(handCurrentHoveredQuickBeltSlotDirtySetOriginal, new HarmonyMethod(handCurrentHoveredQuickBeltSlotSetPrefix), new HarmonyMethod(handCurrentHoveredQuickBeltSlotDirtySetPostfix));
+
+            ++patchIndex; // 9
+
+            // HandUpdatePatch
+            MethodInfo handUpdateOriginal = typeof(FVRViveHand).GetMethod("Update", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo handUpdateTranspiler = typeof(HandUpdatePatch).GetMethod("Transpiler", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(handUpdateOriginal, harmony, false);
+            harmony.Patch(handUpdateOriginal, null, null, new HarmonyMethod(handUpdateTranspiler));
         }
     }
 
@@ -657,6 +678,73 @@ namespace H3MP.Patches
             {
                 trackedItem.BeginInteraction(null);
             }
+        }
+    }
+
+    // Patches FVRViveHand.CurrentHoveredQuickbeltSlot/Dirty_Set to prevent interaction if spectating
+    class HandCurrentHoveredQuickBeltSlotSetPatch
+    {
+        static bool Prefix()
+        {
+            return !Mod.TNHSpectating;
+        }
+
+        static void Postfix(FVRViveHand __instance)
+        {
+            if(Mod.TNHSpectating && __instance.m_currentHoveredQuickbeltSlot != null)
+            {
+                __instance.m_currentHoveredQuickbeltSlot.IsHovered = false;
+                __instance.m_currentHoveredQuickbeltSlot = null;
+            }
+        }
+
+        static void DirtyPostfix(FVRViveHand __instance)
+        {
+            if(Mod.TNHSpectating && __instance.m_currentHoveredQuickbeltSlotDirty != null)
+            {
+                __instance.m_currentHoveredQuickbeltSlotDirty.IsHovered = false;
+                __instance.m_currentHoveredQuickbeltSlotDirty = null;
+            }
+        }
+    }
+
+    // Patches FVRViveHand.Update to prevent grab laser activation if spectating
+    class HandUpdatePatch
+    {
+        static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
+
+            // Override flag2 based on whether we are spectating
+            List<CodeInstruction> toInsert = new List<CodeInstruction>();
+            toInsert.Add(new CodeInstruction(OpCodes.Ldloc_S, 7)); // Get flag2
+            toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(HandUpdatePatch), "GetNewFlag"))); // Call our GetNewFlag method
+            toInsert.Add(new CodeInstruction(OpCodes.Stloc_S, 7)); // Set flag2
+
+            bool applied = false;
+            for (int i = 0; i < instructionList.Count; ++i)
+            {
+                CodeInstruction instruction = instructionList[i];
+
+                if (instruction.opcode == OpCodes.Ldloc_S && instruction.operand.ToString().Contains("(7)"))
+                {
+                    instructionList.InsertRange(i, toInsert);
+                    applied = true;
+                    break;
+                }
+            }
+
+            if (!applied)
+            {
+                Mod.LogError("HandUpdatePatch Transpiler not applied!");
+            }
+
+            return instructionList;
+        }
+
+        public static bool GetNewFlag(bool currentFlag)
+        {
+            return currentFlag && !Mod.TNHSpectating;
         }
     }
 }
