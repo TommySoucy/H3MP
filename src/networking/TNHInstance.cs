@@ -288,6 +288,18 @@ namespace H3MP.Networking
             }
         }
 
+        public bool PlayersStillAlive()
+        {
+            for (int i = 0; i < Mod.currentTNHInstance.currentlyPlaying.Count; ++i)
+            {
+                if (!Mod.currentTNHInstance.dead.Contains(Mod.currentTNHInstance.currentlyPlaying[i]))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
         public void RevivePlayer(int ID, bool received = false)
         {
             if (dead != null)

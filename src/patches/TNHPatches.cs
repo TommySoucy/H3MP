@@ -107,7 +107,7 @@ namespace H3MP.Patches
                 TNH_ManagerGeneratePatrolOriginal = typeof(TNH_Manager).GetMethod("GeneratePatrol", BindingFlags.NonPublic | BindingFlags.Instance);
             }
             MethodInfo TNH_ManagerPatchPlayerDiedOriginal = typeof(TNH_Manager).GetMethod("PlayerDied", BindingFlags.Public | BindingFlags.Instance);
-            MethodInfo TNH_ManagerPatchPlayerDiedPrefix = typeof(TNH_ManagerPatch).GetMethod("PlayerDiedPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo TNH_ManagerPatchPlayerDiedPostfix = typeof(TNH_ManagerPatch).GetMethod("PlayerDiedPostfix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo TNH_ManagerPatchAddTokensOriginal = typeof(TNH_Manager).GetMethod("AddTokens", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo TNH_ManagerPatchAddTokensPrefix = typeof(TNH_ManagerPatch).GetMethod("AddTokensPrefix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo TNH_ManagerPatchSosigKillOriginal = typeof(TNH_Manager).GetMethod("OnSosigKill", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -162,7 +162,7 @@ namespace H3MP.Patches
             PatchController.Verify(TNH_ManagerGeneratePatrolOriginal, harmony, true);
             PatchController.Verify(TNH_ManagerDelayedInitOriginal, harmony, true);
             PatchController.Verify(TNH_ManagerObjectCleanupInHoldOriginal, harmony, false);
-            harmony.Patch(TNH_ManagerPatchPlayerDiedOriginal, new HarmonyMethod(TNH_ManagerPatchPlayerDiedPrefix));
+            harmony.Patch(TNH_ManagerPatchPlayerDiedOriginal, null, new HarmonyMethod(TNH_ManagerPatchPlayerDiedPostfix));
             harmony.Patch(TNH_ManagerPatchAddTokensOriginal, new HarmonyMethod(TNH_ManagerPatchAddTokensPrefix));
             harmony.Patch(TNH_ManagerPatchSosigKillOriginal, new HarmonyMethod(TNH_ManagerPatchSosigKillPrefix));
             harmony.Patch(TNH_ManagerPatchSetPhaseOriginal, new HarmonyMethod(TNH_ManagerPatchSetPhasePrefix));
@@ -948,8 +948,12 @@ namespace H3MP.Patches
         public static List<Vector3> patrolPoints;
         public static int patrolIndex = -1;
 
-        static bool PlayerDiedPrefix()
+        static void PlayerDiedPostfix()
         {
+            // As a postfix, this will ensure the death is handled in terms of the TNHInstance
+            // In the case that we are not controller, SetPhase_Dead will not be allowed to run,
+            // so we also have to handle what that would do, while also considering that there might still be other players alive
+            // so not necessarily clearing patrols, etc.
             if (Mod.managerObject != null)
             {
                 if (Mod.currentTNHInstance != null)
@@ -958,7 +962,12 @@ namespace H3MP.Patches
                     //Mod.currentTNHInstance.manager.Phase = TNH_Phase.Dead;
 
                     // Update locally
-                    Mod.currentTNHInstance.dead.Add(GameManager.ID);
+                    // Only want to add ourselves to dead if not controlelr because controller would have done it in SetPhasePrefix
+                    // before making its call to PlayersStillAlive
+                    if (Mod.currentTNHInstance.controller != GameManager.ID)
+                    {
+                        Mod.currentTNHInstance.dead.Add(GameManager.ID);
+                    }
                     GM.TNH_Manager.SubtractTokens(GM.TNH_Manager.GetNumTokens());
 
                     // Send update
@@ -972,16 +981,7 @@ namespace H3MP.Patches
                     }
 
                     // Prevent TNH from processing player death if there are other players still in the game
-                    bool someStillAlive = false;
-                    for (int i = 0; i < Mod.currentTNHInstance.currentlyPlaying.Count; ++i)
-                    {
-                        if (!Mod.currentTNHInstance.dead.Contains(Mod.currentTNHInstance.currentlyPlaying[i]))
-                        {
-                            someStillAlive = true;
-                            break;
-                        }
-                    }
-                    if (someStillAlive)
+                    if (Mod.currentTNHInstance.PlayersStillAlive())
                     {
                         if (Mod.TNHOnDeathSpectate)
                         {
@@ -997,11 +997,11 @@ namespace H3MP.Patches
                                     GM.CurrentPlayerBody.LeftHand.GetComponent<FVRViveHand>().Mode = FVRViveHand.HandMode.Menu;
                                 }
                             }
+
+                            Mod.currentTNHInstance.manager.DispatchScore();
+                            Mod.currentTNHInstance.manager.FMODController.SwitchTo(0, 2f, false, false);
                         }
-
-                        Mod.currentTNHInstance.manager.FMODController.SwitchTo(0, 2f, false, false);
-
-                        return false;
+                        // TODO: Future: Implement TNH leave on death option
                     }
                     else if (Mod.currentTNHInstance.controller != GameManager.ID)// Last live player, if not controller we dont want to kill all patrols
                     {
@@ -1064,20 +1064,15 @@ namespace H3MP.Patches
                             }
                             supplyPoint.m_panels.Clear();
                         }
-                        Mod.currentTNHInstance.manager.DispatchScore();
 
                         Mod.currentTNHInstance.Reset();
-
-                        return false;
                     }
-                    else // last live player but we are controller
+                    else // Last live player but we are controller, rest handled by SetPhase_Dead
                     {
                         Mod.currentTNHInstance.Reset();
                     }
                 }
             }
-
-            return true;
         }
 
         static bool AddTokensPrefix(int i, bool Scorethis)
@@ -1172,6 +1167,15 @@ namespace H3MP.Patches
                             (Mod.currentTNHInstance.controller == GameManager.ID && Mod.currentTNHInstance.initializer != -1 &&
                             (!ThreadManager.host || !Mod.currentTNHInstance.initializationRequested));
                 Mod.LogInfo("SetPhasePrefix: phase: " + p + ", continuing: " + cont, false);
+
+                // Only want to continue in the case of Dead phase if there are not other players left alive
+                // If there are, things done in SetPhase_Dead like DispatchScore will be handled by PlayerDiedPostfix
+                if (cont && p == TNH_Phase.Dead)
+                {
+                    Mod.currentTNHInstance.dead.Add(GameManager.ID);
+                    cont &= !Mod.currentTNHInstance.PlayersStillAlive();
+                }
+
                 return cont;
             }
             return true;
