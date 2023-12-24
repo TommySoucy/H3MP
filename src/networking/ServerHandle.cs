@@ -5639,22 +5639,19 @@ namespace H3MP.Networking
         {
             string scene = packet.ReadString();
             int instance = packet.ReadInt();
+            Vector3 position = packet.ReadVector3();
+            if(scene.Equals(GameManager.scene) && instance == GameManager.instance)
+            {
+                SM.PlayCoreSound(FVRPooledAudioType.GenericClose, Mod.sosigAlertAlarm, position);
+                ++OnSosigAlertPatch.skip;
+                GM.CurrentSceneSettings.OnSosigAlert(null, position);
+                --OnSosigAlertPatch.skip;
+            }
             if (GameManager.playersByInstanceByScene.TryGetValue(scene, out Dictionary<int, List<int>> instances)
                 && instances.TryGetValue(instance, out List<int> players)
                 && players.Count > 1)
             {
-                Vector3 position = packet.ReadVector3();
-                List<int> filtered = new List<int>(players);
-                filtered.Remove(clientID);
-                if (filtered.Remove(0))
-                {
-                    SM.PlayCoreSound(FVRPooledAudioType.GenericClose, Mod.sosigAlertAlarm, position);
-                    ++OnSosigAlertPatch.skip;
-                    GM.CurrentSceneSettings.OnSosigAlert(null, position);
-                    --OnSosigAlertPatch.skip;
-                }
-
-                ServerSend.AlertSosigs(filtered, scene, instance, position);
+                ServerSend.AlertSosigs(players, scene, instance, position, clientID);
             }
         }
     }

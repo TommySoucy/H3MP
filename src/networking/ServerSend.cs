@@ -4891,7 +4891,7 @@ namespace H3MP.Networking
             }
         }
 
-        public static void AlertSosigs(List<int> players, string scene, int instance, Vector3 position)
+        public static void AlertSosigs(List<int> players, string scene, int instance, Vector3 position, int clientID)
         {
             using (Packet packet = new Packet((int)ServerPackets.alertSosigs))
             {
@@ -4899,7 +4899,7 @@ namespace H3MP.Networking
                 packet.Write(instance);
                 packet.Write(position);
 
-                SendTCPData(players, packet);
+                SendTCPData(players, packet, clientID);
             }
         }
     }
