@@ -1058,9 +1058,9 @@ namespace H3MP.Patches
                             {
                                 if (supplyPoint.m_panels[i] != null)
                                 {
-                                    UnityEngine.Object.Destroy(supplyPoint.m_panels[j]);
+                                    UnityEngine.Object.Destroy(supplyPoint.m_panels[i]);
                                 }
-                                supplyPoint.m_panels.RemoveAt(j);
+                                supplyPoint.m_panels.RemoveAt(i);
                             }
                             supplyPoint.m_panels.Clear();
                         }
@@ -1453,9 +1453,9 @@ namespace H3MP.Patches
                         {
                             if (supplyPoint.m_panels[i] != null)
                             {
-                                UnityEngine.Object.Destroy(supplyPoint.m_panels[j]);
+                                UnityEngine.Object.Destroy(supplyPoint.m_panels[i]);
                             }
-                            supplyPoint.m_panels.RemoveAt(j);
+                            supplyPoint.m_panels.RemoveAt(i);
                         }
                         supplyPoint.m_panels.Clear();
                     }
@@ -1548,9 +1548,9 @@ namespace H3MP.Patches
                         {
                             if (supplyPoint.m_panels[i] != null)
                             {
-                                UnityEngine.Object.Destroy(supplyPoint.m_panels[j]);
+                                UnityEngine.Object.Destroy(supplyPoint.m_panels[i]);
                             }
-                            supplyPoint.m_panels.RemoveAt(j);
+                            supplyPoint.m_panels.RemoveAt(i);
                         }
                         supplyPoint.m_panels.Clear();
                     }
