@@ -528,6 +528,16 @@ namespace H3MP.Tracking
                     setFirearmUpdateOverride = SetGirandoniUpdateOverride;
                     getChamberIndex = GetFirstChamberIndex;
                 }
+                else if (asFA is MeatNailer)
+                {
+                    updateFunc = UpdateMeatNailer;
+                    updateGivenFunc = UpdateGivenMeatNailer;
+                    dataObject = physObj as MeatNailer;
+                    fireFunc = FireMeatNailer;
+                    setFirearmUpdateOverride = SetMeatNailerUpdateOverride;
+                    getChamberIndex = GetMeatNailerChamberIndex;
+                    chamberRound = ChamberMeatNailerRound;
+                }
                 else
                 {
                     updateFunc = UpdateFireArm;
@@ -8937,6 +8947,221 @@ namespace H3MP.Tracking
         private void SetGirandoniUpdateOverride(FireArmRoundType roundType, FireArmRoundClass roundClass, int chamberIndex)
         {
             Girandoni asGirandoni = dataObject as Girandoni;
+            FireArmRoundType prevRoundType = asGirandoni.Chamber.RoundType;
+            asGirandoni.Chamber.RoundType = roundType;
+            ++ChamberPatch.chamberSkip;
+            asGirandoni.Chamber.SetRound(roundClass, asGirandoni.Chamber.transform.position, asGirandoni.Chamber.transform.rotation);
+            --ChamberPatch.chamberSkip;
+            asGirandoni.Chamber.RoundType = prevRoundType;
+            if(asGirandoni.m_airTankAir < 1)
+            {
+                asGirandoni.m_airTankAir = 1;
+            }
+        }
+
+        private bool UpdateMeatNailer()
+        {
+            MeatNailer asMeatNailer = dataObject as MeatNailer;
+            bool modified = false;
+
+            if (itemData.data == null)
+            {
+                // Has tank bool
+                // Hammer cocked bool
+                // Chambered round type short
+                // Chambered round class short
+                // Air tank air float
+                // Air tank catch rot float
+                itemData.data = new byte[14];
+                modified = true;
+            }
+
+            // Write has tank
+            byte preval = itemData.data[0];
+
+            itemData.data[0] = asGirandoni.HasAirTank ? (byte)1 : (byte)0;
+
+            modified |= preval != itemData.data[0];
+
+            // Write hammer cocked
+            preval = itemData.data[1];
+
+            itemData.data[1] = asGirandoni.m_isHammerCocked ? (byte)1 : (byte)0;
+
+            modified |= preval != itemData.data[1];
+
+            // Write chambered round
+            preval = itemData.data[2];
+            byte preval0 = itemData.data[3];
+            byte preval1 = itemData.data[4];
+            byte preval2 = itemData.data[5];
+            if (asGirandoni.Chamber.GetRound() == null || asGirandoni.Chamber.IsSpent || asGirandoni.Chamber.GetRound().IsSpent)
+            {
+                BitConverter.GetBytes((short)-1).CopyTo(itemData.data, 4);
+            }
+            else
+            {
+                BitConverter.GetBytes((short)asGirandoni.Chamber.GetRound().RoundType).CopyTo(itemData.data, 2);
+                BitConverter.GetBytes((short)asGirandoni.Chamber.GetRound().RoundClass).CopyTo(itemData.data, 4);
+            }
+
+            modified |= (preval != itemData.data[2] || preval0 != itemData.data[3] || preval1 != itemData.data[4] || preval2 != itemData.data[5]);
+
+            // Write air tank air
+            preval = itemData.data[6];
+            preval0 = itemData.data[7];
+            preval1 = itemData.data[8];
+            preval2 = itemData.data[9];
+
+            BitConverter.GetBytes(asGirandoni.m_airTankAir).CopyTo(itemData.data, 6);
+
+            modified |= (preval != itemData.data[6] || preval0 != itemData.data[7] || preval1 != itemData.data[8] || preval2 != itemData.data[9]);
+
+            // Write air tank catch rot
+            preval = itemData.data[10];
+            preval0 = itemData.data[11];
+            preval1 = itemData.data[12];
+            preval2 = itemData.data[13];
+
+            BitConverter.GetBytes(asGirandoni.CatchRot).CopyTo(itemData.data, 10);
+
+            modified |= (preval != itemData.data[10] || preval0 != itemData.data[11] || preval1 != itemData.data[12] || preval2 != itemData.data[13]);
+
+            return modified;
+        }
+
+        private bool UpdateGivenMeatNailer(byte[] newData)
+        {
+            bool modified = false;
+            MeatNailer asMeatNailer = dataObject as MeatNailer;
+
+            // Set has tank
+            if (!asGirandoni.HasAirTank && newData[0] == 1)
+            {
+                asGirandoni.HasAirTank = true;
+                // Set catch rot
+                asGirandoni.CatchRot = BitConverter.ToSingle(newData, 10);
+                Vector3 vector = asGirandoni.AirTankRoot.up;
+                vector = Quaternion.AngleAxis(asGirandoni.CatchRot, asGirandoni.AirTankRoot.forward) * vector;
+                Quaternion rotation = Quaternion.LookRotation(asGirandoni.AirTankRoot.forward, vector);
+                asGirandoni.ProxyAirTank.transform.rotation = rotation;
+                asGirandoni.ProxyAirTank.transform.localPosition = Vector3.Lerp(asGirandoni.AirTankPoint_Close.localPosition, asGirandoni.AirTankPoint_Far.localPosition, asGirandoni.CatchRot / asGirandoni.MaxCatchRot);
+                // Set air tank air
+                asGirandoni.m_airTankAir = BitConverter.ToSingle(newData, 6);
+                asGirandoni.PlayAudioEvent(FirearmAudioEventType.MagazineIn, 1f);
+                asGirandoni.ProxyAirTank.SetActive(true);
+            }
+            else if(asGirandoni.HasAirTank && newData[0] == 0)
+            {
+                asGirandoni.HasAirTank = false;
+                asGirandoni.ProxyAirTank.SetActive(false);
+                asGirandoni.m_airTankAir = 0f;
+                asGirandoni.PlayAudioEvent(FirearmAudioEventType.MagazineOut, 1f);
+                asGirandoni.CatchRot = asGirandoni.MaxCatchRot;
+            }
+
+            // Set hammer cocked
+            if (newData[1] == 1 && !asGirandoni.m_isHammerCocked)
+            {
+                asGirandoni.CockHammer();
+            }
+            else if(newData[1] == 0 && asGirandoni.m_isHammerCocked)
+            {
+                asGirandoni.m_isHammerCocked = false;
+            }
+
+            // Set chamber
+            short chamberTypeIndex = BitConverter.ToInt16(newData, 2);
+            short chamberClassIndex = BitConverter.ToInt16(newData,  4);
+            if (chamberClassIndex == -1) // We don't want round in chamber
+            {
+                if (asGirandoni.Chamber.GetRound() != null)
+                {
+                    ++ChamberPatch.chamberSkip;
+                    asGirandoni.Chamber.SetRound(null, false);
+                    --ChamberPatch.chamberSkip;
+                    modified = true;
+                }
+            }
+            else // We want a round in the chamber
+            {
+                FireArmRoundType roundType = (FireArmRoundType)chamberTypeIndex;
+                FireArmRoundClass roundClass = (FireArmRoundClass)chamberClassIndex;
+                if (asGirandoni.Chamber.GetRound() == null || asGirandoni.Chamber.GetRound().RoundClass != roundClass)
+                {
+                    if (asGirandoni.Chamber.RoundType == roundType)
+                    {
+                        ++ChamberPatch.chamberSkip;
+                        asGirandoni.Chamber.SetRound(roundClass, asGirandoni.Chamber.transform.position, asGirandoni.Chamber.transform.rotation);
+                        --ChamberPatch.chamberSkip;
+                    }
+                    else
+                    {
+                        FireArmRoundType prevRoundType = asGirandoni.Chamber.RoundType;
+                        asGirandoni.Chamber.RoundType = roundType;
+                        ++ChamberPatch.chamberSkip;
+                        asGirandoni.Chamber.SetRound(roundClass, asGirandoni.Chamber.transform.position, asGirandoni.Chamber.transform.rotation);
+                        --ChamberPatch.chamberSkip;
+                        asGirandoni.Chamber.RoundType = prevRoundType;
+                    }
+                    modified = true;
+                }
+            }
+
+            if (asGirandoni.HasAirTank)
+            {
+                // Set air tank air
+                asGirandoni.m_airTankAir = BitConverter.ToSingle(newData, 6);
+
+                // Set catch rot
+                asGirandoni.CatchRot = BitConverter.ToSingle(newData, 10);
+            }
+
+            itemData.data = newData;
+
+            return modified;
+        }
+
+        private bool FireMeatNailer(int chamberIndex)
+        {
+            MeatNailer asMeatNailer = dataObject as MeatNailer;
+            asGirandoni.Fire();
+            return true;
+        }
+
+        private void SetMeatNailerUpdateOverride(FireArmRoundType roundType, FireArmRoundClass roundClass, int chamberIndex)
+        {
+            MeatNailer asMeatNailer = dataObject as MeatNailer;
+            FireArmRoundType prevRoundType = asGirandoni.Chamber.RoundType;
+            asGirandoni.Chamber.RoundType = roundType;
+            ++ChamberPatch.chamberSkip;
+            asGirandoni.Chamber.SetRound(roundClass, asGirandoni.Chamber.transform.position, asGirandoni.Chamber.transform.rotation);
+            --ChamberPatch.chamberSkip;
+            asGirandoni.Chamber.RoundType = prevRoundType;
+            if(asGirandoni.m_airTankAir < 1)
+            {
+                asGirandoni.m_airTankAir = 1;
+            }
+        }
+
+        private int GetMeatNailerChamberIndex(FVRFireArmChamber chamber)
+        {
+            MeatNailer asMeatNailer = dataObject as MeatNailer;
+            FireArmRoundType prevRoundType = asGirandoni.Chamber.RoundType;
+            asGirandoni.Chamber.RoundType = roundType;
+            ++ChamberPatch.chamberSkip;
+            asGirandoni.Chamber.SetRound(roundClass, asGirandoni.Chamber.transform.position, asGirandoni.Chamber.transform.rotation);
+            --ChamberPatch.chamberSkip;
+            asGirandoni.Chamber.RoundType = prevRoundType;
+            if(asGirandoni.m_airTankAir < 1)
+            {
+                asGirandoni.m_airTankAir = 1;
+            }
+        }
+
+        private void ChamberMeatNailerRound(FireArmRoundClass roundClass, FireArmRoundType roundType, int chamberIndex)
+        {
+            MeatNailer asMeatNailer = dataObject as MeatNailer;
             FireArmRoundType prevRoundType = asGirandoni.Chamber.RoundType;
             asGirandoni.Chamber.RoundType = roundType;
             ++ChamberPatch.chamberSkip;
