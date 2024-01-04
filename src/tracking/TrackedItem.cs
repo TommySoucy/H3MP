@@ -538,6 +538,15 @@ namespace H3MP.Tracking
                     getChamberIndex = GetMeatNailerChamberIndex;
                     chamberRound = ChamberMeatNailerRound;
                 }
+                else if (asFA is SRG)
+                {
+                    updateFunc = UpdateSRG;
+                    updateGivenFunc = UpdateGivenSRG;
+                    dataObject = physObj as SRG;
+                    fireFunc = FireSRG;
+                    setFirearmUpdateOverride = SetSRGUpdateOverride;
+                    getChamberIndex = GetFirstChamberIndex;
+                }
                 else
                 {
                     updateFunc = UpdateFireArm;
@@ -9062,7 +9071,7 @@ namespace H3MP.Tracking
             // Set chambers
             for (int i = 0; i < asMeatNailer.ammoTrack.holders.Length; ++i)
             {
-                int firstIndex = i * 4 + 1;
+                int firstIndex = i * 4 + 4;
                 chamberTypeIndex = BitConverter.ToInt16(newData, firstIndex);
                 chamberClassIndex = BitConverter.ToInt16(newData, firstIndex + 2);
                 if (chamberClassIndex == -1) // We don't want round in chamber
@@ -9157,6 +9166,104 @@ namespace H3MP.Tracking
             chamberToUse.SetRound(roundClass, chamberToUse.transform.position, chamberToUse.transform.rotation);
             --ChamberPatch.chamberSkip;
             chamberToUse.RoundType = prevRoundType;
+        }
+
+        private bool UpdateSRG()
+        {
+            SRG asSRG = dataObject as SRG;
+            bool modified = false;
+
+            if (itemData.data == null)
+            {
+                // Chambered round type short
+                // Chambered round class short
+                itemData.data = new byte[4];
+                modified = true;
+            }
+
+            // Write chambered round
+            byte preval0 = itemData.data[0];
+            byte preval1 = itemData.data[1];
+            byte preval2 = itemData.data[2];
+            byte preval3 = itemData.data[3];
+            if (asSRG.Chamber.GetRound() == null || asSRG.Chamber.IsSpent || asSRG.Chamber.GetRound().IsSpent)
+            {
+                BitConverter.GetBytes((short)-1).CopyTo(itemData.data, 2);
+            }
+            else
+            {
+                BitConverter.GetBytes((short)asSRG.Chamber.GetRound().RoundType).CopyTo(itemData.data, 0);
+                BitConverter.GetBytes((short)asSRG.Chamber.GetRound().RoundClass).CopyTo(itemData.data, 2);
+            }
+
+            modified |= (preval0 != itemData.data[0] || preval1 != itemData.data[1] || preval2 != itemData.data[2] || preval3 != itemData.data[3]);
+
+            return modified;
+        }
+
+        private bool UpdateGivenSRG(byte[] newData)
+        {
+            bool modified = false;
+            SRG asSRG = dataObject as SRG;
+
+            // Set chamber
+            short chamberTypeIndex = BitConverter.ToInt16(newData, 0);
+            short chamberClassIndex = BitConverter.ToInt16(newData,  2);
+            if (chamberClassIndex == -1) // We don't want round in chamber
+            {
+                if (asSRG.Chamber.GetRound() != null)
+                {
+                    ++ChamberPatch.chamberSkip;
+                    asSRG.Chamber.SetRound(null, false);
+                    --ChamberPatch.chamberSkip;
+                    modified = true;
+                }
+            }
+            else // We want a round in the chamber
+            {
+                FireArmRoundType roundType = (FireArmRoundType)chamberTypeIndex;
+                FireArmRoundClass roundClass = (FireArmRoundClass)chamberClassIndex;
+                if (asSRG.Chamber.GetRound() == null || asSRG.Chamber.GetRound().RoundClass != roundClass)
+                {
+                    if (asSRG.Chamber.RoundType == roundType)
+                    {
+                        ++ChamberPatch.chamberSkip;
+                        asSRG.Chamber.SetRound(roundClass, asSRG.Chamber.transform.position, asSRG.Chamber.transform.rotation);
+                        --ChamberPatch.chamberSkip;
+                    }
+                    else
+                    {
+                        FireArmRoundType prevRoundType = asSRG.Chamber.RoundType;
+                        asSRG.Chamber.RoundType = roundType;
+                        ++ChamberPatch.chamberSkip;
+                        asSRG.Chamber.SetRound(roundClass, asSRG.Chamber.transform.position, asSRG.Chamber.transform.rotation);
+                        --ChamberPatch.chamberSkip;
+                        asSRG.Chamber.RoundType = prevRoundType;
+                    }
+                    modified = true;
+                }
+            }
+
+            itemData.data = newData;
+
+            return modified;
+        }
+
+        private bool FireSRG(int chamberIndex)
+        {
+            SRG asSRG = dataObject as SRG;
+            return asSRG.Fire();
+        }
+
+        private void SetSRGUpdateOverride(FireArmRoundType roundType, FireArmRoundClass roundClass, int chamberIndex)
+        {
+            SRG asSRG = dataObject as SRG;
+            FireArmRoundType prevRoundType = asSRG.Chamber.RoundType;
+            asSRG.Chamber.RoundType = roundType;
+            ++ChamberPatch.chamberSkip;
+            asSRG.Chamber.SetRound(roundClass, asSRG.Chamber.transform.position, asSRG.Chamber.transform.rotation);
+            --ChamberPatch.chamberSkip;
+            asSRG.Chamber.RoundType = prevRoundType;
         }
 
         private bool UpdateSosigWeaponInterface()
