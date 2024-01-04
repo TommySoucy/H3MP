@@ -1487,6 +1487,9 @@ namespace H3MP
             SteamVR_Events.Loading.Listen(TrackedBreakableGlassData.ClearWrapperDicts);
 
             GameManager.OnSpectatorHostsChanged += OnSpectatorHostsChanged;
+
+            // Set modded flag
+            GM.SetRunningModded();
         }
 
         private void OnSpectatorHostsChanged()
