@@ -1,5 +1,8 @@
 ﻿using H3MP.Networking;
+using Open.Nat;
 using System.Collections.Generic;
+using System.Net;
+using System.Threading;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -12,7 +15,7 @@ namespace H3MP.Scripts
 
         public enum State
         {
-            MainWaiting, // Waiting for host entires from IS
+            MainWaiting, // Waiting for host entries from IS
             Main, // Server list
             Host, // Host settings
             HostingWaiting, // Confirmed settings, waiting for IS to list us
@@ -53,6 +56,7 @@ namespace H3MP.Scripts
         public GameObject hostPortField;
         public Text hostPortLabel;
         public Text hostPort;
+        public GameObject portForwardedToggleCheck;
 
         // Hosting
         public GameObject hostingLoadingAnimation;
@@ -257,6 +261,11 @@ namespace H3MP.Scripts
             {
                 hostUsername.text = Mod.config["Username"].ToString();
             }
+            hostPortLabel.color = Color.white;
+            if(Mod.config["Port"] != null)
+            {
+                hostPort.text = Mod.config["Port"].ToString();
+            }
             hostPortField.SetActive(false);
         }
 
@@ -273,9 +282,7 @@ namespace H3MP.Scripts
                 failed = true;
                 hostLimitLabel.color = Color.red;
             }
-
-            // Here, only if already connected do we want to make sure we specify a port
-            if(Mod.managerObject != null && (hostPort.text == "" || !ushort.TryParse(hostPort.text, out ushort parsedPort)))
+            if(hostPort.text == "" || !ushort.TryParse(hostPort.text, out ushort parsedPort))
             {
                 failed = true;
                 hostPortLabel.color = Color.red;
@@ -293,10 +300,7 @@ namespace H3MP.Scripts
             Mod.config["ServerName"] = hostServerName.text;
             Mod.config["MaxClientCount"] = uint.Parse(hostLimit.text);
             Mod.config["Username"] = hostUsername.text;
-            if(Mod.managerObject != null)
-            {
-                Mod.config["Port"] = ushort.Parse(hostPort.text);
-            }
+            Mod.config["Port"] = ushort.Parse(hostPort.text);
             Mod.WriteConfig();
             host.SetActive(false);
             hosting.SetActive(true);
@@ -349,12 +353,16 @@ namespace H3MP.Scripts
                     hostUsername.text = Mod.config["Username"].ToString();
                 }
                 hostPortLabel.color = Color.white;
-                hostPortField.SetActive(true);
                 if (Mod.config["Port"] != null)
                 {
                     hostPort.text = Mod.config["Port"].ToString();
                 }
             }
+        }
+
+        public void OnHostPortForwardedClicked()
+        {
+            portForwardedToggleCheck.SetActive(!portForwardedToggleCheck.activeSelf);
         }
 
         private void HostEntriesReceived(List<ISEntry> entries)
@@ -528,9 +536,34 @@ namespace H3MP.Scripts
                 }
 
                 // Actually start hosting if not already are
-                TODO: // Cont from here, want to make sure that if we start hosting now, we want to host with PT, and we need to start listening through the same socket as ISClient
+                if (!portForwardedToggleCheck.activeSelf)
+                {
+                    // Must first make sure we forward the port through UPnP if necessary
+                    CreateMappings();
+                }
                 Mod.OnHostClicked();
             }
+        }
+
+        private void CreateMappings()
+        {
+            int port = int.Parse(Mod.config["Port"].ToString());
+            Mod.LogInfo("Creating UPnP mappings for "+port);
+            NatDiscoverer discoverer = new NatDiscoverer();
+            CancellationTokenSource cts = new CancellationTokenSource();
+            cts.CancelAfter(10000);
+            System.Threading.Tasks.Task<NatDevice> deviceTask = discoverer.DiscoverDeviceAsync(PortMapper.Upnp, cts);
+            deviceTask.Wait();
+            NatDevice device = deviceTask.Result;
+
+            System.Threading.Tasks.Task mapTask = device.CreatePortMapAsync(new Mapping(Protocol.Tcp, port, port, "H3MP - UPnP TCP mapping"));
+            mapTask.Wait();
+            mapTask = device.CreatePortMapAsync(new Mapping(Protocol.Udp, port, port, "H3MP - UPnP UDP mapping"));
+            mapTask.Wait();
+            System.Threading.Tasks.Task<IPAddress> IPTask = device.GetExternalIPAsync();
+            IPTask.Wait();
+            IPAddress IP = IPTask.Result;
+            Mod.LogInfo("Mappings created on device: "+IP);
         }
 
         private void PlayerAdded(PlayerManager player)

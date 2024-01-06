@@ -49,10 +49,7 @@ namespace H3MP.Networking
 
         public static uint localObjectCounter = 0;
         public static Dictionary<uint, TrackedObjectData> waitingLocalObjects = new Dictionary<uint, TrackedObjectData>();
-        public static bool punchThrough;
-        public static bool punchThroughWaiting;
         public static IAsyncResult connectResult;
-        public static int punchThroughAttemptCounter;
 
         public int tickRate = 20;
         public Timer tickTimer = new Timer();
@@ -130,16 +127,10 @@ namespace H3MP.Networking
                 receiveBuffer = new byte[dataBufferSize];
                 Mod.LogInfo("Attempting connection to " + singleton.IP + ":" + singleton.port, false);
                 connectResult = socket.BeginConnect(singleton.IP, singleton.port, ConnectCallback, socket);
-                if (punchThrough)
-                {
-                    punchThroughAttemptCounter = 0;
-                    punchThroughWaiting = true;
-                }
             }
 
             public void ConnectCallback(IAsyncResult result)
             {
-                punchThroughWaiting = false;
                 Mod.LogInfo("Got connect callback");
                 socket.EndConnect(result);
 

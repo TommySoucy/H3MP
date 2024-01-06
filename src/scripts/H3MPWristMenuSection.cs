@@ -64,7 +64,7 @@ namespace H3MP.Scripts
             background.color = new Color(0.1f, 0.1f, 0.1f, 1);
 
             Text textOut = null;
-            // InitButton(new List<int>() { 0 }, new List<Vector3>() { new Vector3(0, 75, 0) }, new Vector2(1000, 150), new Vector2(140, 70), OnServerListClicked, "Server list", out textOut);
+            InitButton(new List<int>() { 0 }, new List<Vector3>() { new Vector3(0, 75, 0) }, new Vector2(1000, 150), new Vector2(140, 70), OnServerListClicked, "Server list", out textOut);
             InitButton(new List<int>() { 0 }, new List<Vector3>() { new Vector3(0, 0, 0) }, new Vector2(1200, 150), new Vector2(140, 70), OnDirectConnectionClicked, "Direct connection", out textOut);
             InitButton(new List<int>() { 1 }, new List<Vector3>() { new Vector3(0, 75, 0) }, new Vector2(500, 240), new Vector2(140, 70), OnHostClicked, "Host", out textOut);
             InitButton(new List<int>() { 1 }, new List<Vector3>() { Vector3.zero }, new Vector2(500, 240), new Vector2(140, 70), OnConnectClicked, "Join", out textOut);

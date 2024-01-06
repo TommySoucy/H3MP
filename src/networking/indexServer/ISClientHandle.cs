@@ -70,94 +70,12 @@ namespace H3MP.Networking
                         Mod.OnConnectClicked(endPoint);
                         ThreadManager.pingTimer = ThreadManager.pingTime;
                     }
-                    else if (Mod.managerObject != null && ThreadManager.host)
-                    {
-                        int clientID = -1;
-                        for (int i = 1; i <= Server.maxClientCount; ++i)
-                        {
-                            if (Server.clients[i].tcp.socket == null && !Server.clients[i].attemptingPunchThrough)
-                            {
-                                Server.clients[i].attemptingPunchThrough = true;
-                                clientID = i;
-                                break;
-                            }
-                        }
-
-                        if(clientID == -1)
-                        {
-                            Mod.LogError("Received PT connect order from IS but we are at player limit");
-                            return;
-                        }
-                        ServerClient currentClient = Server.clients[clientID];
-                        currentClient.PTEndPoint = endPoint;
-
-                        currentClient.punchThrough = true;
-
-                        currentClient.PTUDP = new UdpClient((ISClient.socket.Client.LocalEndPoint as IPEndPoint).Port);
-
-                        Mod.LogInfo("Attempting connection to " + address + ":" + endPoint.Port, false);
-
-                        using (Packet initialPacket = new Packet((int)ServerPackets.punchThrough))
-                        {
-                            currentClient.PTUDP.BeginSend(packet.ToArray(), packet.Length(), endPoint, null, null);
-                        }
-                        currentClient.PTUDPEstablished = true;
-                        currentClient.punchThroughAttemptCounter = 0;
-
-                        Server.PTClients.Add(currentClient);
-                    }
                 }
                 else
                 {
                     ServerListController.instance.gotEndPoint = false;
                     ServerListController.instance.joiningEntry = -1;
                     ServerListController.instance.SetClientPage(true);
-                }
-            }
-            else
-            {
-                bool gotEndPoint = packet.ReadBool();
-                if (gotEndPoint)
-                {
-                    if (Mod.managerObject != null && ThreadManager.host)
-                    {
-                        int byteCount = packet.ReadInt();
-                        IPAddress address = new IPAddress(packet.ReadBytes(byteCount));
-                        IPEndPoint endPoint = new IPEndPoint(address, packet.ReadInt());
-
-                        int clientID = -1;
-                        for (int i = 1; i <= Server.maxClientCount; ++i)
-                        {
-                            if (Server.clients[i].tcp.socket == null && !Server.clients[i].attemptingPunchThrough)
-                            {
-                                Server.clients[i].attemptingPunchThrough = true;
-                                break;
-                            }
-                        }
-
-                        if (clientID == -1)
-                        {
-                            Mod.LogError("Received PT connect order from IS but we are at player limit");
-                            return;
-                        }
-                        ServerClient currentClient = Server.clients[clientID];
-                        currentClient.PTEndPoint = endPoint;
-
-                        currentClient.punchThrough = true;
-
-                        currentClient.PTUDP = new UdpClient((ISClient.socket.Client.LocalEndPoint as IPEndPoint).Port);
-
-                        Mod.LogInfo("Attempting connection to " + address + ":" + endPoint.Port, false);
-
-                        using (Packet initialPacket = new Packet((int)ServerPackets.punchThrough))
-                        {
-                            currentClient.PTUDP.BeginSend(packet.ToArray(), packet.Length(), endPoint, null, null);
-                        }
-                        currentClient.PTUDPEstablished = true;
-                        currentClient.punchThroughAttemptCounter = 0;
-
-                        Server.PTClients.Add(currentClient);
-                    }
                 }
             }
         }

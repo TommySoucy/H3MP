@@ -96,133 +96,24 @@ namespace H3MP.Networking
 
             if (!host)
             {
-                if (Client.punchThrough)
+                pingTimer -= Time.deltaTime;
+                if (pingTimer <= 0)
                 {
-                    pingTimer -= Time.deltaTime;
-                    if (pingTimer <= 0)
+                    pingTimer = pingTime;
+                    if (Client.singleton.gotWelcome)
                     {
-                        pingTimer = pingTime;
-
-                        // Waiting means we didn't get a call to the callback, meaning no connection. Try again
-                        if (Client.punchThroughWaiting)
-                        {
-                            if (Client.punchThroughAttemptCounter < 10)
-                            {
-                                Mod.LogInfo("Client punchthrough connection attempt " + Client.punchThroughAttemptCounter + ", timing out at 10", false);
-                                ++Client.punchThroughAttemptCounter;
-                                Client.singleton.tcp.socket.EndConnect(Client.connectResult);
-                                Client.connectResult = Client.singleton.tcp.socket.BeginConnect(Client.singleton.IP, Client.singleton.port, Client.singleton.tcp.ConnectCallback, Client.singleton.tcp.socket);
-                            }
-                            else
-                            {
-                                Client.singleton.Disconnect(false, 4);
-                                if(ServerListController.instance != null)
-                                {
-                                    Mod.LogInfo("Client punchthrough connection timed out", false);
-                                    ServerListController.instance.gotEndPoint = false;
-                                    ServerListController.instance.joiningEntry = -1;
-                                    ServerListController.instance.SetClientPage(true);
-                                }
-                            }
-                        }
-                        else // Not waiting for punchthrough connection anymore
-                        {
-                            Client.punchThrough = false;
-                            if (!Client.singleton.tcp.socket.Connected)
-                            {
-                                // Connection unsuccessful
-                                Client.singleton.Disconnect(false, 4);
-                                if (ServerListController.instance != null)
-                                {
-                                    ServerListController.instance.gotEndPoint = false;
-                                    ServerListController.instance.joiningEntry = -1;
-                                    ServerListController.instance.SetClientPage(true);
-                                }
-                            }
-                            // else, connection successful, updating serverlist will be handled by connection event
-                        }
+                        ClientSend.Ping(Convert.ToInt64((DateTime.Now.ToUniversalTime() - epoch).TotalMilliseconds));
                     }
-                }
-                else
-                {
-                    pingTimer -= Time.deltaTime;
-                    if (pingTimer <= 0)
+                    else
                     {
-                        pingTimer = pingTime;
-                        if (Client.singleton.gotWelcome)
+                        ++Client.singleton.pingAttemptCounter;
+                        if (Client.singleton.pingAttemptCounter >= 10)
                         {
-                            ClientSend.Ping(Convert.ToInt64((DateTime.Now.ToUniversalTime() - epoch).TotalMilliseconds));
+                            Mod.LogWarning("Have not received server welcome for " + Client.singleton.pingAttemptCounter + " seconds, timing out at 30");
                         }
-                        else
+                        if (Client.singleton.pingAttemptCounter >= 30)
                         {
-                            ++Client.singleton.pingAttemptCounter;
-                            if (Client.singleton.pingAttemptCounter >= 10)
-                            {
-                                Mod.LogWarning("Have not received server welcome for " + Client.singleton.pingAttemptCounter + " seconds, timing out at 30");
-                            }
-                            if (Client.singleton.pingAttemptCounter >= 30)
-                            {
-                                Client.singleton.Disconnect(false, 4);
-                            }
-                        }
-                    }
-                }
-            }
-            else
-            {
-                if (Server.PTClients.Count > 0)
-                {
-                    pingTimer -= Time.deltaTime;
-                    if (pingTimer <= 0)
-                    {
-                        pingTimer = pingTime;
-
-                        for (int i = Server.PTClients.Count - 1; i >= 0; --i)
-                        {
-                            /*
-                            if(Server.PTClients[i].PTUDPEstablished)
-                            {
-                                Mod.LogInfo("Client " + Server.PTClients[i].ID + " connected through punch-through", false);
-                                if (Server.PTClients[i].PTUDPEstablished)
-                                {
-                                    Server.PTClients[i].PTTCP.EndConnect(Server.PTClients[i].PTConnectionResult);
-                                }
-                                Server.PTClients[i].punchThrough = false;
-                                Server.PTClients[i].PTUDPEstablished = false;
-                                Server.PTClients[i].attemptingPunchThrough = false;
-
-                                Server.PTClients.RemoveAt(i);
-
-                                continue;
-                            }
-
-                            if (Server.PTClients[i].punchThroughAttemptCounter < 10)
-                            {
-                                Mod.LogInfo("Client "+ Server.PTClients[i].ID + " punch-through connection attempt " + Server.PTClients[i].punchThroughAttemptCounter + ", timing out at 10", false);
-                                ++Server.PTClients[i].punchThroughAttemptCounter;
-                                if (Server.PTClients[i].PTUDPEstablished)
-                                {
-                                    Server.PTClients[i].PTTCP.EndConnect(Server.PTClients[i].PTConnectionResult);
-                                }
-                                else
-                                {
-                                    Server.PTClients[i].PTUDPEstablished = true;
-                                }
-                                Server.PTClients[i].PTConnectionResult = Server.PTClients[i].PTTCP.BeginConnect(Server.PTClients[i].PTEndPoint.Address.ToString(), Server.PTClients[i].PTEndPoint.Port, Server.PTClients[i].PTConnectCallback, Server.PTClients[i].PTTCP);
-                            }
-                            else
-                            {
-                                Mod.LogInfo("Client " + Server.PTClients[i].ID + " punch-through connection timed out", false);
-                                if (Server.PTClients[i].PTUDPEstablished)
-                                {
-                                    Server.PTClients[i].PTTCP.EndConnect(Server.PTClients[i].PTConnectionResult);
-                                }
-                                Server.PTClients[i].punchThrough = false;
-                                Server.PTClients[i].PTUDPEstablished = false;
-                                Server.PTClients[i].attemptingPunchThrough = false;
-
-                                Server.PTClients.RemoveAt(i);
-                            }*/
+                            Client.singleton.Disconnect(false, 4);
                         }
                     }
                 }

@@ -145,7 +145,13 @@
     <Reference Include="MonoMod.Utils, Version=22.3.23.4, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>packages\MonoMod.Utils.22.3.23.4\lib\net35\MonoMod.Utils.dll</HintPath>
     </Reference>
+    <Reference Include="Open.Nat, Version=1.0.0.0, Culture=neutral, PublicKeyToken=f22a6a4582336c76, processorArchitecture=MSIL">
+      <HintPath>packages\Open.NAT.2.1.0.0\lib\net35\Open.Nat.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Threading, Version=1.0.2856.102, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>packages\Open.NAT.2.1.0.0\lib\net35\System.Threading.dll</HintPath>
+    </Reference>
     <Reference Include="UnityEngine, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>packages\UnityEngine.5.6.1\lib\net35\UnityEngine.dll</HintPath>
     </Reference>
