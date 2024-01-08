@@ -66,7 +66,6 @@ namespace H3MP.Networking
                     if (ServerListController.instance.state == ServerListController.State.ClientWaiting)
                     {
                         ServerListController.instance.SetClientPage(true);
-                        Client.punchThrough = true;
                         Mod.OnConnectClicked(endPoint);
                         ThreadManager.pingTimer = ThreadManager.pingTime;
                     }
