@@ -5,12 +5,14 @@ using H3MP.Patches;
 using H3MP.Scripts;
 using H3MP.Tracking;
 using HarmonyLib;
+using Open.Nat;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Reflection;
+using System.Threading;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -301,7 +303,9 @@ namespace H3MP
             TNHSpectating = false;
             if (GM.CurrentPlayerBody != null)
             {
+                ++SetPlayerIFFPatch.skip;
                 GM.CurrentPlayerBody.SetPlayerIFF(GM.CurrentSceneSettings.DefaultPlayerIFF);
+                --SetPlayerIFFPatch.skip;
                 if (GM.CurrentPlayerBody.RightHand != null && GM.CurrentPlayerBody.LeftHand != null)
                 {
                     GM.CurrentPlayerBody.RightHand.GetComponent<FVRViveHand>().Mode = FVRViveHand.HandMode.Neutral;
@@ -664,6 +668,11 @@ namespace H3MP
                                     ServerListController.instance.hostServerName.text = "Debug server";
                                     ServerListController.instance.hostLimit.text = "5";
                                     ServerListController.instance.hostUsername.text = "Debug host";
+                                    ServerListController.instance.hostPort.text = "7863";
+                                    //if (!ServerListController.instance.portForwardedToggleCheck.activeSelf)
+                                    //{
+                                    //    ServerListController.instance.OnHostPortForwardedClicked();
+                                    //}
                                     ServerListController.instance.OnHostConfirmClicked();
                                 }
                                 break;
@@ -694,6 +703,52 @@ namespace H3MP
                                 if (H3MPWristMenuSection.invulnerableText != null)
                                 {
                                     H3MPWristMenuSection.invulnerableText.text = "Debug: Invulnerable: " + H3MPWristMenuSection.invulnerable;
+                                }
+                                break;
+                            case 36: // Discover NAT devices
+                                Mod.LogInfo("\tDebug: Discover NAT devices");
+                                SM.PlayGlobalUISound(SM.GlobalUISound.Beep, transform.position);
+                                NatDiscoverer discoverer = new NatDiscoverer();
+                                CancellationTokenSource cts = new CancellationTokenSource();
+                                cts.CancelAfter(10000);
+                                System.Threading.Tasks.Task<IEnumerable<NatDevice>> deviceTask = discoverer.DiscoverDevicesAsync(PortMapper.Upnp, cts);
+                                deviceTask.Wait();
+                                List<NatDevice> devices = new List<NatDevice>(deviceTask.Result);
+                                Mod.LogInfo("Got " + devices.Count + " devices:");
+                                for(int i=0; i < devices.Count; ++i)
+                                {
+                                    System.Threading.Tasks.Task<IPAddress> IPTask = devices[i].GetExternalIPAsync();
+                                    IPTask.Wait();
+                                    IPAddress IP = IPTask.Result;
+                                    Mod.LogInfo("NAT Device " + i + ": " + IP);
+                                }
+                                break;
+                            case 37: // Clear UPnP mappings
+                                Mod.LogInfo("\tDebug: Clear UPnP mappings");
+                                NatDiscoverer clearDiscoverer = new NatDiscoverer();
+                                CancellationTokenSource clearCTS = new CancellationTokenSource();
+                                clearCTS.CancelAfter(10000);
+
+                                // Get device
+                                System.Threading.Tasks.Task<NatDevice> clearDeviceTask = clearDiscoverer.DiscoverDeviceAsync(PortMapper.Upnp, clearCTS);
+                                clearDeviceTask.Wait();
+                                NatDevice device = clearDeviceTask.Result;
+
+                                // Get all mappings
+                                System.Threading.Tasks.Task<IEnumerable<Mapping>> clearMappingsTask = device.GetAllMappingsAsync();
+                                clearMappingsTask.Wait();
+                                List<Mapping> clearMappings = new List<Mapping>(clearMappingsTask.Result);
+                                Mod.LogInfo("Got " + clearMappings.Count + " mappings:");
+
+                                // Delete H3MP mappings
+                                for (int i = 0; i < clearMappings.Count; ++i)
+                                {
+                                    Mod.LogInfo("\tMapping " + i + ": " + clearMappings[i].Description);
+                                    if (clearMappings[i].Description.Contains("H3MP"))
+                                    {
+                                        Mod.LogInfo("\t\tH3MP Mapping, removing...");
+                                        device.DeletePortMapAsync(clearMappings[i]).Wait();
+                                    }
                                 }
                                 break;
                         }

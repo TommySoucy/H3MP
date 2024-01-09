@@ -19,7 +19,7 @@ namespace H3MP.Networking
         public static int dataBufferSize = 4096;
 
         public static string IP = "h3mp.tommysoucy.vip";
-        public static ushort port = 7861;
+        public static ushort port = 7862;
         public static int ID = -1;
 
         public static bool isConnected = false;

@@ -257,9 +257,11 @@ namespace H3MP.Patches
     // Patches FVRPlayerBody.SetPlayerIFF to keep players' IFFs up to date
     class SetPlayerIFFPatch
     {
+        public static int skip;
+
         static void Prefix(int iff)
         {
-            if (Mod.managerObject == null)
+            if (Mod.managerObject == null || skip > 0)
             {
                 return;
             }
