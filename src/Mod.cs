@@ -999,8 +999,6 @@ namespace H3MP
 
         public static void WriteConfig()
         {
-            TODO1: // Make Direct connection use a similar UI to server list where player can enter username, IP (if client), and port
-            TODO2: // Add periodic UDP ping as well as UDP punchthrough
             File.WriteAllText(H3MPPath + "/Config.json", JObject.FromObject(config).ToString());
         }
 
