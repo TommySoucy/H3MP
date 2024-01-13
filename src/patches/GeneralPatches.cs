@@ -131,7 +131,7 @@ namespace H3MP.Patches
 
             // ScorePatch
             MethodInfo initializedOriginal = typeof(SteamManager).GetMethod("get_Initialized", BindingFlags.Public | BindingFlags.Static);
-            MethodInfo submitOriginal = typeof(TNH_ScoreDisplay).GetMethod("SubmitScoreAndGoToBoard", BindingFlags.Public | BindingFlags.Static);
+            MethodInfo submitOriginal = typeof(TNH_ScoreDisplay).GetMethod("SubmitScoreAndGoToBoard", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo initializedPrefix = typeof(ScorePatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(initializedOriginal, harmony, false);

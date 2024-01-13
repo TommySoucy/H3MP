@@ -556,9 +556,10 @@ namespace H3MP.Scripts
             deviceTask.Wait();
             NatDevice device = deviceTask.Result;
 
-            System.Threading.Tasks.Task mapTask = device.CreatePortMapAsync(new Mapping(Protocol.Tcp, port, port, "H3MP - UPnP TCP mapping"));
+            // Mappings with lifetime 0 are permanent
+            System.Threading.Tasks.Task mapTask = device.CreatePortMapAsync(new Mapping(Protocol.Tcp, port, port, 0, "H3MP - UPnP TCP mapping"));
             mapTask.Wait();
-            mapTask = device.CreatePortMapAsync(new Mapping(Protocol.Udp, port, port, "H3MP - UPnP UDP mapping"));
+            mapTask = device.CreatePortMapAsync(new Mapping(Protocol.Udp, port, port, 0, "H3MP - UPnP UDP mapping"));
             mapTask.Wait();
             System.Threading.Tasks.Task<IPAddress> IPTask = device.GetExternalIPAsync();
             IPTask.Wait();
