@@ -72,6 +72,7 @@ namespace H3MP.Networking
                     }
                     if (ISClient.pingAttemptCounter >= 10)
                     {
+                        ISClient.pingAttemptCounter = 0;
                         ISClient.Disconnect(false, 4);
                     }
                 }
