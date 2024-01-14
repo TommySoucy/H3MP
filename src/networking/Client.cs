@@ -37,7 +37,7 @@ namespace H3MP.Networking
         public TCP tcp;
         public UDP udp;
 
-        private bool isConnected = false;
+        public bool isConnected = false;
         public static bool isFullyConnected = false;
         public bool gotWelcome = false;
         public bool gotConnectSync = false;

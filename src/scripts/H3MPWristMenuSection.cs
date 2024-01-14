@@ -2,9 +2,7 @@
 using H3MP.Networking;
 using H3MP.Patches;
 using H3MP.Tracking;
-using HarmonyLib;
 using System.Collections.Generic;
-using System.Reflection;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -71,7 +69,7 @@ namespace H3MP.Scripts
             InitButton(new List<int>() { 0, 1, 2, 3 }, new List<Vector3>() { new Vector3(0, -75, 0), new Vector3(0, -75, 0), new Vector3(0, -75, 0), new Vector3(0, -75, 0) }, new Vector2(500, 150), new Vector2(140, 70), OnOptionsClicked, "Options", out textOut);
             InitButton(new List<int>() { 2 }, new List<Vector3>() { new Vector3(0, 75, 0) }, new Vector2(500, 240), new Vector2(140, 70), OnCloseClicked, "Close\nserver", out textOut);
             InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(0, 75, 0) }, new Vector2(500, 240), new Vector2(140, 70), OnDisconnectClicked, "Disconnect", out textOut);
-            InitButton(new List<int>() { 4 }, new List<Vector3>() { new Vector3(-215, 140, 0) }, new Vector2(240, 240), new Vector2(70, 70), OnBackClicked, "Back", out textOut);
+            InitButton(new List<int>() { 1, 2, 3, 4 }, new List<Vector3>() { new Vector3(-215, 140, 0), new Vector3(-215, 140, 0), new Vector3(-215, 140, 0), new Vector3(-215, 140, 0) }, new Vector2(240, 240), new Vector2(70, 70), OnBackClicked, "Back", out textOut);
             InitButton(new List<int>() { 4 }, new List<Vector3>() { new Vector3(0, 150, 0) }, new Vector2(1200, 150), new Vector2(270, 45), OnReloadConfigClicked, "Reload config", out textOut);
             InitButton(new List<int>() { 4 }, new List<Vector3>() { new Vector3(0, 100, 0) }, new Vector2(1200, 150), new Vector2(270, 45), OnItemInterpolationClicked, "Item interpolation (ON)", out textOut);
             InitButton(new List<int>() { 4 }, new List<Vector3>() { new Vector3(0, 50, 0) }, new Vector2(1200, 150), new Vector2(270, 45), OnTNHReviveClicked, "TNH revive", out textOut);
@@ -148,7 +146,21 @@ namespace H3MP.Scripts
         private void OnDirectConnectionClicked(Text textRef)
         {
             SM.PlayGlobalUISound(SM.GlobalUISound.Beep, transform.position);
-            SetPage(1);
+            if(Mod.managerObject != null)
+            {
+                if (ThreadManager.host)
+                {
+                    SetPage(2);
+                }
+                else
+                {
+                    SetPage(3);
+                }
+            }
+            else
+            {
+                SetPage(1);
+            }
         }
 
         private void OnHostClicked(Text textRef)
@@ -196,6 +208,7 @@ namespace H3MP.Scripts
         {
             SM.PlayGlobalUISound(SM.GlobalUISound.Beep, transform.position);
 
+        TODO: // Make sure we update the wrist menu UI when we host/connect or close server/disconnect through serverlist
             Server.Close();
 
             // Switch page
@@ -224,13 +237,23 @@ namespace H3MP.Scripts
         {
             SM.PlayGlobalUISound(SM.GlobalUISound.Beep, transform.position);
 
-            if (Mod.managerObject == null)
+            switch (currentPage)
             {
-                SetPage(1);
-            }
-            else
-            {
-                SetPage(ThreadManager.host ? 2 : 3);
+                case 1:
+                case 2:
+                case 3:
+                    SetPage(0);
+                    break;
+                case 4:
+                    if (Mod.managerObject == null)
+                    {
+                        SetPage(1);
+                    }
+                    else
+                    {
+                        SetPage(ThreadManager.host ? 2 : 3);
+                    }
+                    break;
             }
         }
 
