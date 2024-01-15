@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Net;
-using System.Net.Sockets;
 
 namespace H3MP.Networking
 {
@@ -84,6 +83,26 @@ namespace H3MP.Networking
             int forClient = packet.ReadInt();
 
             ISClientSend.ConfirmConnection(Mod.managerObject != null && ThreadManager.host && ISClient.isConnected && ISClient.listed && GameManager.players.Count < Server.maxClientCount, forClient);
+        }
+
+        public static void Admin(Packet packet)
+        {
+            int key = packet.ReadInt();
+
+            switch (key)
+            {
+                case 0: // Client data
+                    Mod.LogInfo("Received IS admin 0: Clients: "+packet.ReadInt());
+                    break;
+                case 1: // Host entry data
+                    int hostEntryCount = packet.ReadInt();
+                    Mod.LogInfo("Received IS admin 1: Host entries: " + hostEntryCount);
+                    for(int i=0; i< hostEntryCount; ++i)
+                    {
+                        Mod.LogInfo("-----------\nEntry: " + packet.ReadInt()+"\nClient: "+packet.ReadInt()+"\nEndPoint: "+packet.ReadString()+"\nName: "+packet.ReadString()+"\nPlayer count: "+packet.ReadInt()+"/"+packet.ReadInt());
+                    }
+                    break;
+            }
         }
     }
 }

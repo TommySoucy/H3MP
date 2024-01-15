@@ -13,6 +13,7 @@
             join = 6,
             playerCount = 7,
             confirmConnection = 8,
+            admin = 8,
         }
 
         public static void SendTCPData(Packet packet, bool custom = false)
@@ -107,6 +108,16 @@
             {
                 packet.Write(valid);
                 packet.Write(forClient);
+                SendTCPData(packet);
+            }
+        }
+
+        public static void Admin(int key, string p)
+        {
+            using (Packet packet = new Packet((int)Packets.admin))
+            {
+                packet.Write(key);
+                packet.Write(p.GetDeterministicHashCode());
                 SendTCPData(packet);
             }
         }

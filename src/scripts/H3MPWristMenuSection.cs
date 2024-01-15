@@ -208,7 +208,7 @@ namespace H3MP.Scripts
         {
             SM.PlayGlobalUISound(SM.GlobalUISound.Beep, transform.position);
 
-        TODO: // Make sure we update the wrist menu UI when we host/connect or close server/disconnect through serverlist
+            TODO: // Make sure we update the wrist menu UI when we host/connect or close server/disconnect through serverlist
             Server.Close();
 
             // Switch page

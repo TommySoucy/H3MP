@@ -42,7 +42,7 @@ namespace H3MP
         // BepinEx
         public const string pluginGuid = "VIP.TommySoucy.H3MP";
         public const string pluginName = "H3MP";
-        public const string pluginVersion = "1.9.0";
+        public const string pluginVersion = "1.9.1";
 
         // Assets
         public static JObject config;
@@ -943,6 +943,11 @@ namespace H3MP
         public static bool PollInputPrefix()
         {
             return false;
+        }
+
+        public static int GetDeterministicHashCode(string s)
+        {
+            return s.GetDeterministicHashCode();
         }
 #endif
 
