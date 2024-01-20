@@ -2,14 +2,16 @@
 
 As the title says, this is a mod that adds multiplayer to the virtual reality game **Hotdogs, Horseshoes and Handgrenades**.
 
+## MAIN BUILD - H3 Beta should be set to "None"
+
 ## IMPORTANT
 
 - See incompatibilities section below for a list of known incompatible mods and modes.
 - Only report bugs if you don't use any of the mods from the incompatibilities list.
-- Report bugs on the H3VR homebrew discord server's #h3mp-general channel and always send **_full_** output logs.
-- Will most probably work with the Main version of the game, but currently only guaranteed to work with "alpha - Mod Safe".
+- Report bugs in the H3VR homebrew discord server (Look it up on google) and always send **_full_** output logs.
 - If you get "PatchVerify" errors on start up it means either your game or H3MP is the wrong version.
 - Port forward or hosting solution must support both TCP and UDP
+- UPnP will not work if you are behind multiple NATs. That means if you computer is connected to the internet through multiple routers.
 
 ## Manual Installation
 
@@ -25,9 +27,15 @@ Can be done through thunderstore using [r2modman mod manager](https://h3vr.thund
 
 ## Usage
 
-All H3MP functions can be accessed through the wristmenu, in-game (apart from the settings in the config file, see Config section below).
+All H3MP functions can be accessed through the wristmenu, in-game.
 
-To join a server, you will have to have set the IP and port of the server in your config file (see Config section below), then, in the wristmenu, press H3MP->Join
+Hosting and joining can be done entirely from the in-game server list, accessible through H3MP's wristmenu section.
+The server list will let you host and join directly, as well as list your server publicly and join public servers.
+Upon hosting, you will have a check mark labeled "Forwarded". If left unchecked, UPnP will be used to open the entered port. Otherwise you will be expected to have already forwarded the port.
+
+Direct connection, as could be done before without the server list, can still be done exactly the same way.
+To join a server directly, you will have to have set the IP and port of the server in your config file (see Config section below), then, in the wristmenu, press H3MP->Join.
+To host directly, you will have to open a port, set that port in your config file, and then, in the wristmenu, press H3MP->Host.
 
 **_If you forgot to set these before going in-game and restarting the game is too much of a hassle, mainly for people with 200+ mods that I figured probably take a while to load, you can set your config, then go to H3MP->Options->Reload config in the wristmenu which will reload your configs, after which you can connect/host_**
 
@@ -63,8 +71,14 @@ The **config** refers to a file in the H3MP folder called **Config.json** which 
 - **_Port_**: The port of the server you will be joining **or hosting from**
 - **_MaxClientCount_**: The maximum number of clients that can connect to your server
 - **_Username_**: The username you will have on the server
+- **_ServerName_**: The name of your server if you host publicly
+- **_TickRate_**: How many times a second updates will be sent to other players
 
 ## Hosting
+
+Can now be done directly from the server list.
+
+For direct connection, you can either use the server list's Join/Host buttons on the first page, or use direct connection as was required before:
 
 To host a server on a **local network**, anyone who wants to connect to you will have to set their config's **IP** to your machine's local IP address, which can be found by running the "ipconfig" command in CMD.
 
