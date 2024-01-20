@@ -55,12 +55,12 @@
                 packet.Write(limit);
                 if(password != null && !password.Equals(""))
                 {
-                    packet.Write(false);
+                    packet.Write(true);
+                    packet.Write(password.GetDeterministicHashCode());
                 }
                 else
                 {
-                    packet.Write(true);
-                    packet.Write(password.GetDeterministicHashCode());
+                    packet.Write(false);
                 }
                 packet.Write(port);
                 SendTCPData(packet);

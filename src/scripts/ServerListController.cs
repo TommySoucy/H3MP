@@ -232,7 +232,6 @@ namespace H3MP.Scripts
                 {
                     GameObject hostEntry = Instantiate(mainEntryPrefab, currentListPage);
                     hostEntry.SetActive(true);
-                    Player player = Server.clients[Server.connectedClients[i]].player;
                     hostEntry.transform.GetChild(0).GetComponent<Text>().text = entries[i].name;
                     hostEntry.transform.GetChild(1).GetComponent<Text>().text = entries[i].playerCount + "/" + entries[i].limit;
                     hostEntry.transform.GetChild(2).gameObject.SetActive(entries[i].locked);
