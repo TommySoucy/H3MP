@@ -604,7 +604,7 @@ namespace H3MP.Scripts
                 if(Mod.managerObject == null)
                 {
                     // Actually start hosting if not already are
-                    if (!hostPortForwardedToggleCheck.activeSelf)
+                    if (hostPortForwardedToggleCheck.activeSelf)
                     {
                         // Must first make sure we forward the port through UPnP if necessary
                         CreateMappings();
