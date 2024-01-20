@@ -107,7 +107,31 @@ namespace H3MP.Networking
             }
             else
             {
-                actualIP = Dns.GetHostAddresses(IP)[0].ToString();
+                // The first address might be the DNS address, not the server's so need to check them
+                // I will be assuming the one that starts with 192 is the DNS's and is not the one we want
+                IPAddress[] addresses = Dns.GetHostAddresses(IP);
+                if(addresses != null && addresses.Length > 0)
+                {
+                    bool found = false;
+                    for (int i = 0; i < addresses.Length; ++i)
+                    {
+                        if (addresses[i].GetAddressBytes()[0] != 192)
+                        {
+                            actualIP = addresses[i].ToString();
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found)
+                    {
+                        Mod.LogWarning("Did not find an address that does not start with 192 from IS sub domain. Using first IP.");
+                        actualIP = addresses[0].ToString();
+                    }
+                }
+                else
+                {
+                    Mod.LogError("Did not get any address from IS sub domain! Connection to IS will fail.");
+                }
             }
             receiveBuffer = new byte[dataBufferSize];
             Mod.LogInfo("Making connection to IS: " + actualIP + ":" + port, false);
