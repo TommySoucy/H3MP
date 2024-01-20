@@ -551,7 +551,7 @@ namespace H3MP.Scripts
                 if (ISClient.listed)
                 {
                     hostingListButtonText.color = Color.green;
-                    hostingListButtonText.text = "Listed";
+                    hostingListButtonText.text = "Public";
                 }
                 else
                 {
@@ -563,7 +563,7 @@ namespace H3MP.Scripts
                     else
                     {
                         hostingListButtonText.color = Color.yellow;
-                        hostingListButtonText.text = "Unlisted";
+                        hostingListButtonText.text = "Private";
                     }
                 }
 
