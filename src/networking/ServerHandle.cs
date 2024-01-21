@@ -19,7 +19,7 @@ namespace H3MP.Networking
             int IFF = packet.ReadInt();
             int colorIndex = packet.ReadInt();
 
-            Mod.LogInfo($"{Server.clients[clientID].tcp.socket.Client.RemoteEndPoint} connected successfully and is now player {clientID}", false);
+            Mod.LogInfo($"{Server.clients[clientID].tcp.socket.Client.RemoteEndPoint} connected successfully and is now player {clientID}.", false);
 
             if (clientID != clientIDCheck)
             {
@@ -34,8 +34,10 @@ namespace H3MP.Networking
             // Tell the client connection is complete
             ServerSend.ConnectionComplete(clientID);
 
+            Mod.LogInfo("\tChecking if we are connected and listed on IS", false);
             if (ISClient.isConnected && ISClient.listed)
             {
+                Mod.LogInfo("\t\tWe are, sending new playercount: "+ GameManager.players.Count, false);
                 ISClientSend.PlayerCount(GameManager.players.Count);
             }
         }

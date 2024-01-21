@@ -988,7 +988,7 @@ namespace H3MP.Scripts
                         // Not connected directly, can disconnect from IS
                         ISClient.Disconnect(true, 0);
                     }
-                    else // Connected directly as client, no need for IS connection
+                    else // Connected directly
                     {
                         if (ThreadManager.host)
                         {

@@ -13,7 +13,7 @@
             join = 6,
             playerCount = 7,
             confirmConnection = 8,
-            admin = 8,
+            admin = 9,
         }
 
         public static void SendTCPData(Packet packet, bool custom = false)

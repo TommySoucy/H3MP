@@ -99,7 +99,7 @@ namespace H3MP.Networking
                     Mod.LogInfo("Received IS admin 1: Host entries: " + hostEntryCount);
                     for(int i=0; i< hostEntryCount; ++i)
                     {
-                        Mod.LogInfo("-----------\nEntry: " + packet.ReadInt()+"\nClient: "+packet.ReadInt()+"\nEndPoint: "+packet.ReadString()+"\nName: "+packet.ReadString()+"\nPlayer count: "+packet.ReadInt()+"/"+packet.ReadInt());
+                        Mod.LogInfo("\n-----------\nEntry: " + packet.ReadInt()+"\nClient: "+packet.ReadInt()+"\nEndPoint: "+packet.ReadString()+"\nName: "+packet.ReadString()+"\nPlayer count: "+packet.ReadInt()+"/"+packet.ReadInt()+"\nHas Password: "+packet.ReadBool());
                     }
                     break;
             }
