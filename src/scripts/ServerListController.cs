@@ -900,7 +900,7 @@ namespace H3MP.Scripts
             if (directConnection)
             {
                 Mod.config["IP"] = joinIP.text;
-                Mod.config["Port"] = joinPort.text;
+                Mod.config["Port"] = ushort.Parse(joinPort.text);
             }
             Mod.WriteConfig();
             join.SetActive(false);

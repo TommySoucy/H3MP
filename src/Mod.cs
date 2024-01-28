@@ -998,7 +998,21 @@ namespace H3MP
         public void LoadConfig()
         {
             Logger.LogInfo("Loading config...");
-            config = JObject.Parse(File.ReadAllText(H3MPPath + "/Config.json"));
+            try
+            {
+                config = JObject.Parse(File.ReadAllText(H3MPPath + "/Config.json"));
+            }
+            catch(Exception ex)
+            {
+                Mod.LogError("Failed to load config: "+ex.Message+". Setting defaults config");
+                config = new JObject();
+                config["IP"] = "";
+                config["Port"] = (ushort)7863;
+                config["MaxClientCount"] = 5;
+                config["Username"] = "Default Username";
+                config["TickRate"] = 20;
+                config["ServerName"] = "Default Server Name";
+            }
             Logger.LogInfo("Config loaded");
         }
 
@@ -1616,7 +1630,15 @@ namespace H3MP
                 client.port = (ushort)endPointOverride.Port;
             }
 
-            client.ConnectToServer();
+            if(IPAddress.TryParse(client.IP, out IPAddress address))
+            {
+                client.ConnectToServer();
+            }
+            else
+            {
+                client.Disconnect(false, 0);
+                return;
+            }
 
             if (GameManager.scene.Equals("TakeAndHold_Lobby_2"))
             {
