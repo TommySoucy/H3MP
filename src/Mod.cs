@@ -1610,35 +1610,37 @@ namespace H3MP
                 return;
             }
 
-            if (config["IP"].ToString().Equals(""))
+            string IPToUse;
+            ushort portToUse;
+            if (endPointOverride == null)
+            {
+                IPToUse = config["IP"].ToString();
+                portToUse = (ushort)config["Port"];
+            }
+            else
+            {
+                IPToUse = endPointOverride.Address.ToString();
+                portToUse = (ushort)endPointOverride.Port;
+            }
+
+            if (IPToUse.Equals(""))
             {
                 LogError("Attempted to connect to server but no IP set in config!");
+                return;
+            }
+            else if(!IPAddress.TryParse(IPToUse, out IPAddress address))
+            {
+                LogError("Attempted to connect to server but IP could not be parsed!");
                 return;
             }
 
             CreateManagerObject();
 
             Client client = managerObject.AddComponent<Client>();
-            if(endPointOverride == null)
-            {
-                client.IP = config["IP"].ToString();
-                client.port = (ushort)config["Port"];
-            }
-            else
-            {
-                client.IP = endPointOverride.Address.ToString();
-                client.port = (ushort)endPointOverride.Port;
-            }
+            client.IP = IPToUse;
+            client.port = portToUse;
 
-            if(IPAddress.TryParse(client.IP, out IPAddress address))
-            {
-                client.ConnectToServer();
-            }
-            else
-            {
-                client.Disconnect(false, 0);
-                return;
-            }
+            client.ConnectToServer();
 
             if (GameManager.scene.Equals("TakeAndHold_Lobby_2"))
             {
