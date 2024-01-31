@@ -14,6 +14,9 @@
             playerCount = 7,
             confirmConnection = 8,
             admin = 9,
+            reserved0 = 10,
+            reserved1 = 11,
+            reserved2 = 12,
         }
 
         public static void SendTCPData(Packet packet, bool custom = false)

@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Net;
+using UnityEngine;
 
 namespace H3MP.Networking
 {
@@ -102,6 +103,19 @@ namespace H3MP.Networking
                         Mod.LogInfo("\n-----------\nEntry: " + packet.ReadInt()+"\nClient: "+packet.ReadInt()+"\nEndPoint: "+packet.ReadString()+"\nName: "+packet.ReadString()+"\nPlayer count: "+packet.ReadInt()+"/"+packet.ReadInt()+"\nHas Password: "+packet.ReadBool());
                     }
                     break;
+            }
+        }
+
+        public static void Unlisted(Packet packet)
+        {
+            if(ISClient.listed)
+            {
+                ISClient.listed = false;
+                if(ServerListController.instance != null && ServerListController.instance.state == ServerListController.State.Hosting)
+                {
+                    ServerListController.instance.hostingListButtonText.color = Color.yellow;
+                    ServerListController.instance.hostingListButtonText.text = "Private";
+                }
             }
         }
     }
