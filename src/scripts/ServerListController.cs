@@ -76,7 +76,8 @@ namespace H3MP.Scripts
         public GameObject hostingEntryPrefab;
         public GameObject hostingPrevButton;
         public GameObject hostingNextButton;
-        public GameObject hostingListButton;
+        public GameObject hostingListButtonObject;
+        public Button hostingListButton;
         public Text hostingListButtonText;
 
         // Join
@@ -538,7 +539,7 @@ namespace H3MP.Scripts
                 hostingLoadingAnimation.SetActive(true);
                 hostingInfoTextObject.SetActive(true);
                 hostingListParent.gameObject.SetActive(false);
-                hostingListButton.SetActive(false);
+                hostingListButtonObject.SetActive(false);
                 hostingInfoText.text = "Awaiting server confirm";
             }
             else
@@ -547,11 +548,12 @@ namespace H3MP.Scripts
                 hostingLoadingAnimation.SetActive(false);
                 hostingInfoTextObject.SetActive(false);
                 hostingListParent.gameObject.SetActive(true);
-                hostingListButton.SetActive(true);
+                hostingListButtonObject.SetActive(true);
                 if (ISClient.listed)
                 {
                     hostingListButtonText.color = Color.green;
                     hostingListButtonText.text = "Public";
+                    hostingListButton.interactable = false;
                 }
                 else
                 {
@@ -559,11 +561,13 @@ namespace H3MP.Scripts
                     {
                         hostingListButtonText.color = Color.cyan;
                         hostingListButtonText.text = "Listing";
+                        hostingListButton.interactable = false;
                     }
                     else
                     {
                         hostingListButtonText.color = Color.yellow;
                         hostingListButtonText.text = "Private";
+                        hostingListButton.interactable = true;
                     }
                 }
 
