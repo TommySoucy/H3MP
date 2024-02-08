@@ -745,7 +745,7 @@ namespace H3MP.Scripts
                     {
                         clientInfoText.color = Color.white;
                         clientInfoText.text = "Awaiting server confirm";
-                        ISClientSend.Join(joiningEntry, joinPassword.text.GetDeterministicHashCode());
+                        ISClientSend.Join(joiningEntry, Mod.GetSHA256Hash(joinPassword.text));
                     }
                 }
             }

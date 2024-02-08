@@ -944,11 +944,6 @@ namespace H3MP
         {
             return false;
         }
-
-        public static int GetDeterministicHashCode(string s)
-        {
-            return s.GetDeterministicHashCode();
-        }
 #endif
 
         public static void CustomPacketHandlerReceivedInvoke(string handlerID, int index)
@@ -2907,6 +2902,23 @@ namespace H3MP
             {
                 OnRemovePlayerFromSpecificLists(player);
             }
+        }
+
+        public static string GetSHA256Hash(string input)
+        {
+            using (System.Security.Cryptography.SHA256 sha256 = System.Security.Cryptography.SHA256.Create())
+            {
+                byte[] inputBytes = System.Text.Encoding.ASCII.GetBytes(input);
+                byte[] hashBytes = sha256.ComputeHash(inputBytes);
+
+                //return Convert.ToHexString(hashBytes);
+                return ByteArrayToString(hashBytes);
+            }
+        }
+
+        public static string ByteArrayToString(byte[] ba)
+        {
+            return BitConverter.ToString(ba).Replace("-", "");
         }
 
         public static void LogInfo(string message, bool debug = true)

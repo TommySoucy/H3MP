@@ -59,7 +59,7 @@
                 if(password != null && !password.Equals(""))
                 {
                     packet.Write(true);
-                    packet.Write(password.GetDeterministicHashCode());
+                    packet.Write(Mod.GetSHA256Hash(password));
                 }
                 else
                 {
@@ -86,7 +86,7 @@
             }
         }
 
-        public static void Join(int ID, int passwordHash)
+        public static void Join(int ID, string passwordHash)
         {
             using (Packet packet = new Packet((int)Packets.join))
             {
@@ -120,7 +120,7 @@
             using (Packet packet = new Packet((int)Packets.admin))
             {
                 packet.Write(key);
-                packet.Write(p.GetDeterministicHashCode());
+                packet.Write(Mod.GetSHA256Hash(p));
                 SendTCPData(packet);
             }
         }
