@@ -417,6 +417,11 @@ namespace H3MP.Scripts
                     hostPortField.clearButton.SetActive(true);
                 }
             }
+            else if(ISClient.listed)
+            {
+                ISClientSend.Unlist();
+                ISClient.wantListed = false;
+            }
         }
 
         public void OnHostPortForwardedClicked()
@@ -553,7 +558,7 @@ namespace H3MP.Scripts
                 {
                     hostingListButtonText.color = Color.green;
                     hostingListButtonText.text = "Public";
-                    hostingListButton.interactable = false;
+                    hostingListButton.interactable = true;
                 }
                 else
                 {

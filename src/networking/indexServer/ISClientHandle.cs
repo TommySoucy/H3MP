@@ -115,6 +115,7 @@ namespace H3MP.Networking
                 {
                     ServerListController.instance.hostingListButtonText.color = Color.yellow;
                     ServerListController.instance.hostingListButtonText.text = "Private";
+                    ServerListController.instance.hostingListButton.interactable = true;
                 }
             }
         }
