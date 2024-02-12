@@ -179,16 +179,12 @@ namespace H3MP.Patches
                 {
                     if (breaking)
                     {
-#if DEBUG
                         Mod.LogError("PatchVerify: " + identifier + " failed patch verify, this will most probably break H3MP! Update the mod.\nOriginal hash: " + originalHash + ", new hash: " + hash);
-#endif
                         ++breakingPatchVerify;
                     }
                     else
                     {
-#if DEBUG
                         Mod.LogWarning("PatchVerify: " + identifier + " failed patch verify, this will most probably break some part of H3MP. Update the mod.\nOriginal hash: " + originalHash + ", new hash: " + hash);
-#endif
                         ++warningPatchVerify;
                     }
 
