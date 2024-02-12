@@ -2838,8 +2838,13 @@ namespace H3MP
 
             GameObject.Destroy(GameManager.players[playerID].gameObject);
             GameManager.players.Remove(playerID);
+            if (ISClient.isConnected && ISClient.listed)
+            {
+                Mod.LogInfo("Player removed from lists, sending new playercount: " + (GameManager.players.Count + 1), false);
+                ISClientSend.PlayerCount(GameManager.players.Count + 1); // +1 because players does not include ourselves
+            }
 
-            if(OnPlayerRemoved != null)
+            if (OnPlayerRemoved != null)
             {
                 OnPlayerRemoved(player);
             }

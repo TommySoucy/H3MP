@@ -37,8 +37,8 @@ namespace H3MP.Networking
             Mod.LogInfo("\tChecking if we are connected and listed on IS", false);
             if (ISClient.isConnected && ISClient.listed)
             {
-                Mod.LogInfo("\t\tWe are, sending new playercount: "+ GameManager.players.Count, false);
-                ISClientSend.PlayerCount(GameManager.players.Count);
+                Mod.LogInfo("\t\tWe are, sending new playercount: "+ (GameManager.players.Count + 1), false);
+                ISClientSend.PlayerCount(GameManager.players.Count + 1); // +1 because players does not include ourselves
             }
         }
 
