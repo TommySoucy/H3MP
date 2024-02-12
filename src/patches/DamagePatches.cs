@@ -1077,7 +1077,7 @@ namespace H3MP.Patches
         {
             List<CodeInstruction> instructionList = new List<CodeInstruction>(instructions);
             List<CodeInstruction> toInsertSecond = new List<CodeInstruction>();
-            toInsertSecond.Add(new CodeInstruction(OpCodes.Ldloc_S, 13)); // Load explosion gameobject
+            toInsertSecond.Add(new CodeInstruction(OpCodes.Ldloc_S, 9)); // Load explosion gameobject
             toInsertSecond.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load projectile instance
             toInsertSecond.Add(new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(BallisticProjectile), "tempFA"))); // Load tempFA from instance
             toInsertSecond.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(ExplosionDamageablePatch), "AddControllerReference"))); // Call AddControllerReference
@@ -1312,7 +1312,7 @@ namespace H3MP.Patches
     // Patches Explosion.Explode to ignore latest IFVRDamageable if necessary
     class ExplosionDamageablePatch
     {
-        public static void AddControllerReference(GameObject dest, Component src = null)
+        public static void AddControllerReference(GameObject dest, MonoBehaviour src = null)
         {
             // Skip if not connected or no one to send data to
             if (Mod.managerObject == null || GameManager.playersPresent.Count == 0 || dest == null)
