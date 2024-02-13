@@ -60,6 +60,8 @@ namespace H3MP.Scripts
         public Text usernameLabel;
         public Text healthLabel;
 
+
+
         public virtual void Awake()
         {
             GameManager.OnPlayerBodyInit += OnPlayerBodyInit;
@@ -343,6 +345,32 @@ namespace H3MP.Scripts
                         handTransforms[i].rotation = handsToFollow[i].rotation;
                     }
                 }
+                
+                // hide self when using quickbelt
+                var pitch = headToFollow.rotation.eulerAngles.x;
+                var hand0Pos = handsToFollow[0].position;
+                var hand1Pos = handsToFollow[1].position;
+
+                var handDist = 999f; // distance to nearest qb slot
+                foreach (var slot in GM.CurrentPlayerBody.QBSlots_Internal)
+                {
+                    var t = slot.transform;
+                    handDist = Mathf.Min(Vector3.Distance(hand0Pos, t.position), handDist);
+                    handDist = Mathf.Min(Vector3.Distance(hand1Pos, t.position), handDist);
+                }
+                
+                Debug.Log($"HMD Pitch: {pitch}\nHand dist: {handDist}");
+                
+                if (pitch > 54 && handDist <= 0.09f)
+                {
+                    Debug.Log("Hiding self!");
+                }
+                else if (pitch < 32 || (270 < pitch && pitch < 360))
+                {
+                    // begin timer to hide self
+                }
+                
+                Debug.Log("");
             }
         }
 
