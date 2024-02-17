@@ -1,6 +1,6 @@
 ﻿using FistVR;
 using System;
-using System.Timers;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -61,18 +61,17 @@ namespace H3MP.Scripts
         public Text usernameLabel;
         public Text healthLabel;
 
-        private bool selfHidden = false;
-        private Timer selfUnhideTimer = new Timer(200);
+        // for self-hiding
+        public static bool optionHideSelf = true;
         private const float SELF_HIDE_PITCH = 54;
         private const float SELF_UNHIDE_PITCH = 42;
+        private bool selfIsHidden = false;
+        private bool selfIsUnhiding = false;
 
 
         public virtual void Awake()
         {
             GameManager.OnPlayerBodyInit += OnPlayerBodyInit;
-
-            selfUnhideTimer.AutoReset = false;
-            selfUnhideTimer.Elapsed += SelfUnhideCallback;
 
             Verify();
 
@@ -355,30 +354,40 @@ namespace H3MP.Scripts
                 }
 
                 // Hide self when using quickbelt //
-                var usingQB = IsUsingQuickbelt();
-                var pitch = headToFollow.rotation.eulerAngles.x;
-                if (!selfHidden)
+                if (optionHideSelf)
                 {
-                    if (usingQB)
+                    var usingQB = IsUsingQuickbelt();
+                    var pitch = headToFollow.rotation.eulerAngles.x;
+                    if (!selfIsHidden)
                     {
-                        selfUnhideTimer.Stop();
-                        SetBodyVisible(false);
-                        SetHandsVisible(false);
-                        selfHidden = true;
+                        if (usingQB)
+                        {
+                            SetBodyVisible(false);
+                            SetHandsVisible(false);
+                            selfIsHidden = true;
+                        }
                     }
-                }
-                else
-                {
-                    if (!selfUnhideTimer.Enabled) // try to start timer
+                    else if (!selfIsUnhiding)
                     {
                         if (pitch < SELF_UNHIDE_PITCH || (180 < pitch && pitch < 360))
-                            selfUnhideTimer.Start();
-                    }
-                    else if (usingQB) // stop the running timer if interacting with qb
-                    {
-                        selfUnhideTimer.Stop();
+                        {
+                            selfIsUnhiding = true;
+                            StartCoroutine(nameof(SelfUnhideCoroutine));
+                        }
                     }
                 }
+            }
+        }
+
+        public void ToggleSelfHide()
+        {
+            optionHideSelf = !optionHideSelf;
+            if (!optionHideSelf)
+            {
+                selfIsHidden = false;
+                selfIsUnhiding = false;
+                SetBodyVisible(GameManager.bodyVisible);
+                SetHandsVisible(GameManager.handsVisible);
             }
         }
 
@@ -400,11 +409,16 @@ namespace H3MP.Scripts
             return false;
         }
 
-        private void SelfUnhideCallback(object _, ElapsedEventArgs __)
+        private IEnumerator SelfUnhideCoroutine()
         {
-            SetBodyVisible(GameManager.bodyVisible);
-            SetHandsVisible(GameManager.handsVisible);
-            selfHidden = false;
+            yield return new WaitForSeconds(0.15f);
+            if (!optionHideSelf || !IsUsingQuickbelt())
+            {
+                SetBodyVisible(GameManager.bodyVisible);
+                SetHandsVisible(GameManager.handsVisible);
+                selfIsHidden = false;
+            }
+            selfIsUnhiding = false;
         }
 
         public virtual void SetHeadVisible(bool visible)
@@ -558,7 +572,6 @@ namespace H3MP.Scripts
         public virtual void OnDestroy()
         {
             GameManager.OnPlayerBodyInit -= OnPlayerBodyInit;
-            selfUnhideTimer.Elapsed -= SelfUnhideCallback;
         }
     }
 }
