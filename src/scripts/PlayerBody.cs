@@ -1,5 +1,6 @@
 ﻿using FistVR;
 using System;
+using System.Timers;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -60,11 +61,18 @@ namespace H3MP.Scripts
         public Text usernameLabel;
         public Text healthLabel;
 
+        private bool selfHidden = false;
+        private Timer selfUnhideTimer = new Timer(200);
+        private const float SELF_HIDE_PITCH = 54;
+        private const float SELF_UNHIDE_PITCH = 42;
 
 
         public virtual void Awake()
         {
             GameManager.OnPlayerBodyInit += OnPlayerBodyInit;
+
+            selfUnhideTimer.AutoReset = false;
+            selfUnhideTimer.Elapsed += SelfUnhideCallback;
 
             Verify();
 
@@ -345,33 +353,58 @@ namespace H3MP.Scripts
                         handTransforms[i].rotation = handsToFollow[i].rotation;
                     }
                 }
-                
-                // hide self when using quickbelt
-                var pitch = headToFollow.rotation.eulerAngles.x;
-                var hand0Pos = handsToFollow[0].position;
-                var hand1Pos = handsToFollow[1].position;
 
-                var handDist = 999f; // distance to nearest qb slot
-                foreach (var slot in GM.CurrentPlayerBody.QBSlots_Internal)
+                // Hide self when using quickbelt //
+                var usingQB = IsUsingQuickbelt();
+                var pitch = headToFollow.rotation.eulerAngles.x;
+                if (!selfHidden)
                 {
-                    var t = slot.transform;
-                    handDist = Mathf.Min(Vector3.Distance(hand0Pos, t.position), handDist);
-                    handDist = Mathf.Min(Vector3.Distance(hand1Pos, t.position), handDist);
+                    if (usingQB)
+                    {
+                        selfUnhideTimer.Stop();
+                        SetBodyVisible(false);
+                        SetHandsVisible(false);
+                        selfHidden = true;
+                    }
                 }
-                
-                Debug.Log($"HMD Pitch: {pitch}\nHand dist: {handDist}");
-                
-                if (pitch > 54 && handDist <= 0.09f)
+                else
                 {
-                    Debug.Log("Hiding self!");
+                    if (!selfUnhideTimer.Enabled) // try to start timer
+                    {
+                        if (pitch < SELF_UNHIDE_PITCH || (180 < pitch && pitch < 360))
+                            selfUnhideTimer.Start();
+                    }
+                    else if (usingQB) // stop the running timer if interacting with qb
+                    {
+                        selfUnhideTimer.Stop();
+                    }
                 }
-                else if (pitch < 32 || (270 < pitch && pitch < 360))
-                {
-                    // begin timer to hide self
-                }
-                
-                Debug.Log("");
             }
+        }
+
+        private bool IsUsingQuickbelt()
+        {
+            var pitch = headToFollow.rotation.eulerAngles.x;
+            if (SELF_HIDE_PITCH < pitch && pitch < 90)
+            {
+                foreach (var t in handsToFollow)
+                {
+                    var hand = t.GetComponent<FVRViveHand>();
+                    if (
+                        (hand.CurrentInteractable == null && (hand.CurrentHoveredQuickbeltSlotDirty != null) || hand.ClosestPossibleInteractable != null)
+                        || (hand.CurrentInteractable != null && hand.CurrentHoveredQuickbeltSlot != null)
+                    )
+                        return true;
+                }
+            }
+            return false;
+        }
+
+        private void SelfUnhideCallback(object _, ElapsedEventArgs __)
+        {
+            SetBodyVisible(GameManager.bodyVisible);
+            SetHandsVisible(GameManager.handsVisible);
+            selfHidden = false;
         }
 
         public virtual void SetHeadVisible(bool visible)
@@ -525,6 +558,7 @@ namespace H3MP.Scripts
         public virtual void OnDestroy()
         {
             GameManager.OnPlayerBodyInit -= OnPlayerBodyInit;
+            selfUnhideTimer.Elapsed -= SelfUnhideCallback;
         }
     }
 }
