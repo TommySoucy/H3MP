@@ -17,6 +17,7 @@ namespace H3MP.Scripts
         public static Text colorText;
         public static Text visibilityText;
         public static Text handText;
+        public static Text selfHideText;
 
         public override void Enable()
         {
@@ -49,6 +50,7 @@ namespace H3MP.Scripts
             InitButton(new List<int>() { 0 }, new List<Vector3>() { new Vector3(-155, 100, 0) }, new Vector2(150, 150), new Vector2(45, 45), OnPreviousColorClicked, "<", out textOut);
             InitButton(new List<int>() { 0 }, new List<Vector3>() { new Vector3(0, 50, 0) }, new Vector2(1200, 150), new Vector2(270, 45), OnVisibleClicked, "Visible: " + (GameManager.currentPlayerBody != null && GameManager.currentPlayerBody.bodyRenderers != null && GameManager.currentPlayerBody.bodyRenderers.Length > 0 && GameManager.currentPlayerBody.bodyRenderers[0].enabled ? "True" : "False"), out visibilityText);
             InitButton(new List<int>() { 0 }, new List<Vector3>() { new Vector3(0, 0, 0) }, new Vector2(1200, 150), new Vector2(270, 45), OnHandsClicked, "Hands visible: " + (GameManager.currentPlayerBody != null && GameManager.currentPlayerBody.handRenderers != null && GameManager.currentPlayerBody.handRenderers.Length > 0 && GameManager.currentPlayerBody.handRenderers[0].enabled ? "True" : "False"), out handText);
+            InitButton(new List<int>() { 0 }, new List<Vector3>() { new Vector3(0, -50, 0) }, new Vector2(1200, 150), new Vector2(270, 45), OnSelfHideClicked, "Auto-hide self: " + (PlayerBody.optionAutoHideSelf ? "True" : "False"), out selfHideText);
             //InitButton(new List<int>() { 3 }, new List<Vector3>() { new Vector3(215, -140, 0) }, new Vector2(240, 240), new Vector2(70, 70), OnNextOptionsClicked, "Next", out textOut);
             //InitButton(new List<int>() { 4 }, new List<Vector3>() { new Vector3(-215, -140, 0) }, new Vector2(240, 240), new Vector2(70, 70), OnPrevOptionsClicked, "Prev", out textOut);
         }
@@ -240,6 +242,20 @@ namespace H3MP.Scripts
                 GameManager.handsVisible = !GameManager.handsVisible;
                 GameManager.currentPlayerBody.SetHandsVisible(GameManager.handsVisible);
                 handText.text = "Hands visible: " + GameManager.handsVisible;
+            }
+        }
+
+        private void OnSelfHideClicked(Text textRef)
+        {
+            if (GameManager.currentPlayerBody == null)
+            {
+                SM.PlayGlobalUISound(SM.GlobalUISound.Error, transform.position);
+            }
+            else
+            {
+                SM.PlayGlobalUISound(SM.GlobalUISound.Beep, transform.position);
+                GameManager.currentPlayerBody.ToggleSelfHide();
+                selfHideText.text = "Auto-hide self: " + (PlayerBody.optionAutoHideSelf ? "True" : "False");
             }
         }
 
