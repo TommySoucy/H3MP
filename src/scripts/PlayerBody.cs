@@ -363,8 +363,8 @@ namespace H3MP.Scripts
                     {
                         if (usingQB)
                         {
-                            SetBodyVisible(false);
-                            SetHandsVisible(false);
+                            SetPOVBodyVisible(false);
+                            SetPOVHandsVisible(false);
                             selfIsHidden = true;
                         }
                     }
@@ -387,8 +387,8 @@ namespace H3MP.Scripts
             {
                 selfIsHidden = false;
                 selfIsUnhiding = false;
-                SetBodyVisible(GameManager.bodyVisible);
-                SetHandsVisible(GameManager.handsVisible);
+                SetPOVBodyVisible(true);
+                SetPOVHandsVisible(true);
             }
         }
 
@@ -417,11 +417,11 @@ namespace H3MP.Scripts
 
         private IEnumerator SelfUnhideCoroutine()
         {
-            yield return new WaitForSeconds(0.15f);
+            yield return new WaitForSeconds(0.2f);
             if (!optionAutoHideSelf || !IsUsingQuickbelt())
             {
-                SetBodyVisible(GameManager.bodyVisible);
-                SetHandsVisible(GameManager.handsVisible);
+                SetPOVBodyVisible(true);
+                SetPOVHandsVisible(true);
                 selfIsHidden = false;
             }
             selfIsUnhiding = false;
@@ -491,6 +491,34 @@ namespace H3MP.Scripts
                     if (handRenderers[i] != null)
                     {
                         handRenderers[i].enabled = visible;
+                    }
+                }
+            }
+        }
+
+        private void SetPOVBodyVisible(bool visible)
+        {
+            if (bodyRenderers != null)
+            {
+                for (int i = 0; i < bodyRenderers.Length; ++i)
+                {
+                    if (bodyRenderers[i] != null)
+                    {
+                        bodyRenderers[i].gameObject.layer = visible ? LayerMask.NameToLayer("Default") : LayerMask.NameToLayer("ExternalCamOnly");
+                    }
+                }
+            }
+        }
+
+        private void SetPOVHandsVisible(bool visible)
+        {
+            if (handRenderers != null)
+            {
+                for (int i = 0; i < handRenderers.Length; ++i)
+                {
+                    if (handRenderers[i] != null)
+                    {
+                        handRenderers[i].gameObject.layer = visible ? LayerMask.NameToLayer("Default") : LayerMask.NameToLayer("ExternalCamOnly");
                     }
                 }
             }
