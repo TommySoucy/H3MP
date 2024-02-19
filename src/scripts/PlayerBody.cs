@@ -353,12 +353,11 @@ namespace H3MP.Scripts
                     }
                 }
 
-                // Hide self when using quickbelt //
-                // TODO: better way to determine if this is the local PlayerBody?
-                if (headDisplayMode != HeadDisplayMode.Physical && optionAutoHideSelf)
+                // (Un)hide self when using quickbelt //    
+                if (GameManager.currentPlayerBody == this && optionAutoHideSelf)
                 {
-                    var usingQB = IsUsingQuickbelt();
-                    var pitch = headToFollow.rotation.eulerAngles.x;
+                    bool usingQB = IsUsingQuickbelt();
+                    float pitch = headToFollow.rotation.eulerAngles.x;
                     if (!selfIsHidden)
                     {
                         if (usingQB)
@@ -373,7 +372,7 @@ namespace H3MP.Scripts
                         if (pitch < SELF_UNHIDE_PITCH || (180 < pitch && pitch < 360))
                         {
                             selfIsUnhiding = true;
-                            StartCoroutine(nameof(SelfUnhideCoroutine));
+                            AnvilManager.Run(SelfUnhideCoroutine());
                         }
                     }
                 }
@@ -394,23 +393,21 @@ namespace H3MP.Scripts
 
         private bool IsUsingQuickbelt()
         {
-            try
+            float pitch = headToFollow.rotation.eulerAngles.x;
+            if (SELF_HIDE_PITCH < pitch && pitch < 90)
             {
-                var pitch = headToFollow.rotation.eulerAngles.x;
-                if (SELF_HIDE_PITCH < pitch && pitch < 90)
+                foreach (Transform t in handsToFollow)
                 {
-                    foreach (var t in handsToFollow)
-                    {
-                        var hand = t.GetComponent<FVRViveHand>();
-                        if (
-                            (hand.CurrentInteractable == null && (hand.CurrentHoveredQuickbeltSlotDirty != null) || hand.ClosestPossibleInteractable != null)
-                            || (hand.CurrentInteractable != null && hand.CurrentHoveredQuickbeltSlot != null)
-                        )
-                            return true;
-                    }
+                    FVRViveHand hand = t.GetComponent<FVRViveHand>();
+                    if (hand == null) continue;
+
+                    if (
+                        (hand.CurrentInteractable == null && (hand.CurrentHoveredQuickbeltSlotDirty != null) || hand.ClosestPossibleInteractable != null)
+                        || (hand.CurrentInteractable != null && hand.CurrentHoveredQuickbeltSlot != null)
+                    )
+                        return true;
                 }
             }
-            catch { /* no FVRViveHand = not local player */ }
 
             return false;
         }
