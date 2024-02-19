@@ -64,7 +64,8 @@ namespace H3MP.Scripts
         // for self-hiding
         public static bool optionAutoHideSelf = true;
         private const float SELF_HIDE_PITCH = 54;
-        private const float SELF_UNHIDE_PITCH = 42;
+        private const float SELF_UNHIDE_PITCH = 50;
+        private const float SELF_UNHIDE_DELAY = 0.5f;
         private bool selfIsHidden = false;
         private bool selfIsUnhiding = false;
 
@@ -371,7 +372,6 @@ namespace H3MP.Scripts
                     {
                         if (pitch < SELF_UNHIDE_PITCH || (180 < pitch && pitch < 360))
                         {
-                            selfIsUnhiding = true;
                             AnvilManager.Run(SelfUnhideCoroutine());
                         }
                     }
@@ -414,13 +414,17 @@ namespace H3MP.Scripts
 
         private IEnumerator SelfUnhideCoroutine()
         {
-            yield return new WaitForSeconds(0.2f);
+            if (selfIsUnhiding) yield break;
+            selfIsUnhiding = true;
+
+            yield return new WaitForSeconds(SELF_UNHIDE_DELAY);
             if (!optionAutoHideSelf || !IsUsingQuickbelt())
             {
                 SetPOVBodyVisible(true);
                 SetPOVHandsVisible(true);
                 selfIsHidden = false;
             }
+
             selfIsUnhiding = false;
         }
 
