@@ -1,4 +1,5 @@
-﻿using H3MP.Networking;
+﻿using BepInEx.Bootstrap;
+using H3MP.Networking;
 using Open.Nat;
 using System.Collections.Generic;
 using System.Net;
@@ -11,6 +12,7 @@ namespace H3MP.Scripts
     public class ServerListController : MonoBehaviour
     {
         public static ServerListController instance;
+        public static Dictionary<int, List<string>> modlists = new Dictionary<int, List<string>>();
         private bool awakened;
         private bool skipCloseClicked;
         private bool skipDisconnectClicked;
@@ -26,6 +28,7 @@ namespace H3MP.Scripts
             Join, // Join settings
             ClientWaiting, // Confirmed settings, waiting for IS to confirm password is correct and that our connection was established
             Client, // Client to a host
+            Modlist, // In modlist page
         }
         public State state = State.Main;
 
@@ -35,6 +38,7 @@ namespace H3MP.Scripts
         public GameObject hosting;
         public GameObject join;
         public GameObject client;
+        public GameObject modlistPage;
 
         // Main
         public GameObject mainLoadingAnimation;
@@ -46,9 +50,14 @@ namespace H3MP.Scripts
         public GameObject mainPrevButton;
         public GameObject mainNextButton;
         public GameObject mainRefreshButton;
+        public float mainRefreshTimer;
         public Text mainInfoText;
 
         // Host
+        public GameObject hostPage0;
+        public GameObject hostPage1;
+        public GameObject hostPreviousButton;
+        public GameObject hostNextButton;
         public Text hostServerNameLabel;
         public Text hostServerName;
         public TextField hostServerNameField;
@@ -65,6 +74,9 @@ namespace H3MP.Scripts
         public Text hostPort;
         public TextField hostPortField;
         public GameObject hostPortForwardedToggleCheck;
+        public GameObject hostModlistEnforcedToggleCheck;
+        public GameObject hostModlistMinimumToggleCheck;
+        public GameObject hostModlistUnenforcedToggleCheck;
 
         // Hosting
         public GameObject hostingLoadingAnimation;
@@ -85,6 +97,8 @@ namespace H3MP.Scripts
         public Text joinUsername;
         public TextField joinUsernameField;
         public int joiningEntry;
+        public int entryModlistEnforcement;
+        public List<string> modlist;
         public bool gotEndPoint;
         public GameObject joinPasswordFieldObject;
         public Text joinPassword;
@@ -109,6 +123,14 @@ namespace H3MP.Scripts
         public GameObject clientPrevButton;
         public GameObject clientNextButton;
         public GameObject clientDisconnectButton;
+
+        // Modlist
+        public int modlistPageIndex;
+        public Transform modlistParent;
+        public GameObject modlistPagePrefab;
+        public GameObject modlistEntryPrefab;
+        public GameObject modlistPrevButton;
+        public GameObject modlistNextButton;
 
         private void Awake()
         {
@@ -146,6 +168,18 @@ namespace H3MP.Scripts
 
             // Initialize UI based on connection state
             Init();
+        }
+
+        public void Update()
+        {
+            if(mainRefreshTimer > 0)
+            {
+                mainRefreshTimer -= Time.deltaTime;
+                if(mainRefreshTimer <= 0)
+                {
+                    mainRefreshButton.SetActive(true);
+                }
+            }
         }
 
         public bool ShouldConnectToIS()
@@ -209,6 +243,7 @@ namespace H3MP.Scripts
                 mainPrevButton.SetActive(false);
                 mainNextButton.SetActive(false);
                 mainRefreshButton.SetActive(false);
+                mainRefreshTimer = 10;
                 if (entries.Count == 0)
                 {
                     mainInfoText.gameObject.SetActive(true);
@@ -238,8 +273,9 @@ namespace H3MP.Scripts
                     hostEntry.transform.GetChild(2).gameObject.SetActive(entries[i].locked);
                     int entryID = entries[i].ID;
                     bool hasPassword = entries[i].locked;
+                    int modlistEnforcement = entries[i].modlistEnforcement;
                     string serverName = entries[i].name;
-                    hostEntry.GetComponent<Button>().onClick.AddListener(() => { Join(false, entryID, hasPassword, serverName); });
+                    hostEntry.GetComponent<Button>().onClick.AddListener(() => { Join(false, entryID, hasPassword, modlistEnforcement, serverName); });
 
                     // Start a new page every 7 elements
                     if (i + 1 % 7 == 0 && i != entries.Count - 1)
@@ -283,11 +319,26 @@ namespace H3MP.Scripts
                 hostPort.text = Mod.config["Port"].ToString();
                 hostPortField.clearButton.SetActive(true);
             }
+            if(Mod.config["Public"] != null)
+            {
+                hostListToggleCheck.SetActive((bool)Mod.config["Public"]);
+            }
+            if(Mod.config["UPnP"] != null)
+            {
+                hostPortForwardedToggleCheck.SetActive((bool)Mod.config["UPnP"]);
+            }
+            if(Mod.config["ModlistEnforcement"] != null)
+            {
+                int enforcement = (int)Mod.config["ModlistEnforcement"];
+                hostModlistEnforcedToggleCheck.SetActive(enforcement == 0);
+                hostModlistMinimumToggleCheck.SetActive(enforcement == 1);
+                hostModlistUnenforcedToggleCheck.SetActive(enforcement == 2);
+            }
         }
 
         public void OnJoinClicked()
         {
-            Join(true, -1, true, "Direct connection");
+            Join(true, -1, true, 2, "Direct connection");
             state = State.Join;
 
             if(Mod.config["IP"] != null)
@@ -340,6 +391,24 @@ namespace H3MP.Scripts
             Mod.config["MaxClientCount"] = uint.Parse(hostLimit.text);
             Mod.config["Username"] = hostUsername.text;
             Mod.config["Port"] = ushort.Parse(hostPort.text);
+            Mod.config["Public"] = hostListToggleCheck.activeSelf;
+            Mod.config["UPnP"] = hostPortForwardedToggleCheck.activeSelf;
+            int modlistEnforcement = 2;
+            if (hostModlistEnforcedToggleCheck.activeSelf)
+            {
+                Mod.config["ModlistEnforcement"] = 0;
+                modlistEnforcement = 0;
+            }
+            else if (hostModlistMinimumToggleCheck.activeSelf)
+            {
+                Mod.config["ModlistEnforcement"] = 1;
+                modlistEnforcement = 1;
+            }
+            else if (hostModlistUnenforcedToggleCheck.activeSelf)
+            {
+                Mod.config["ModlistEnforcement"] = 2;
+                modlistEnforcement = 2;
+            }
             Mod.WriteConfig();
             host.SetActive(false);
             hosting.SetActive(true);
@@ -347,7 +416,7 @@ namespace H3MP.Scripts
             SetHostingPage(Mod.managerObject == null);
             if (!directConnection)
             {
-                ISClientSend.List(hostServerName.text, int.Parse(hostLimit.text), hostPassword.text, ushort.Parse(hostPort.text));
+                ISClientSend.List(hostServerName.text, int.Parse(hostLimit.text), hostPassword.text, ushort.Parse(hostPort.text), modlistEnforcement);
                 ISClient.wantListed = true;
             }
             ISClient.listed = false;
@@ -427,6 +496,27 @@ namespace H3MP.Scripts
         public void OnHostPortForwardedClicked()
         {
             hostPortForwardedToggleCheck.SetActive(!hostPortForwardedToggleCheck.activeSelf);
+        }
+
+        public void OnHostModlistEnforcedClicked()
+        {
+            hostModlistEnforcedToggleCheck.SetActive(true);
+            hostModlistMinimumToggleCheck.SetActive(false);
+            hostModlistUnenforcedToggleCheck.SetActive(false);
+        }
+
+        public void OnHostModlistMinimumClicked()
+        {
+            hostModlistEnforcedToggleCheck.SetActive(false);
+            hostModlistMinimumToggleCheck.SetActive(true);
+            hostModlistUnenforcedToggleCheck.SetActive(false);
+        }
+
+        public void OnHostModlistUnenforcedClicked()
+        {
+            hostModlistEnforcedToggleCheck.SetActive(false);
+            hostModlistMinimumToggleCheck.SetActive(false);
+            hostModlistUnenforcedToggleCheck.SetActive(true);
         }
 
         public void OnHostListClicked()
@@ -512,10 +602,11 @@ namespace H3MP.Scripts
             }
         }
 
-        private void Join(bool direct, int entryID, bool hasPassword, string name)
+        private void Join(bool direct, int entryID, bool hasPassword, int modlistEnforcement, string name)
         {
             directConnection = direct;
             joiningEntry = entryID;
+            entryModlistEnforcement = modlistEnforcement;
             gotEndPoint = false;
             main.SetActive(false);
             join.SetActive(true);
@@ -748,9 +839,51 @@ namespace H3MP.Scripts
                     }
                     else
                     {
-                        clientInfoText.color = Color.white;
-                        clientInfoText.text = "Awaiting server confirm";
-                        ISClientSend.Join(joiningEntry, Mod.GetSHA256Hash(joinPassword.text));
+                        if (entryModlistEnforcement != 2)
+                        {
+                            if (modlist == null)
+                            {
+                                clientInfoText.color = Color.white;
+                                clientInfoText.text = "Getting mod list";
+                                ISClientSend.RequestModlist(joiningEntry, Mod.GetSHA256Hash(joinPassword.text));
+                            }
+                            else
+                            {
+                                List<string> missing = new List<string>();
+                                List<string> surplus = new List<string>(Chainloader.PluginInfos.Keys);
+                                for(int i=0; i < modlist.Count; ++i)
+                                {
+                                    if (Chainloader.PluginInfos.ContainsKey(modlist[i]))
+                                    {
+                                        surplus.Remove(modlist[i]);
+                                    }
+                                    else
+                                    {
+                                        missing.Add(modlist[i]);
+                                    }
+                                }
+
+                                if(missing.Count != 0 || (entryModlistEnforcement == 0 && surplus.Count != 0))
+                                {
+                                    joiningEntry = -1;
+                                    client.SetActive(false);
+                                    modlistPage.SetActive(true);
+                                    SetModlistPage(missing, surplus);
+                                }
+                                else
+                                {
+                                    clientInfoText.color = Color.white;
+                                    clientInfoText.text = "Awaiting server confirm";
+                                    ISClientSend.Join(joiningEntry, Mod.GetSHA256Hash(joinPassword.text));
+                                }
+                            }
+                        }
+                        else
+                        {
+                            clientInfoText.color = Color.white;
+                            clientInfoText.text = "Awaiting server confirm";
+                            ISClientSend.Join(joiningEntry, Mod.GetSHA256Hash(joinPassword.text));
+                        }
                     }
                 }
             }
@@ -795,6 +928,58 @@ namespace H3MP.Scripts
             }
         }
 
+        public void SetModlistPage(List<string> missing, List<string> surplus)
+        {
+            state = State.Modlist;
+
+            // Destroy any existent pages
+            while (modlistParent.childCount > 1)
+            {
+                Transform otherChild = modlistParent.GetChild(1);
+                otherChild.parent = null;
+                Destroy(otherChild.gameObject);
+            }
+
+            // Build new pages
+            Transform currentListPage = Instantiate(modlistPagePrefab, modlistParent).transform;
+            currentListPage.gameObject.SetActive(true);
+            modlistPageIndex = 0;
+            for (int i = 0; i < missing.Count; ++i)
+            {
+                // Start a new page if necessary
+                if (currentListPage.childCount == 8)
+                {
+                    currentListPage = Instantiate(modlistPagePrefab, modlistParent).transform;
+                    clientNextButton.SetActive(true);
+                }
+
+                GameObject modEntry = Instantiate(modlistEntryPrefab, currentListPage);
+                modEntry.SetActive(true);
+                Text text = modEntry.transform.GetChild(0).GetComponent<Text>();
+                text.text = missing[i];
+                text.color = Color.red;
+
+            }
+            if (entryModlistEnforcement == 1)
+            {
+                for (int i = 0; i < surplus.Count; ++i)
+                {
+                    // Start a new page if necessary
+                    if (currentListPage.childCount == 8)
+                    {
+                        currentListPage = Instantiate(modlistPagePrefab, modlistParent).transform;
+                        clientNextButton.SetActive(true);
+                    }
+
+                    GameObject modEntry = Instantiate(modlistEntryPrefab, currentListPage);
+                    modEntry.SetActive(true);
+                    Text text = modEntry.transform.GetChild(0).GetComponent<Text>();
+                    text.text = surplus[i];
+                    text.color = Color.yellow;
+                }
+            }
+        }
+
         private void KickPlayer(int ID)
         {
             if (ThreadManager.host)
@@ -833,7 +1018,7 @@ namespace H3MP.Scripts
 
             if (mainListPage == mainListParent.childCount - 2)
             {
-                mainPrevButton.SetActive(false);
+                mainNextButton.SetActive(false);
             }
             mainPrevButton.SetActive(true);
         }
@@ -841,6 +1026,24 @@ namespace H3MP.Scripts
         public void OnMainRefreshClicked()
         {
             ISClientSend.RequestHostEntries();
+            mainRefreshButton.SetActive(false);
+            mainRefreshTimer = 10;
+        }
+
+        public void OnHostNextClicked()
+        {
+            hostPage0.SetActive(false);
+            hostPage1.SetActive(true);
+            hostPreviousButton.SetActive(true);
+            hostNextButton.SetActive(false);
+        }
+
+        public void OnHostPreviousClicked()
+        {
+            hostPage0.SetActive(true);
+            hostPage1.SetActive(false);
+            hostPreviousButton.SetActive(false);
+            hostNextButton.SetActive(true);
         }
 
         public void OnHostCancelClicked()
@@ -862,7 +1065,7 @@ namespace H3MP.Scripts
             {
                 hostingPrevButton.SetActive(false);
             }
-            hostingPrevButton.SetActive(true);
+            hostingNextButton.SetActive(true);
         }
 
         public void OnHostingNextClicked()
@@ -875,7 +1078,7 @@ namespace H3MP.Scripts
 
             if (hostingListPage == hostingListParent.childCount - 2)
             {
-                hostingPrevButton.SetActive(false);
+                hostingNextButton.SetActive(false);
             }
             hostingPrevButton.SetActive(true);
         }
@@ -914,6 +1117,7 @@ namespace H3MP.Scripts
             Mod.WriteConfig();
             join.SetActive(false);
             client.SetActive(true);
+            modlists.TryGetValue(joiningEntry, out modlist);
             SetClientPage(true);
         }
 
@@ -954,7 +1158,7 @@ namespace H3MP.Scripts
             {
                 clientPrevButton.SetActive(false);
             }
-            clientPrevButton.SetActive(true);
+            clientNextButton.SetActive(true);
         }
 
         public void OnClientNextClicked()
@@ -967,9 +1171,46 @@ namespace H3MP.Scripts
 
             if (clientListPage == clientListParent.childCount - 2)
             {
-                clientPrevButton.SetActive(false);
+                clientNextButton.SetActive(false);
             }
             clientPrevButton.SetActive(true);
+        }
+
+        public void OnModlistPrevClicked()
+        {
+            modlistParent.GetChild(modlistPageIndex + 1).gameObject.SetActive(false);
+
+            --modlistPageIndex;
+
+            modlistParent.GetChild(modlistPageIndex + 1).gameObject.SetActive(true);
+
+            if (modlistPageIndex == 0)
+            {
+                modlistPrevButton.SetActive(false);
+            }
+            modlistNextButton.SetActive(true);
+        }
+
+        public void OnModlistNextClicked()
+        {
+            modlistParent.GetChild(modlistPageIndex + 1).gameObject.SetActive(false);
+
+            ++modlistPageIndex;
+
+            modlistParent.GetChild(modlistPageIndex + 1).gameObject.SetActive(true);
+
+            if (modlistPageIndex == modlistParent.childCount - 2)
+            {
+                modlistNextButton.SetActive(false);
+            }
+            modlistPrevButton.SetActive(true);
+        }
+
+        public void OnModlistBackClicked()
+        {
+            modlistPage.SetActive(false);
+            main.SetActive(true);
+            SetMainPage(null);
         }
 
         private void OnDestroy()

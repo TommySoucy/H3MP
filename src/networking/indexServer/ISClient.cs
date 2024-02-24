@@ -294,6 +294,7 @@ namespace H3MP.Networking
                 ISClientHandle.Admin,
                 null, // Reserved
                 ISClientHandle.Unlisted,
+                ISClientHandle.Modlist,
             };
 
             Mod.LogInfo("Initialized IS client", false);

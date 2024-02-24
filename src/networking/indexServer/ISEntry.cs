@@ -12,5 +12,6 @@ namespace H3MP.Networking
         public int playerCount;
         public int limit;
         public bool locked;
+        public int modlistEnforcement;
     }
 }

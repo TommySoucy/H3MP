@@ -39,6 +39,7 @@ namespace H3MP.Networking
                 newEntry.playerCount = packet.ReadInt();
                 newEntry.limit = packet.ReadInt();
                 newEntry.locked = packet.ReadBool();
+                newEntry.modlistEnforcement = packet.ReadByte();
                 entries.Add(newEntry);
             }
             ISClient.OnReceiveHostEntriesInvoke(entries);
@@ -75,6 +76,51 @@ namespace H3MP.Networking
                     ServerListController.instance.gotEndPoint = false;
                     ServerListController.instance.joiningEntry = -1;
                     ServerListController.instance.SetClientPage(true);
+                }
+            }
+        }
+
+        public static void Modlist(Packet packet)
+        {
+            int entryID = packet.ReadInt();
+            bool gotModlist = packet.ReadBool();
+            int modCount = packet.ReadInt();
+            List<string> modlist = new List<string>();
+            for(int i = 0; i < modCount; ++i)
+            {
+                modlist.Add(packet.ReadString());
+            }
+
+            if (ServerListController.modlists.TryGetValue(entryID, out List<string> modlists))
+            {
+                Mod.LogError("Received modlist for entry " + entryID + " but we already had it? Replacing.");
+                ServerListController.modlists[entryID] = modlist;
+            }
+            else
+            {
+                ServerListController.modlists.Add(entryID, modlist);
+            }
+
+            if (ServerListController.instance != null)
+            {
+                if (gotModlist)
+                {
+                    if (ServerListController.instance.state == ServerListController.State.ClientWaiting)
+                    {
+                        ServerListController.instance.modlist = modlist;
+                        ServerListController.instance.SetClientPage(true);
+                    }
+                }
+                else
+                {
+                    ServerListController.instance.gotEndPoint = false;
+                    ServerListController.instance.joiningEntry = -1;
+                    if(ServerListController.instance.state == ServerListController.State.ClientWaiting)
+                    {
+                        ServerListController.instance.SetClientPage(true);
+                        ServerListController.instance.clientInfoText.color = Color.red;
+                        ServerListController.instance.clientInfoText.text = "Error joining server: Couldn't get modlist";
+                    }
                 }
             }
         }

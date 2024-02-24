@@ -1,4 +1,8 @@
-﻿namespace H3MP.Networking
+﻿using BepInEx;
+using BepInEx.Bootstrap;
+using System.Collections.Generic;
+
+namespace H3MP.Networking
 {
     public class ISClientSend
     {
@@ -17,6 +21,7 @@
             reserved0 = 10,
             reserved1 = 11,
             reserved2 = 12,
+            requestModlist = 13,
         }
 
         public static void SendTCPData(Packet packet, bool custom = false)
@@ -50,7 +55,7 @@
             }
         }
 
-        public static void List(string name, int limit, string password, ushort port)
+        public static void List(string name, int limit, string password, ushort port, int modlistEnforcement)
         {
             using (Packet packet = new Packet((int)Packets.list))
             {
@@ -66,6 +71,15 @@
                     packet.Write(false);
                 }
                 packet.Write(port);
+                packet.Write((byte)modlistEnforcement);
+                if (modlistEnforcement != 2)
+                {
+                    packet.Write(Chainloader.PluginInfos.Count);
+                    foreach (KeyValuePair<string, PluginInfo> otherPlugin in Chainloader.PluginInfos)
+                    {
+                        packet.Write(otherPlugin.Key);
+                    }
+                }
                 SendTCPData(packet);
             }
         }
@@ -89,6 +103,16 @@
         public static void Join(int ID, string passwordHash)
         {
             using (Packet packet = new Packet((int)Packets.join))
+            {
+                packet.Write(ID);
+                packet.Write(passwordHash);
+                SendTCPData(packet);
+            }
+        }
+
+        public static void RequestModlist(int ID, string passwordHash)
+        {
+            using (Packet packet = new Packet((int)Packets.requestModlist))
             {
                 packet.Write(ID);
                 packet.Write(passwordHash);
