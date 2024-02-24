@@ -3,6 +3,7 @@ using System;
 using System.Net;
 using UnityEngine;
 using System.Collections.Generic;
+using H3MP.Scripts;
 
 namespace H3MP.Networking
 {
@@ -325,6 +326,9 @@ namespace H3MP.Networking
                         break;
                     case 4:
                         Mod.LogWarning("Connection to IS failed, timed out.");
+                        break;
+                    case 5:
+                        Mod.LogWarning("Connection to IS failed, wrong H3MP version. Minimum: "+ServerListController.minimumVersion);
                         break;
                 }
 

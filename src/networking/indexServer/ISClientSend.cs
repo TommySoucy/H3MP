@@ -34,6 +34,8 @@ namespace H3MP.Networking
         {
             using (Packet packet = new Packet((int)Packets.welcomeReceived))
             {
+                packet.Write(Mod.pluginVersion);
+
                 SendTCPData(packet);
             }
         }

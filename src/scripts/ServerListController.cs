@@ -13,6 +13,8 @@ namespace H3MP.Scripts
     {
         public static ServerListController instance;
         public static Dictionary<int, List<string>> modlists = new Dictionary<int, List<string>>();
+        public static string minimumVersion = null;
+        public static string failedConnectionReason = null;
         private bool awakened;
         private bool skipCloseClicked;
         private bool skipDisconnectClicked;
@@ -557,7 +559,7 @@ namespace H3MP.Scripts
         {
             // If got disconnected while in other page than Hosting/Client, we for sure just want to go back to main page
             // because connection to IS dropped unexpectedly, and we will attempt to reconnect
-            // If in hosting, if listed, just make sure we set the corersponding vars
+            // If in hosting, if listed, just make sure we set the corresponding vars
             // In hosting/client, we want to remain on that page
 
             if(state == State.Hosting)
@@ -579,7 +581,15 @@ namespace H3MP.Scripts
 
                 mainLoadingAnimation.SetActive(false);
                 mainInfoText.color = Color.red;
-                mainInfoText.text = "Connection to index server failed";
+                if(failedConnectionReason == null)
+                {
+                    mainInfoText.text = "Connection to index server failed";
+                }
+                else
+                {
+                    mainInfoText.text = failedConnectionReason;
+                    failedConnectionReason = null;
+                }
             }
         }
 

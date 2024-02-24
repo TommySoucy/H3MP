@@ -12,14 +12,43 @@ namespace H3MP.Networking
         {
             string msg = packet.ReadString();
             int ID = packet.ReadInt();
+            ServerListController.minimumVersion = packet.ReadString();
 
             Mod.LogInfo("Message from server: "+msg, false);
 
-            ISClient.gotWelcome = true;
-            ISClient.ID = ID;
-            ISClientSend.WelcomeReceived();
+            if (Mod.pluginVersion.Equals(ServerListController.minimumVersion))
+            {
+                ISClient.gotWelcome = true;
+                ISClient.ID = ID;
+                ISClientSend.WelcomeReceived();
 
-            ISClientSend.RequestHostEntries();
+                ISClientSend.RequestHostEntries();
+            }
+            else
+            {
+                string[] versionSplit = ServerListController.minimumVersion.Split('.');
+                int minimumMajor = int.Parse(versionSplit[0]);
+                int minimumMinor = int.Parse(versionSplit[1]);
+                int minimumPatch = int.Parse(versionSplit[2]);
+                versionSplit = Mod.pluginVersion.Split('.');
+                int major = int.Parse(versionSplit[0]);
+                int minor = int.Parse(versionSplit[1]);
+                int patch = int.Parse(versionSplit[2]);
+
+                if(major > minimumMajor || minor > minimumMinor || patch > minimumPatch)
+                {
+                    ISClient.gotWelcome = true;
+                    ISClient.ID = ID;
+                    ISClientSend.WelcomeReceived();
+
+                    ISClientSend.RequestHostEntries();
+                }
+                else
+                {
+                    ServerListController.failedConnectionReason = "H3MP version required to use server list: "+ ServerListController.minimumVersion+"+. You need to update. If version not available yet, it will be released soon.";
+                    ISClient.Disconnect(true, 5);
+                }
+            }
         }
 
         public static void Ping(Packet packet)
