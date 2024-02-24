@@ -208,7 +208,7 @@ namespace H3MP.Scripts
                 mainHostButton.SetActive(true);
                 mainPrevButton.SetActive(false);
                 mainNextButton.SetActive(false);
-                mainRefreshButton.SetActive(true);
+                mainRefreshButton.SetActive(false);
                 if (entries.Count == 0)
                 {
                     mainInfoText.gameObject.SetActive(true);
