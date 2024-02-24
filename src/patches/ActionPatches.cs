@@ -6312,7 +6312,7 @@ namespace H3MP.Patches
 
         static bool FireGunPrefix(TNH_EncryptionTarget __instance)
         {
-            if (Mod.managerObject == null)
+            if (Mod.managerObject == null || __instance.m_isDestroyed)
             {
                 return true;
             }
@@ -6401,7 +6401,7 @@ namespace H3MP.Patches
 
         static void WarpToNextPositionPostfix(TNH_EncryptionTarget __instance)
         {
-            if (Mod.managerObject == null)
+            if (Mod.managerObject == null || __instance.m_isDestroyed)
             {
                 return;
             }
