@@ -1,5 +1,6 @@
 ﻿using FistVR;
 using System;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -60,6 +61,15 @@ namespace H3MP.Scripts
         public Text usernameLabel;
         public Text healthLabel;
 
+        // for self-hiding
+        public static bool optionAutoHideSelf = true;
+        private const float SELF_HIDE_PITCH = 54;
+        private const float SELF_UNHIDE_PITCH = 50;
+        private const float SELF_UNHIDE_DELAY = 0.5f;
+        private bool selfIsHidden = false;
+        private bool selfIsUnhiding = false;
+        public FVRViveHand[] handScripts;
+
         public virtual void Awake()
         {
             GameManager.OnPlayerBodyInit += OnPlayerBodyInit;
@@ -72,6 +82,11 @@ namespace H3MP.Scripts
                 handsToFollow = new Transform[2];
                 handsToFollow[0] = GM.CurrentPlayerBody.LeftHand;
                 handsToFollow[1] = GM.CurrentPlayerBody.RightHand;
+                handScripts = new FVRViveHand[2]
+                { 
+                    GM.CurrentPlayerBody.LeftHand.GetComponent<FVRViveHand>(), 
+                    GM.CurrentPlayerBody.RightHand.GetComponent<FVRViveHand>() 
+                };
                 if (headDisplayMode != HeadDisplayMode.Physical)
                 {
                     SetHeadVisible(false);
@@ -305,6 +320,11 @@ namespace H3MP.Scripts
                 handsToFollow = new Transform[2];
                 handsToFollow[0] = playerBody.LeftHand;
                 handsToFollow[1] = playerBody.RightHand;
+                handScripts = new FVRViveHand[2]
+                {
+                    GM.CurrentPlayerBody.LeftHand.GetComponent<FVRViveHand>(),
+                    GM.CurrentPlayerBody.RightHand.GetComponent<FVRViveHand>()
+                };
                 if (headDisplayMode != HeadDisplayMode.Physical)
                 {
                     SetHeadVisible(false);
@@ -343,7 +363,81 @@ namespace H3MP.Scripts
                         handTransforms[i].rotation = handsToFollow[i].rotation;
                     }
                 }
+
+                // (Un)hide self when using quickbelt //    
+                if (GameManager.currentPlayerBody == this && optionAutoHideSelf)
+                {
+                    bool usingQB = IsUsingQuickbelt();
+                    float pitch = headToFollow.rotation.eulerAngles.x;
+                    if (!selfIsHidden)
+                    {
+                        if (usingQB)
+                        {
+                            SetPOVBodyVisible(false);
+                            SetPOVHandsVisible(false);
+                            selfIsHidden = true;
+                        }
+                    }
+                    else if (!selfIsUnhiding)
+                    {
+                        if (pitch < SELF_UNHIDE_PITCH || (180 < pitch && pitch < 360))
+                        {
+                            AnvilManager.Run(SelfUnhideCoroutine());
+                        }
+                    }
+                }
             }
+        }
+
+        public void ToggleSelfHide()
+        {
+            optionAutoHideSelf = !optionAutoHideSelf;
+            if (!optionAutoHideSelf)
+            {
+                selfIsHidden = false;
+                selfIsUnhiding = false;
+                SetPOVBodyVisible(true);
+                SetPOVHandsVisible(true);
+            }
+        }
+
+        private bool IsUsingQuickbelt()
+        {
+            float pitch = headToFollow.rotation.eulerAngles.x;
+            if (SELF_HIDE_PITCH < pitch && pitch < 90)
+            {
+                for(int i=0; i < handScripts.Length; ++i)
+                {
+                    if (handScripts[i] == null)
+                    {
+                        continue;
+                    }
+
+                    if ((handScripts[i].CurrentInteractable == null && handScripts[i].CurrentHoveredQuickbeltSlotDirty != null || handScripts[i].ClosestPossibleInteractable != null)
+                        || (handScripts[i].CurrentInteractable != null && handScripts[i].CurrentHoveredQuickbeltSlot != null))
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        private IEnumerator SelfUnhideCoroutine()
+        {
+            if (selfIsUnhiding) yield break;
+            selfIsUnhiding = true;
+
+            yield return new WaitForSeconds(SELF_UNHIDE_DELAY);
+            if (!optionAutoHideSelf || !IsUsingQuickbelt())
+            {
+                SetPOVBodyVisible(true);
+                SetPOVHandsVisible(true);
+                selfIsHidden = false;
+            }
+
+            selfIsUnhiding = false;
         }
 
         public virtual void SetHeadVisible(bool visible)
@@ -410,6 +504,34 @@ namespace H3MP.Scripts
                     if (handRenderers[i] != null)
                     {
                         handRenderers[i].enabled = visible;
+                    }
+                }
+            }
+        }
+
+        private void SetPOVBodyVisible(bool visible)
+        {
+            if (bodyRenderers != null)
+            {
+                for (int i = 0; i < bodyRenderers.Length; ++i)
+                {
+                    if (bodyRenderers[i] != null)
+                    {
+                        bodyRenderers[i].gameObject.layer = visible ? LayerMask.NameToLayer("Default") : LayerMask.NameToLayer("ExternalCamOnly");
+                    }
+                }
+            }
+        }
+
+        private void SetPOVHandsVisible(bool visible)
+        {
+            if (handRenderers != null)
+            {
+                for (int i = 0; i < handRenderers.Length; ++i)
+                {
+                    if (handRenderers[i] != null)
+                    {
+                        handRenderers[i].gameObject.layer = visible ? LayerMask.NameToLayer("Default") : LayerMask.NameToLayer("ExternalCamOnly");
                     }
                 }
             }

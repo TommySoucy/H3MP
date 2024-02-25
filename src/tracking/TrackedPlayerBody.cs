@@ -29,6 +29,11 @@ namespace H3MP.Tracking
                     physicalPlayerBody.headToFollow = GM.CurrentPlayerBody.Head;
                     physicalPlayerBody.handsToFollow[0] = GM.CurrentPlayerBody.LeftHand;
                     physicalPlayerBody.handsToFollow[1] = GM.CurrentPlayerBody.RightHand;
+                    physicalPlayerBody.handScripts = new FVRViveHand[2]
+                    {
+                        GM.CurrentPlayerBody.LeftHand.GetComponent<FVRViveHand>(),
+                        GM.CurrentPlayerBody.RightHand.GetComponent<FVRViveHand>()
+                    };
                     if (physicalPlayerBody.headDisplayMode != PlayerBody.HeadDisplayMode.Physical)
                     {
                         physicalPlayerBody.SetHeadVisible(false);
@@ -105,6 +110,11 @@ namespace H3MP.Tracking
                 }
                 physicalPlayerBody.handsToFollow[0] = playerBody.LeftHand;
                 physicalPlayerBody.handsToFollow[1] = playerBody.RightHand;
+                physicalPlayerBody.handScripts = new FVRViveHand[2]
+                {
+                    GM.CurrentPlayerBody.LeftHand.GetComponent<FVRViveHand>(),
+                    GM.CurrentPlayerBody.RightHand.GetComponent<FVRViveHand>()
+                };
                 if (physicalPlayerBody.headDisplayMode != PlayerBody.HeadDisplayMode.Physical)
                 {
                     physicalPlayerBody.SetHeadVisible(false);
