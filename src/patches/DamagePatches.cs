@@ -3946,8 +3946,7 @@ namespace H3MP.Patches
                 return true;
             }
 
-            // If in control, apply damage, send to everyone else
-            // If not in control, apply damage without adding force to RB, then send to everyone, controller will apply force
+            // Ensure only controller processes damage
             TrackedObject trackedObject = GameManager.trackedObjectByDamageable.TryGetValue(__instance, out trackedObject) ? trackedObject : null;
             if (trackedObject != null)
             { 
@@ -3955,7 +3954,7 @@ namespace H3MP.Patches
                 {
                     return true;
                 }
-                else // Not controller, do everything apart from adding force to RB
+                else
                 {
                     if (ThreadManager.host)
                     {

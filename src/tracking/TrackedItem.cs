@@ -144,6 +144,14 @@ namespace H3MP.Tracking
                 updateGivenFunc = UpdateGivenMinigunBox;
                 dataObject = physObj as MinigunBox;
             }
+            else if (physObj is FVRFireArmRound)
+            {
+                FVRFireArmRound asRound = (FVRFireArmRound)physObj;
+                dataObject = asRound;
+
+                GameManager.trackedObjectByDamageable.Add(asRound, this);
+                removeTrackedDamageables = RemoveTrackedCommonDamageables;
+            }
             else if (physObj is FVRFireArmMagazine)
             {
                 updateFunc = UpdateMagazine;
