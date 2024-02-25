@@ -4957,9 +4957,7 @@ namespace H3MP.Networking
                 {
                     if(trackedItemData.physical != null)
                     {
-                        ++RoundPatch.splodeInDamage;
                         (trackedItemData.physicalItem.physicalItem as FVRFireArmRound).Damage(damage);
-                        --RoundPatch.splodeInDamage;
                     }
                 }
                 else
