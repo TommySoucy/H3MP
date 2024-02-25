@@ -68,7 +68,7 @@ namespace H3MP.Scripts
         private const float SELF_UNHIDE_DELAY = 0.5f;
         private bool selfIsHidden = false;
         private bool selfIsUnhiding = false;
-
+        public FVRViveHand[] handScripts;
 
         public virtual void Awake()
         {
@@ -82,6 +82,11 @@ namespace H3MP.Scripts
                 handsToFollow = new Transform[2];
                 handsToFollow[0] = GM.CurrentPlayerBody.LeftHand;
                 handsToFollow[1] = GM.CurrentPlayerBody.RightHand;
+                handScripts = new FVRViveHand[2]
+                { 
+                    GM.CurrentPlayerBody.LeftHand.GetComponent<FVRViveHand>(), 
+                    GM.CurrentPlayerBody.RightHand.GetComponent<FVRViveHand>() 
+                };
                 if (headDisplayMode != HeadDisplayMode.Physical)
                 {
                     SetHeadVisible(false);
@@ -315,6 +320,11 @@ namespace H3MP.Scripts
                 handsToFollow = new Transform[2];
                 handsToFollow[0] = playerBody.LeftHand;
                 handsToFollow[1] = playerBody.RightHand;
+                handScripts = new FVRViveHand[2]
+                {
+                    GM.CurrentPlayerBody.LeftHand.GetComponent<FVRViveHand>(),
+                    GM.CurrentPlayerBody.RightHand.GetComponent<FVRViveHand>()
+                };
                 if (headDisplayMode != HeadDisplayMode.Physical)
                 {
                     SetHeadVisible(false);
@@ -396,16 +406,18 @@ namespace H3MP.Scripts
             float pitch = headToFollow.rotation.eulerAngles.x;
             if (SELF_HIDE_PITCH < pitch && pitch < 90)
             {
-                foreach (Transform t in handsToFollow)
+                for(int i=0; i < handScripts.Length; ++i)
                 {
-                    FVRViveHand hand = t.GetComponent<FVRViveHand>();
-                    if (hand == null) continue;
+                    if (handScripts[i] == null)
+                    {
+                        continue;
+                    }
 
-                    if (
-                        (hand.CurrentInteractable == null && (hand.CurrentHoveredQuickbeltSlotDirty != null) || hand.ClosestPossibleInteractable != null)
-                        || (hand.CurrentInteractable != null && hand.CurrentHoveredQuickbeltSlot != null)
-                    )
+                    if ((handScripts[i].CurrentInteractable == null && handScripts[i].CurrentHoveredQuickbeltSlotDirty != null || handScripts[i].ClosestPossibleInteractable != null)
+                        || (handScripts[i].CurrentInteractable != null && handScripts[i].CurrentHoveredQuickbeltSlot != null))
+                    {
                         return true;
+                    }
                 }
             }
 
