@@ -149,6 +149,11 @@ namespace H3MP.Tracking
                 FVRFireArmRound asRound = (FVRFireArmRound)physObj;
                 dataObject = asRound;
 
+                // Note: If we set the dataObject, calls to the following will be made
+                //       so need to make sure they are initialized
+                updateFunc = UpdateRound;
+                updateGivenFunc = UpdateGivenRound;
+
                 GameManager.trackedObjectByDamageable.Add(asRound, this);
                 removeTrackedDamageables = RemoveTrackedCommonDamageables;
             }
@@ -1156,6 +1161,24 @@ namespace H3MP.Tracking
             modified |= preval0 != itemData.data[8];
 
             return modified;
+        }
+
+        private bool UpdateRound()
+        {
+            // Place holder
+            // All round states are currently being updated through specific events
+            // There is no need for updates
+            // But this method must exist since tracked round dataObject is set
+            return false;
+        }
+
+        private bool UpdateGivenRound(byte[] newData)
+        {
+            // Place holder
+            // All round states are currently being updated through specific events
+            // There is no need for updates
+            // But this method must exist since tracked round dataObject is set
+            return false;
         }
 
         private bool UpdateGivenSBLPCell(byte[] newData)
