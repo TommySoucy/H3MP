@@ -54,8 +54,12 @@ namespace H3MP.Scripts
         [Header("Optionals")]
         [Tooltip("If set, will enable wristmenu option to toggle body.")]
         public Renderer[] bodyRenderers;
+        [NonSerialized]
+        public int[] bodyRendererLayers;
         [Tooltip("If set, will enable wristmenu option to toggle hands.")]
         public Renderer[] handRenderers;
+        [NonSerialized]
+        public int[] handRendererLayers;
         [Tooltip("All parts that you want to have change color with the color the player has set.")]
         public Renderer[] coloredParts;
         public Text usernameLabel;
@@ -75,6 +79,30 @@ namespace H3MP.Scripts
             GameManager.OnPlayerBodyInit += OnPlayerBodyInit;
 
             Verify();
+
+            if (bodyRenderers != null) 
+            {
+                bodyRendererLayers = new int[bodyRenderers.Length];
+                for (int i = 0; i < bodyRenderers.Length; ++i) 
+                {
+                    if (bodyRenderers[i] != null)
+                    {
+                        bodyRendererLayers[i] = bodyRenderers[i].gameObject.layer;
+                    }
+                }
+            }
+
+            if (handRenderers != null) 
+            {
+                handRendererLayers = new int[handRenderers.Length];
+                for (int i = 0; i < handRenderers.Length; ++i) 
+                {
+                    if (handRenderers[i] != null)
+                    {
+                        handRendererLayers[i] = handRenderers[i].gameObject.layer;
+                    }
+                }
+            }
 
             if(Mod.managerObject == null && GM.CurrentPlayerBody != null)
             {
@@ -517,7 +545,7 @@ namespace H3MP.Scripts
                 {
                     if (bodyRenderers[i] != null)
                     {
-                        bodyRenderers[i].gameObject.layer = visible ? LayerMask.NameToLayer("Default") : LayerMask.NameToLayer("ExternalCamOnly");
+                        bodyRenderers[i].gameObject.layer = visible ? bodyRendererLayers[i] : LayerMask.NameToLayer("ExternalCamOnly");
                     }
                 }
             }
@@ -531,7 +559,7 @@ namespace H3MP.Scripts
                 {
                     if (handRenderers[i] != null)
                     {
-                        handRenderers[i].gameObject.layer = visible ? LayerMask.NameToLayer("Default") : LayerMask.NameToLayer("ExternalCamOnly");
+                        handRenderers[i].gameObject.layer = visible ? handRendererLayers[i] : LayerMask.NameToLayer("ExternalCamOnly");
                     }
                 }
             }
