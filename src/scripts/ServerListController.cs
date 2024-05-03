@@ -1,11 +1,13 @@
 ﻿using BepInEx.Bootstrap;
 using H3MP.Networking;
 using Open.Nat;
+using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Threading;
 using UnityEngine;
 using UnityEngine.UI;
+using Valve.Newtonsoft.Json.Linq;
 
 namespace H3MP.Scripts
 {
@@ -22,6 +24,7 @@ namespace H3MP.Scripts
 
         public enum State
         {
+            ISSelect, // Selecting / Adding an IS
             MainWaiting, // Waiting for host entries from IS
             Main, // Server list
             Host, // Host settings
@@ -35,12 +38,33 @@ namespace H3MP.Scripts
         public State state = State.Main;
 
         // Pages
+        public GameObject ISSelect;
+        public GameObject ISAdd;
         public GameObject main;
         public GameObject host;
         public GameObject hosting;
         public GameObject join;
         public GameObject client;
         public GameObject modlistPage;
+
+        // ISSelect
+        public Transform ISSelectListParent;
+        public int ISSelectListPage;
+        public GameObject ISSelectPagePrefab;
+        public GameObject ISSelectEntryPrefab;
+        public GameObject ISSelectPreviousButton;
+        public GameObject ISSelectNextButton;
+
+        // ISAdd
+        public Text ISAddServerNameLabel;
+        public Text ISAddServerNameText;
+        public TextField ISAddServerNameField;
+        public Text ISAddIPLabel;
+        public Text ISAddIPText;
+        public TextField ISAddIPField;
+        public Text ISAddPortLabel;
+        public Text ISAddPortText;
+        public TextField ISAddPortField;
 
         // Main
         public GameObject mainLoadingAnimation;
@@ -63,6 +87,7 @@ namespace H3MP.Scripts
         public Text hostServerNameLabel;
         public Text hostServerName;
         public TextField hostServerNameField;
+        public GameObject hostListToggle;
         public GameObject hostListToggleCheck;
         public Text hostPassword;
         public Text hostLimitLabel;
@@ -162,12 +187,6 @@ namespace H3MP.Scripts
             Server.OnServerClose += OnHostingCloseClicked;
             Client.OnDisconnect += OnClientDisconnectClicked;
 
-            // Connect to IS if necessary
-            if (ShouldConnectToIS())
-            {
-                ISClient.Connect();
-            }
-
             // Initialize UI based on connection state
             Init();
         }
@@ -184,21 +203,22 @@ namespace H3MP.Scripts
             }
         }
 
-        public bool ShouldConnectToIS()
-        {
-            // Should only connect to IS if not already connected to it, and if not connected as client
-            return !ISClient.isConnected && (Mod.managerObject == null || ThreadManager.host);
-        }
-
         public void Init()
         {
             if (Mod.managerObject == null)
             {
-                SetMainPage(null);
+                if (ISClient.isConnected)
+                {
+                    SetMainPage(null);
+                }
+                else
+                {
+                    SetISSelectPage();
+                }
             }
             else
             {
-                main.SetActive(false);
+                ISSelect.SetActive(false);
                 if (ThreadManager.host)
                 {
                     hosting.SetActive(true);
@@ -210,6 +230,72 @@ namespace H3MP.Scripts
                     SetClientPage(false);
                 }
             }
+        }
+
+        public void SetISSelectPage()
+        {
+            if (ISClient.isConnected)
+            {
+                Mod.LogError("ServerListController.SetISSelectPage called but we were connected to IS:\n" + Environment.StackTrace);
+                ISClient.Disconnect(true, 0);
+            }
+
+            state = State.ISSelect;
+
+            ISSelectListParent.gameObject.SetActive(true);
+            ISSelectPreviousButton.SetActive(false);
+            ISSelectNextButton.SetActive(false);
+            JArray ISList = Mod.config["ISList"] as JArray;
+
+            // Destroy any existent pages
+            while (ISSelectListParent.childCount > 1)
+            {
+                Transform otherChild = ISSelectListParent.GetChild(1);
+                otherChild.parent = null;
+                Destroy(otherChild.gameObject);
+            }
+
+            // Build new pages
+            Transform currentListPage = Instantiate(ISSelectPagePrefab, ISSelectListParent).transform;
+            for (int i = 0; i < ISList.Count; ++i)
+            {
+                GameObject ISEntry = Instantiate(ISSelectEntryPrefab, currentListPage);
+                ISEntry.SetActive(true);
+                ISEntry.transform.GetChild(0).GetComponent<Text>().text = ISList["Name"].ToString();
+                string IP = ISList["IP"].ToString();
+                ushort port = (ushort)ISList["Port"];
+                ISEntry.GetComponent<Button>().onClick.AddListener(() => { 
+                    ISClient.Connect(IP, port);
+                    ISSelect.SetActive(false);
+                    if (Mod.managerObject == null)
+                    {
+                        main.SetActive(true);
+                        SetMainPage(null);
+                    }
+                    else
+                    {
+                        if (ThreadManager.host)
+                        {
+                            hosting.SetActive(true);
+                            SetHostingPage(ISClient.isConnected && ISClient.gotWelcome && ISClient.wantListed && !ISClient.listed);
+                        }
+                        else
+                        {
+                            client.SetActive(true);
+                            SetClientPage(false);
+                        }
+                    }
+                });
+
+                // Start a new page every 7 elements
+                if (i + 1 % 7 == 0 && i != ISList.Count - 1)
+                {
+                    currentListPage = Instantiate(ISSelectPagePrefab, ISSelectListParent).transform;
+                    ISSelectNextButton.SetActive(true);
+                }
+            }
+            ISSelectListPage = Mathf.Min(ISSelectListPage, ISSelectListParent.childCount - 2);
+            ISSelectListParent.GetChild(ISSelectListPage + 1).gameObject.SetActive(true);
         }
 
         public void SetMainPage(List<ISEntry> entries)
@@ -294,6 +380,7 @@ namespace H3MP.Scripts
         public void OnHostClicked()
         {
             state = State.Host;
+            ISSelect.SetActive(false);
             main.SetActive(false);
             host.SetActive(true);
 
@@ -321,9 +408,18 @@ namespace H3MP.Scripts
                 hostPort.text = Mod.config["Port"].ToString();
                 hostPortField.clearButton.SetActive(true);
             }
-            if(Mod.config["Public"] != null)
+            if (ISClient.isConnected)
             {
-                hostListToggleCheck.SetActive((bool)Mod.config["Public"]);
+                hostListToggle.SetActive(true);
+                if (Mod.config["Public"] != null)
+                {
+                    hostListToggleCheck.SetActive((bool)Mod.config["Public"]);
+                }
+            }
+            else
+            {
+                hostListToggle.SetActive(false);
+                hostListToggleCheck.SetActive(false);
             }
             if(Mod.config["UPnP"] != null)
             {
@@ -343,6 +439,7 @@ namespace H3MP.Scripts
             Join(true, -1, true, 2, "Direct connection");
             state = State.Join;
 
+            // IP and Port label colors are set in Join() only if necessary
             if(Mod.config["IP"] != null)
             {
                 joinIP.text = Mod.config["IP"].ToString();
@@ -432,14 +529,17 @@ namespace H3MP.Scripts
             }
 
             // Make sure we are not listed
-            if (ISClient.listed || ISClient.wantListed)
+            if (ISClient.isConnected)
             {
-                ISClient.wantListed = false;
-                ISClient.listed = false;
-                ISClientSend.Unlist();
+                if (ISClient.listed || ISClient.wantListed)
+                {
+                    ISClient.wantListed = false;
+                    ISClient.listed = false;
+                    ISClientSend.Unlist();
+                }
             }
 
-            // Close server is necessary
+            // Close server if necessary
             if(Mod.managerObject != null && ThreadManager.host)
             {
                 skipCloseClicked = true;
@@ -448,50 +548,66 @@ namespace H3MP.Scripts
             }
 
             hosting.SetActive(false);
-            main.SetActive(true);
-
-            SetMainPage(null);
+            if (ISClient.isConnected)
+            {
+                main.SetActive(true);
+                SetMainPage(null);
+            }
+            else
+            {
+                ISSelect.SetActive(true);
+                SetISSelectPage();
+            }
         }
 
         public void OnHostingListClicked()
         {
-            if(!ISClient.listed && !ISClient.wantListed)
+            if (ISClient.isConnected)
             {
-                state = State.Host;
-                hosting.SetActive(false);
-                host.SetActive(true);
-                directConnection = false;
-                hostListToggleCheck.SetActive(true);
+                if (!ISClient.listed && !ISClient.wantListed)
+                {
+                    state = State.Host;
+                    hosting.SetActive(false);
+                    host.SetActive(true);
+                    directConnection = false;
+                    hostListToggleCheck.SetActive(true);
 
-                hostServerNameLabel.color = Color.white;
-                if (Mod.config["ServerName"] != null)
-                {
-                    hostServerName.text = Mod.config["ServerName"].ToString();
-                    hostServerNameField.clearButton.SetActive(true);
+                    hostServerNameLabel.color = Color.white;
+                    if (Mod.config["ServerName"] != null)
+                    {
+                        hostServerName.text = Mod.config["ServerName"].ToString();
+                        hostServerNameField.clearButton.SetActive(true);
+                    }
+                    hostLimitLabel.color = Color.white;
+                    if (Mod.config["MaxClientCount"] != null)
+                    {
+                        hostLimit.text = Mod.config["MaxClientCount"].ToString();
+                        hostLimitField.clearButton.SetActive(true);
+                    }
+                    hostUsernameLabel.color = Color.white;
+                    if (Mod.config["Username"] != null)
+                    {
+                        hostUsername.text = Mod.config["Username"].ToString();
+                        hostUsernameField.clearButton.SetActive(true);
+                    }
+                    hostPortLabel.color = Color.white;
+                    if (Mod.config["Port"] != null)
+                    {
+                        hostPort.text = Mod.config["Port"].ToString();
+                        hostPortField.clearButton.SetActive(true);
+                    }
                 }
-                hostLimitLabel.color = Color.white;
-                if (Mod.config["MaxClientCount"] != null)
+                else if (ISClient.listed)
                 {
-                    hostLimit.text = Mod.config["MaxClientCount"].ToString();
-                    hostLimitField.clearButton.SetActive(true);
-                }
-                hostUsernameLabel.color = Color.white;
-                if (Mod.config["Username"] != null)
-                {
-                    hostUsername.text = Mod.config["Username"].ToString();
-                    hostUsernameField.clearButton.SetActive(true);
-                }
-                hostPortLabel.color = Color.white;
-                if (Mod.config["Port"] != null)
-                {
-                    hostPort.text = Mod.config["Port"].ToString();
-                    hostPortField.clearButton.SetActive(true);
+                    ISClientSend.Unlist();
+                    ISClient.wantListed = false;
                 }
             }
-            else if(ISClient.listed)
+            else
             {
-                ISClientSend.Unlist();
-                ISClient.wantListed = false;
+                hosting.SetActive(false);
+                ISSelect.SetActive(true);
+                SetISSelectPage();
             }
         }
 
@@ -564,13 +680,13 @@ namespace H3MP.Scripts
 
             if(state == State.Hosting)
             {
-                if (ISClient.listed)
-                {
-                    ISClient.wantListed = false;
-                    ISClient.listed = false;
-                }
+                ISClient.wantListed = false;
+                ISClient.listed = false;
+                hostingListButtonText.color = Color.yellow;
+                hostingListButtonText.text = "Select IS";
+                hostingListButton.interactable = true;
             }
-            else if(state != State.Client)
+            else if(state != State.Client && state != State.ISSelect)
             {
                 main.SetActive(true);
                 host.SetActive(false);
@@ -618,6 +734,7 @@ namespace H3MP.Scripts
             joiningEntry = entryID;
             entryModlistEnforcement = modlistEnforcement;
             gotEndPoint = false;
+            ISSelect.SetActive(false);
             main.SetActive(false);
             join.SetActive(true);
             joinPasswordFieldObject.SetActive(hasPassword);
@@ -1003,6 +1120,96 @@ namespace H3MP.Scripts
             Destroy(gameObject);
         }
 
+        public void OnISSelectAddClicked()
+        {
+            ISSelect.SetActive(false);
+            ISAdd.SetActive(true);
+
+            ISAddIPLabel.color = Color.white;
+            ISAddIPText.text = "";
+            ISAddIPField.clearButton.SetActive(false);
+            ISAddPortLabel.color = Color.white;
+            ISAddPortText.text = "";
+            ISAddPortField.clearButton.SetActive(false);
+            ISAddServerNameLabel.color = Color.white;
+            ISAddServerNameText.text = "";
+            ISAddServerNameField.clearButton.SetActive(false);
+        }
+
+        public void OnISSelectPreviousClicked()
+        {
+            ISSelectListParent.GetChild(ISSelectListPage + 1).gameObject.SetActive(false);
+
+            --ISSelectListPage;
+
+            ISSelectListParent.GetChild(ISSelectListPage + 1).gameObject.SetActive(true);
+
+            if (ISSelectListPage == 0)
+            {
+                ISSelectPreviousButton.SetActive(false);
+            }
+            ISSelectNextButton.SetActive(true);
+        }
+
+        public void OnISSelectNextClicked()
+        {
+            ISSelectListParent.GetChild(ISSelectListPage + 1).gameObject.SetActive(false);
+
+            ++ISSelectListPage;
+
+            ISSelectListParent.GetChild(ISSelectListPage + 1).gameObject.SetActive(true);
+
+            if (ISSelectListPage == ISSelectListParent.childCount - 2)
+            {
+                ISSelectNextButton.SetActive(false);
+            }
+            ISSelectPreviousButton.SetActive(true);
+        }
+
+        public void OnISAddBackClicked()
+        {
+            ISSelect.SetActive(true);
+            ISAdd.SetActive(false);
+
+            SetISSelectPage();
+        }
+
+        public void OnISAddConfirmClicked()
+        {
+            bool failed = false;
+            if (ISAddServerNameText.text == "")
+            {
+                failed = true;
+                ISAddServerNameLabel.color = Color.red;
+            }
+            if (ISAddIPText.text == "")
+            {
+                failed = true;
+                ISAddIPLabel.color = Color.red;
+            }
+            ushort parsedPort = 0;
+            if (ISAddPortText.text == "" || !ushort.TryParse(ISAddPortText.text, out parsedPort))
+            {
+                failed = true;
+                ISAddPortLabel.color = Color.red;
+            }
+            if (failed)
+            {
+                return;
+            }
+
+            JObject newISEntry = new JObject();
+            newISEntry["Name"] = ISAddServerNameText.text;
+            newISEntry["IP"] = ISAddIPText.text;
+            newISEntry["Port"] = parsedPort;
+            (Mod.config["ISList"] as JArray).Add(newISEntry);
+            Mod.WriteConfig();
+
+            ISSelect.SetActive(true);
+            ISAdd.SetActive(false);
+            SetISSelectPage();
+        }
+
         public void OnMainPrevClicked()
         {
             mainListParent.GetChild(mainListPage + 1).gameObject.SetActive(false);
@@ -1040,6 +1247,15 @@ namespace H3MP.Scripts
             mainRefreshTimer = 10;
         }
 
+        public void OnMainBackClicked()
+        {
+            ISClient.Disconnect(true, 0);
+
+            main.SetActive(false);
+            ISSelect.SetActive(true);
+            SetISSelectPage();
+        }
+
         public void OnHostNextClicked()
         {
             hostPage0.SetActive(false);
@@ -1059,8 +1275,16 @@ namespace H3MP.Scripts
         public void OnHostCancelClicked()
         {
             host.SetActive(false);
-            main.SetActive(true);
-            SetMainPage(null);
+            if (ISClient.isConnected)
+            {
+                main.SetActive(true);
+                SetMainPage(null);
+            }
+            else
+            {
+                ISSelect.SetActive(true);
+                SetISSelectPage();
+            }
         }
 
         public void OnHostingPrevClicked()
@@ -1134,8 +1358,16 @@ namespace H3MP.Scripts
         public void OnJoinCancelClicked()
         {
             join.SetActive(false);
-            main.SetActive(true);
-            SetMainPage(null);
+            if (ISClient.isConnected)
+            {
+                main.SetActive(true);
+                SetMainPage(null);
+            }
+            else
+            {
+                ISSelect.SetActive(true);
+                SetISSelectPage();
+            }
         }
 
         public void OnClientDisconnectClicked()
@@ -1152,8 +1384,16 @@ namespace H3MP.Scripts
                 skipDisconnectClicked = false;
             }
             client.SetActive(false);
-            main.SetActive(true);
-            SetMainPage(null);
+            if (ISClient.isConnected)
+            {
+                main.SetActive(true);
+                SetMainPage(null);
+            }
+            else
+            {
+                ISSelect.SetActive(true);
+                SetISSelectPage();
+            }
         }
 
         public void OnClientPrevClicked()
@@ -1225,6 +1465,11 @@ namespace H3MP.Scripts
 
         private void OnDestroy()
         {
+            if (!awakened)
+            {
+                return;
+            }
+
             ISClient.OnReceiveHostEntries -= HostEntriesReceived;
             ISClient.OnDisconnect -= ISClientDisconnected;
             ISClient.OnListed -= Listed;
@@ -1233,11 +1478,6 @@ namespace H3MP.Scripts
             Mod.OnPlayerRemoved -= PlayerRemoved;
             Server.OnServerClose -= OnHostingCloseClicked;
             Client.OnDisconnect -= OnClientDisconnectClicked;
-
-            if (!awakened)
-            {
-                return;
-            }
 
             if(ISClient.isConnected)
             {

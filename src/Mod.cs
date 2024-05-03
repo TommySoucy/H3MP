@@ -42,7 +42,7 @@ namespace H3MP
         // BepinEx
         public const string pluginGuid = "VIP.TommySoucy.H3MP";
         public const string pluginName = "H3MP";
-        public const string pluginVersion = "1.9.11";
+        public const string pluginVersion = "1.9.12";
 
         // Assets
         public static JObject config;
@@ -1007,6 +1007,13 @@ namespace H3MP
                 config["Username"] = "Default Username";
                 config["TickRate"] = 20;
                 config["ServerName"] = "Default Server Name";
+                JArray ISList = new JArray();
+                config["ISList"] = ISList;
+                JObject defaultISEntry = new JObject();
+                defaultISEntry["Name"] = "Official";
+                defaultISEntry["IP"] = "h3mp.tommysoucy.vip";
+                defaultISEntry["Port"] = 7862;
+                ISList.Add(defaultISEntry);
             }
             Logger.LogInfo("Config loaded");
         }

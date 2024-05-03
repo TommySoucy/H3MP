@@ -19,8 +19,6 @@ namespace H3MP.Networking
 
         public static int dataBufferSize = 4096;
 
-        public static string IP = "h3mp.tommysoucy.vip";
-        public static ushort port = 7862;
         public static int ID = -1;
 
         public static bool isConnected = false;
@@ -76,7 +74,7 @@ namespace H3MP.Networking
         /// </summary>
         public static event OnListedDelegate OnListed;
 
-        public static void Connect()
+        public static void Connect(string IP, ushort port)
         {
             if (managerObject == null)
             {
@@ -100,39 +98,31 @@ namespace H3MP.Networking
                 SendBufferSize = dataBufferSize
             };
 
+            // The first address might be the DNS address, not the server's so need to check them
+            // I will be assuming the one that starts with 192 is the DNS's and is not the one we want
             string actualIP = IP;
-            if (Mod.config["ISOverride"] != null)
+            IPAddress[] addresses = Dns.GetHostAddresses(IP);
+            if(addresses != null && addresses.Length > 0)
             {
-                actualIP = Dns.GetHostAddresses(Mod.config["ISOverride"].ToString())[0].ToString();
-                Mod.LogWarning("ISOverride: " + Mod.config["ISOverride"].ToString()+" resolved to "+ actualIP);
+                bool found = false;
+                for (int i = 0; i < addresses.Length; ++i)
+                {
+                    if (addresses[i].GetAddressBytes()[0] != 192)
+                    {
+                        actualIP = addresses[i].ToString();
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found)
+                {
+                    Mod.LogWarning("Did not find an address that does not start with 192 from IS sub domain. Using first IP.");
+                    actualIP = addresses[0].ToString();
+                }
             }
             else
             {
-                // The first address might be the DNS address, not the server's so need to check them
-                // I will be assuming the one that starts with 192 is the DNS's and is not the one we want
-                IPAddress[] addresses = Dns.GetHostAddresses(IP);
-                if(addresses != null && addresses.Length > 0)
-                {
-                    bool found = false;
-                    for (int i = 0; i < addresses.Length; ++i)
-                    {
-                        if (addresses[i].GetAddressBytes()[0] != 192)
-                        {
-                            actualIP = addresses[i].ToString();
-                            found = true;
-                            break;
-                        }
-                    }
-                    if (!found)
-                    {
-                        Mod.LogWarning("Did not find an address that does not start with 192 from IS sub domain. Using first IP.");
-                        actualIP = addresses[0].ToString();
-                    }
-                }
-                else
-                {
-                    Mod.LogError("Did not get any address from IS sub domain! Connection to IS will fail.");
-                }
+                Mod.LogError("Did not get any address from IS sub domain! Connection to IS will fail.");
             }
             receiveBuffer = new byte[dataBufferSize];
             Mod.LogInfo("Making connection to IS: " + actualIP + ":" + port, false);
