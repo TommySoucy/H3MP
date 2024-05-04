@@ -251,7 +251,7 @@ namespace H3MP.Scripts
             while (ISSelectListParent.childCount > 1)
             {
                 Transform otherChild = ISSelectListParent.GetChild(1);
-                otherChild.parent = null;
+                otherChild.SetParent(null);
                 Destroy(otherChild.gameObject);
             }
 
@@ -261,9 +261,9 @@ namespace H3MP.Scripts
             {
                 GameObject ISEntry = Instantiate(ISSelectEntryPrefab, currentListPage);
                 ISEntry.SetActive(true);
-                ISEntry.transform.GetChild(0).GetComponent<Text>().text = ISList["Name"].ToString();
-                string IP = ISList["IP"].ToString();
-                ushort port = (ushort)ISList["Port"];
+                ISEntry.transform.GetChild(0).GetComponent<Text>().text = ISList[i]["Name"].ToString();
+                string IP = ISList[i]["IP"].ToString();
+                ushort port = (ushort)ISList[i]["Port"];
                 ISEntry.GetComponent<Button>().onClick.AddListener(() => { 
                     ISClient.Connect(IP, port);
                     ISSelect.SetActive(false);
@@ -285,6 +285,12 @@ namespace H3MP.Scripts
                             SetClientPage(false);
                         }
                     }
+                });
+                int index = i;
+                ISEntry.transform.GetChild(1).GetComponent<Button>().onClick.AddListener(() => {
+                    JArray currentISList = Mod.config["ISList"] as JArray;
+                    currentISList.RemoveAt(index);
+                    SetISSelectPage();
                 });
 
                 // Start a new page every 7 elements
@@ -346,7 +352,7 @@ namespace H3MP.Scripts
                 while (mainListParent.childCount > 1)
                 {
                     Transform otherChild = mainListParent.GetChild(1);
-                    otherChild.parent = null;
+                    otherChild.SetParent(null);
                     Destroy(otherChild.gameObject);
                 }
 
@@ -798,7 +804,7 @@ namespace H3MP.Scripts
                 while (hostingListParent.childCount > 1)
                 {
                     Transform otherChild = hostingListParent.GetChild(1);
-                    otherChild.parent = null;
+                    otherChild.SetParent(null);
                     Destroy(otherChild.gameObject);
                 }
 
@@ -1025,7 +1031,7 @@ namespace H3MP.Scripts
                 while (clientListParent.childCount > 1)
                 {
                     Transform otherChild = clientListParent.GetChild(1);
-                    otherChild.parent = null;
+                    otherChild.SetParent(null);
                     Destroy(otherChild.gameObject);
                 }
 
@@ -1063,7 +1069,7 @@ namespace H3MP.Scripts
             while (modlistParent.childCount > 1)
             {
                 Transform otherChild = modlistParent.GetChild(1);
-                otherChild.parent = null;
+                otherChild.SetParent(null);
                 Destroy(otherChild.gameObject);
             }
 
@@ -1186,6 +1192,18 @@ namespace H3MP.Scripts
             {
                 failed = true;
                 ISAddIPLabel.color = Color.red;
+            }
+            else
+            {
+                try
+                {
+                    Dns.GetHostAddresses(ISAddIPText.text);
+                }
+                catch (Exception)
+                {
+                    failed = true;
+                    ISAddIPLabel.color = Color.red;
+                }
             }
             ushort parsedPort = 0;
             if (ISAddPortText.text == "" || !ushort.TryParse(ISAddPortText.text, out parsedPort))
