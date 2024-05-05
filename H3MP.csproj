@@ -115,8 +115,8 @@
     <None Include="src\tracking\TrackedTemplateData.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="0Harmony, Version=2.12.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>packages\HarmonyX.2.12.0\lib\net35\0Harmony.dll</HintPath>
+    <Reference Include="0Harmony, Version=2.10.2.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>packages\HarmonyX.2.10.2\lib\net35\0Harmony.dll</HintPath>
     </Reference>
     <Reference Include="Assembly-CSharp, Version=1.2.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>packages\H3VR.GameLibs.0.113.0\lib\net35\Assembly-CSharp.dll</HintPath>
@@ -139,23 +139,11 @@
     <Reference Include="Mono.Cecil.Rocks, Version=0.10.4.0, Culture=neutral, PublicKeyToken=50cebf1cceb9d05e, processorArchitecture=MSIL">
       <HintPath>packages\Mono.Cecil.0.10.4\lib\net35\Mono.Cecil.Rocks.dll</HintPath>
     </Reference>
-    <Reference Include="MonoMod.Backports, Version=1.1.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>packages\MonoMod.Backports.1.1.0\lib\net35\MonoMod.Backports.dll</HintPath>
+    <Reference Include="MonoMod.RuntimeDetour, Version=22.3.23.4, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>packages\MonoMod.RuntimeDetour.22.3.23.4\lib\net35\MonoMod.RuntimeDetour.dll</HintPath>
     </Reference>
-    <Reference Include="MonoMod.Core, Version=1.1.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>packages\MonoMod.Core.1.1.0\lib\net35\MonoMod.Core.dll</HintPath>
-    </Reference>
-    <Reference Include="MonoMod.Iced, Version=1.17.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>packages\MonoMod.Core.1.1.0\lib\net35\MonoMod.Iced.dll</HintPath>
-    </Reference>
-    <Reference Include="MonoMod.ILHelpers, Version=1.0.1.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>packages\MonoMod.ILHelpers.1.0.1\lib\net35\MonoMod.ILHelpers.dll</HintPath>
-    </Reference>
-    <Reference Include="MonoMod.RuntimeDetour, Version=25.1.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>packages\MonoMod.RuntimeDetour.25.1.0\lib\net35\MonoMod.RuntimeDetour.dll</HintPath>
-    </Reference>
-    <Reference Include="MonoMod.Utils, Version=25.0.4.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>packages\MonoMod.Utils.25.0.4\lib\net35\MonoMod.Utils.dll</HintPath>
+    <Reference Include="MonoMod.Utils, Version=22.3.23.4, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>packages\MonoMod.Utils.22.3.23.4\lib\net35\MonoMod.Utils.dll</HintPath>
     </Reference>
     <Reference Include="Open.Nat, Version=1.0.0.0, Culture=neutral, PublicKeyToken=f22a6a4582336c76, processorArchitecture=MSIL">
       <HintPath>packages\Open.NAT.2.1.0.0\lib\net35\Open.Nat.dll</HintPath>
