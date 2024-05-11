@@ -245,7 +245,22 @@ namespace H3MP.Scripts
             ISSelectListParent.gameObject.SetActive(true);
             ISSelectPreviousButton.SetActive(false);
             ISSelectNextButton.SetActive(false);
-            JArray ISList = Mod.config["ISList"] as JArray;
+            JArray ISList = null;
+            if (Mod.config["ISList"] == null)
+            {
+                ISList = new JArray();
+                Mod.config["ISList"] = ISList;
+                JObject defaultISEntry = new JObject();
+                defaultISEntry["Name"] = "Official";
+                defaultISEntry["IP"] = "h3mp.tommysoucy.vip";
+                defaultISEntry["Port"] = 7862;
+                ISList.Add(defaultISEntry);
+                Mod.WriteConfig();
+            }
+            else
+            {
+                ISList = Mod.config["ISList"] as JArray;
+            }
 
             // Destroy any existent pages
             while (ISSelectListParent.childCount > 1)
