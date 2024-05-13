@@ -4,15 +4,12 @@ using H3MP.Networking;
 using H3MP.Patches;
 using H3MP.Scripts;
 using H3MP.Tracking;
-using HarmonyLib;
-using Open.Nat;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Reflection;
-using System.Threading;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -42,7 +39,7 @@ namespace H3MP
         // BepinEx
         public const string pluginGuid = "VIP.TommySoucy.H3MP";
         public const string pluginName = "H3MP";
-        public const string pluginVersion = "1.9.13";
+        public const string pluginVersion = "1.9.14";
 
         // Assets
         public static JObject config;
