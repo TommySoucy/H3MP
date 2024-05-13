@@ -62,6 +62,34 @@ namespace H3MP.Tracking
 
         public static KeyValuePair<int, TNH_Manager.SosigPatrolSquad> latestSosigPatrolSquad = new KeyValuePair<int, TNH_Manager.SosigPatrolSquad>(-1, null);
 
+        /// <summary>
+        /// CUSTOMIZATION
+        /// Delegate for the OnCollectAdditionalData event
+        /// </summary>
+        /// <param name="collected">Custom override for whether additional data was collected. If false, H3MP will try to collect</param>
+        /// <param name="trackedSosigData">The data of the tracked sosig we are collecting data for</param>
+        public delegate void OnCollectAdditionalDataDelegate(ref bool collected, TrackedSosigData trackedSosigData);
+
+        /// <summary>
+        /// CUSTOMIZATION
+        /// Event called when collecting a sosig's additional data
+        /// </summary>
+        public static event OnCollectAdditionalDataDelegate OnCollectAdditionalData;
+
+        /// <summary>
+        /// CUSTOMIZATION
+        /// Delegate for the OnProcessAdditionalData event
+        /// </summary>
+        /// <param name="processed">Custom override for whether additional data was processed. If false, H3MP will try to process</param>
+        /// <param name="trackedSosigData">The data of the tracked sosig we are processing additional data of</param>
+        public delegate void OnProcessAdditionalDataDelegate(ref bool processed, TrackedSosigData trackedSosigData);
+
+        /// <summary>
+        /// CUSTOMIZATION
+        /// Event called when processing a sosig's additional data on instantiation
+        /// </summary>
+        public static event OnProcessAdditionalDataDelegate OnProcessAdditionalData;
+
         public TrackedSosigData()
         {
 
@@ -664,6 +692,16 @@ namespace H3MP.Tracking
 
         private void CollectExternalData()
         {
+            bool collected = false;
+            if (OnCollectAdditionalData != null)
+            {
+                OnCollectAdditionalData(ref collected, this);
+            }
+            if (collected)
+            {
+                return;
+            }
+
             data = new byte[10 + (12 * ((TNH_ManagerPatch.inGenerateSentryPatrol || TNH_ManagerPatch.inGeneratePatrol) ? (TNH_ManagerPatch.patrolPoints == null ? 0 : TNH_ManagerPatch.patrolPoints.Count) : 0))];
 
             // Write TNH context
@@ -879,6 +917,16 @@ namespace H3MP.Tracking
 
         private void ProcessData()
         {
+            bool processed = false;
+            if (OnProcessAdditionalData != null)
+            {
+                OnProcessAdditionalData(ref processed, this);
+            }
+            if (processed)
+            {
+                return;
+            }
+
             if (GM.TNH_Manager != null && Mod.currentTNHInstance != null)
             {
                 if (data[0] == 1) // TNH_HoldPoint is in spawn enemy group

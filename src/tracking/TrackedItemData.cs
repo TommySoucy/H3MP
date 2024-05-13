@@ -36,7 +36,8 @@ namespace H3MP.Tracking
         /// Delegate for the OnCollectAdditionalData event
         /// </summary>
         /// <param name="collected">Custom override for whether additional data was collected. If false, H3MP will try to collect</param>
-        public delegate void OnCollectAdditionalDataDelegate(ref bool collected);
+        /// <param name="trackedItemData">The data of the tracked item we are collecting data for</param>
+        public delegate void OnCollectAdditionalDataDelegate(ref bool collected, TrackedItemData trackedItemData);
 
         /// <summary>
         /// CUSTOMIZATION
@@ -49,7 +50,8 @@ namespace H3MP.Tracking
         /// Delegate for the OnProcessAdditionalData event
         /// </summary>
         /// <param name="processed">Custom override for whether additional data was processed. If false, H3MP will try to process</param>
-        public delegate void OnProcessAdditionalDataDelegate(ref bool processed);
+        /// <param name="trackedItemData">The data of the tracked item we are processing additional data of</param>
+        public delegate void OnProcessAdditionalDataDelegate(ref bool processed, TrackedItemData trackedItemData);
 
         /// <summary>
         /// CUSTOMIZATION
@@ -176,7 +178,7 @@ namespace H3MP.Tracking
             bool collected = false;
             if(OnCollectAdditionalData != null)
             {
-                OnCollectAdditionalData(ref collected);
+                OnCollectAdditionalData(ref collected, this);
             }
             if (collected)
             {
@@ -528,7 +530,7 @@ namespace H3MP.Tracking
             bool processed = false;
             if(OnProcessAdditionalData != null)
             {
-                OnProcessAdditionalData(ref processed);
+                OnProcessAdditionalData(ref processed, this);
             }
             if (processed)
             {
