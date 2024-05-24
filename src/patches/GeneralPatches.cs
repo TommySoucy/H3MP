@@ -163,7 +163,7 @@ namespace H3MP.Patches
     }
 
     // Patches SteamVR_LoadLevel.Begin() So we can keep track of which scene we are loading
-    class LoadLevelBeginPatch
+    public class LoadLevelBeginPatch
     {
         public static string loadingLevel;
 

@@ -4,11 +4,11 @@ using UnityEngine;
 
 namespace H3MP.Scripts
 {
-    public class HoverScroll : FVRPointableButton
+    public class H3MPHoverScroll : FVRPointableButton
     {
         public AudioSource hoverSound;
         public Scrollbar scrollbar;
-        public HoverScroll other;
+        public H3MPHoverScroll other;
 
         public bool up;
         public float rate; // fraction of page/s
