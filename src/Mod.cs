@@ -607,12 +607,6 @@ namespace H3MP
                                         testCustomPacketID = Server.RegisterCustomPacketType("TestCustomPacketID");
                                     }
 
-                                    /// CUSTOMIZATION
-                                    /// Note that if this packet is a UDP update packet, additionally to adding a handler
-                                    /// in Mod.customPacketHandlers, you should also implement a packet preprocessor
-                                    /// in ThreadManager.customPacketPreprocessors
-                                    /// See "Packet preprocessing" region in ThreadManager for explanation
-                                    /// In particular, see PlayerStatePreprocessor and TrackedObjectsPreprocessor to see what a preprocessor should do
                                     Mod.customPacketHandlers[testCustomPacketID] = TestCustomPacketIDServerHandler;
                                 }
                                 else
@@ -912,14 +906,6 @@ namespace H3MP
             Mod.LogInfo("Custom packet received from server");
         }
 
-        /// <summary>
-        /// CUSTOMIZATION
-        /// Note that if this packet is a UDP update packet, additionally to adding a handler
-        /// in Mod.customPacketHandlers, you should also implement a packet preprocessor
-        /// in ThreadManager.customPacketPreprocessors
-        /// See "Packet preprocessing" region in ThreadManager for explanation
-        /// In particular, see PlayerStatePreprocessor and TrackedObjectsPreprocessor to see what a preprocessor should do
-        /// </summary>
         public static void TestCustomPacketIDReceived(string identifier, int ID)
         {
             Mod.LogInfo("Client received ID " + ID + " for custom packet ID " + identifier);

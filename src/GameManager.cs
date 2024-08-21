@@ -211,6 +211,21 @@ namespace H3MP
 
         /// <summary>
         /// CUSTOMIZATION
+        /// Delegate for the OnPlayerInstanceChanged event
+        /// </summary>
+        /// <param name="ID">The player's ID</param>
+        /// <param name="instance">The instance they left</param>
+        /// <param name="destination">The destination instance</param>
+        public delegate void OnPlayerInstanceChangedDelegate(int ID, int instance, int destination);
+
+        /// <summary>
+        /// CUSTOMIZATION
+        /// Event called when a player's instance changes
+        /// </summary>
+        public static event OnPlayerInstanceChangedDelegate OnPlayerInstanceChanged;
+
+        /// <summary>
+        /// CUSTOMIZATION
         /// Delegate for the OnSceneLeft event
         /// </summary>
         /// <param name="scene">The scene that we left</param>
@@ -781,6 +796,12 @@ namespace H3MP
                 }
             }
 
+            // Call the event so others can update themselves like we do for TNH instances above
+            if(OnPlayerInstanceChanged != null)
+            {
+                OnPlayerInstanceChanged(player.ID, player.instance, instance);
+            }
+
             // Remove from scene/instance
             playersByInstanceByScene[player.scene][player.instance].Remove(player.ID);
             if(playersByInstanceByScene[player.scene][player.instance].Count == 0)
@@ -1110,9 +1131,9 @@ namespace H3MP
         }
 
         public static TNHInstance AddNewTNHInstance(int hostID, bool letPeopleJoin,
-                                                         int progressionTypeSetting, int healthModeSetting, int equipmentModeSetting,
-                                                         int targetModeSetting, int AIDifficultyModifier, int radarModeModifier,
-                                                         int itemSpawnerMode, int backpackMode, int healthMult, int sosiggunShakeReloading, int TNHSeed, string levelID)
+                                                    int progressionTypeSetting, int healthModeSetting, int equipmentModeSetting,
+                                                    int targetModeSetting, int AIDifficultyModifier, int radarModeModifier,
+                                                    int itemSpawnerMode, int backpackMode, int healthMult, int sosiggunShakeReloading, int TNHSeed, string levelID)
         {
             if (ThreadManager.host)
             {
@@ -1122,9 +1143,9 @@ namespace H3MP
                     ++freeInstance;
                 }
                 TNHInstance newInstance = new TNHInstance(freeInstance, hostID, letPeopleJoin,
-                                                                    progressionTypeSetting, healthModeSetting, equipmentModeSetting,
-                                                                    targetModeSetting, AIDifficultyModifier, radarModeModifier,
-                                                                    itemSpawnerMode, backpackMode, healthMult, sosiggunShakeReloading, TNHSeed, levelID);
+                                                            progressionTypeSetting, healthModeSetting, equipmentModeSetting,
+                                                            targetModeSetting, AIDifficultyModifier, radarModeModifier,
+                                                            itemSpawnerMode, backpackMode, healthMult, sosiggunShakeReloading, TNHSeed, levelID);
                 TNHInstances.Add(freeInstance, newInstance);
 
                 if ((newInstance.letPeopleJoin || newInstance.currentlyPlaying.Count == 0) && Mod.TNHInstanceList != null && Mod.joinTNHInstances != null && !Mod.joinTNHInstances.ContainsKey(freeInstance))
