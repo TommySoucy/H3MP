@@ -1261,7 +1261,8 @@ namespace H3MP
             }
 
             // Called instance left event
-            if(OnInstanceLeft != null)
+            TODO e: // Sub to this and instance joined and make sure we handle it the same way as we do TNH
+            if (OnInstanceLeft != null)
             {
                 OnInstanceLeft(GameManager.instance, instance);
             }
