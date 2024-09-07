@@ -56,6 +56,21 @@ namespace H3MP.Tracking
         }
 
         /// <summary>
+        /// Optional method
+        /// This will be called if the object is not being tracked on our side
+        /// Can be used to decide whether you want the object to subsequently be destroyed or not
+        /// Useful if the tracked object is a scene object and can't necessarily be instantiated
+        /// See TrackedGatlngGunData's implementation for example
+        /// </summary>
+        /// <param name="t">The transform of the object</param>
+        /// <returns>True if want to destroy object</returns>
+        public static bool TrackSkipped(Transform t)
+        {
+            /// Refer to other existing tracked types for specific examples.
+            return false;
+        }
+
+        /// <summary>
         /// This overrides TrackedObjectData.IsIdentifiable()
         /// Note: This is not absolutely required but if missing TrackedObjectData.IsIdentifiable() will always return true.
         /// This method will be used by H3MP to check if an object's data is identifiable locally.
