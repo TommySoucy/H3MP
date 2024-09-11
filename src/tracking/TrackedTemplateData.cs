@@ -56,6 +56,18 @@ namespace H3MP.Tracking
         }
 
         /// <summary>
+        /// This method is optional.
+        /// If multiple types returned true for IsOfType, H3MP must choose 1 to track the object with
+        /// For example, if a type inherits from TrackedItem, it should override TrackedItem because it obviously wants to be chosen
+        /// as the tracked type instead, but both will have returned true on IsOfType
+        /// </summary>
+        /// <returns>Array of types that should be ignored</returns>
+        public static Type[] GetTypeOverrides()
+        {
+            return null;
+        }
+
+        /// <summary>
         /// Optional method
         /// This will be called if the object is not being tracked on our side
         /// Can be used to decide whether you want the object to subsequently be destroyed or not
@@ -82,7 +94,7 @@ namespace H3MP.Tracking
         public override bool IsIdentifiable()
         {
             /// Refer to other existing tracked types for specific examples.
-            return false
+            return false;
         }
 
         /// <summary>

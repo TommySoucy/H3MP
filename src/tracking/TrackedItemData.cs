@@ -173,7 +173,7 @@ namespace H3MP.Tracking
             return trackedItem;
         }
 
-        private void CollectExternalData()
+        public void CollectExternalData()
         {
             bool collected = false;
             if(OnCollectAdditionalData != null)
@@ -525,7 +525,7 @@ namespace H3MP.Tracking
             }
         }
 
-        private void ProcessAdditionalData()
+        public void ProcessAdditionalData()
         {
             bool processed = false;
             if(OnProcessAdditionalData != null)
@@ -851,13 +851,16 @@ namespace H3MP.Tracking
                         break;
                     }
                 }
-                for(int i=0; i< GM.CurrentPlayerBody.QBSlots_Added.Count; ++i)
+                if (!inPlayerQBS)
                 {
-                    if (GM.CurrentPlayerBody.QBSlots_Added[i] == physicalItem.physicalItem.QuickbeltSlot)
+                    for (int i = 0; i < GM.CurrentPlayerBody.QBSlots_Added.Count; ++i)
                     {
-                        interactionID = i + 259; // Added QBS 259-514
-                        inPlayerQBS = true;
-                        break;
+                        if (GM.CurrentPlayerBody.QBSlots_Added[i] == physicalItem.physicalItem.QuickbeltSlot)
+                        {
+                            interactionID = i + 259; // Added QBS 259-514
+                            inPlayerQBS = true;
+                            break;
+                        }
                     }
                 }
             }

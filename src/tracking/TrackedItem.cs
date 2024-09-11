@@ -18,7 +18,7 @@ namespace H3MP.Tracking
         public static bool interpolated = true;
 
         // Scene/instance change
-        int securedCode = -1; // -1 means it was not secured
+        public int securedCode = -1; // -1 means it was not secured
 
         // Unknown tracked ID queues
         public static Dictionary<uint, byte> unknownCrateHolding = new Dictionary<uint, byte>();
@@ -12832,12 +12832,17 @@ namespace H3MP.Tracking
             TrackedObjectData.ObjectBringType bring = TrackedObjectData.ObjectBringType.No;
             data.ShouldBring(true, ref bring);
 
-            // We might want to bring an item with us across scenes
+            // Note that we only consider TrackedObjectData.ObjectBringType.OnlyInteracted
+            // This is because we do not want to bring loose world items across scenes
+            // since as the scene changes, an item's pos/rot may no longer be valid
             if (data.IsControlled(out int interactionID))
             {
                 if ((int)bring > 0)
                 {
+                    TODO e: // Some items have detached elements, like lasers, whos point is another gameobject not parented to the laser item. We must handle this, as it should also be secured
                     // Secure parent object
+                    // If we have a parent, we do not want to secure ourselves,
+                    // we can assume that our parentmost item will be secured instead
                     if(data.parent == -1)
                     {
                         EnsureUncontrolled();
@@ -12878,7 +12883,7 @@ namespace H3MP.Tracking
             }
         }
 
-        private void Unsecure()
+        public virtual void Unsecure()
         {
             SceneManager.MoveGameObjectToScene(gameObject, SceneManager.GetActiveScene());
 
