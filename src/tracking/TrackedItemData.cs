@@ -1,10 +1,13 @@
-﻿using FistVR;
+﻿using FFmpeg.AutoGen;
+using FistVR;
 using H3MP.Networking;
 using H3MP.Patches;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Text;
 using UnityEngine;
+using Valve.Newtonsoft.Json.Linq;
 
 namespace H3MP.Tracking
 {
@@ -322,6 +325,39 @@ namespace H3MP.Tracking
                     for (int j = 0; j < 4; ++j)
                     {
                         additionalData[firstIndex + j + 8] = vecBytes[j];
+                    }
+                }
+            }
+            else
+            {
+                Type[] interfaces = physicalItem.dataObject.GetType().GetInterfaces();
+                if(interfaces != null)
+                {
+                    for (int i = 0; i < interfaces.Length; ++i)
+                    {
+                        if (interfaces[i] == PatchController.MW_IModularWeapon)
+                        {
+                            IDictionary pointDict = PatchController.MW_IModularWeapon_get_AllAttachmentPoints.Invoke(physicalItem.dataObject, null) as IDictionary;
+                            List<byte> buffer = new List<byte>();
+                            buffer.AddRange(BitConverter.GetBytes(pointDict.Count));
+                            foreach (DictionaryEntry entry in pointDict)
+                            {
+                                string groupID = (string)entry.Key;
+                                string selectedPart = (string)PatchController.MW_ModularWeaponPartsAttachmentPoint_SelectedModularWeaponPart.GetValue(entry.Value);
+                                buffer.AddRange(BitConverter.GetBytes(groupID.Length));
+                                buffer.AddRange(Encoding.ASCII.GetBytes(groupID));
+                                buffer.AddRange(BitConverter.GetBytes(selectedPart.Length));
+                                buffer.AddRange(Encoding.ASCII.GetBytes(selectedPart));
+
+                                List<byte> tempBuffer = new List<byte>();
+                                physicalItem.AddModulPartDataInvoke(tempBuffer, groupID, selectedPart);
+
+                                buffer.AddRange(BitConverter.GetBytes(tempBuffer.Count));
+                                buffer.AddRange(tempBuffer);
+                            }
+                            additionalData = buffer.ToArray();
+                            break;
+                        }
                     }
                 }
             }
@@ -669,8 +705,45 @@ namespace H3MP.Tracking
                     asGC.GenerateGout(pos, normal);
                 }
             }
+            else
+            {
+                Type[] interfaces = physicalItem.dataObject.GetType().GetInterfaces();
+                if (interfaces != null)
+                {
+                    int offset = 0;
+                    for (int i = 0; i < interfaces.Length; ++i)
+                    {
+                        if (interfaces[i] == PatchController.MW_IModularWeapon)
+                        {
+                            IDictionary pointDict = PatchController.MW_IModularWeapon_get_AllAttachmentPoints.Invoke(physicalItem.dataObject, null) as IDictionary;
+                            int partCount = BitConverter.ToInt32(additionalData, offset);
+                            offset += 4;
+                            for(int j=0; j < partCount; ++j)
+                            {
+                                int groupIDLength = BitConverter.ToInt32(additionalData, offset);
+                                offset += 4;
+                                string groupID = Encoding.ASCII.GetString(additionalData, offset, groupIDLength);
+                                offset += groupIDLength;
+                                int partLength = BitConverter.ToInt32(additionalData, offset);
+                                offset += 4;
+                                string part = Encoding.ASCII.GetString(additionalData, offset, partLength);
+                                offset += partLength;
 
-            if(physicalItem.integratedLaser != null && controller != GameManager.ID)
+                                // Note: This method (ProcessAdditionalData) is called by Instantiate(), so after the item's Awake()
+                                // It is at Awake that a modular weapon configures its default parts, so by now they should have been configured and 
+                                // making our own call here should be fine
+                                PatchController.MW_IModularWeapon_ConfigureModularWeaponPart.Invoke(physicalItem.dataObject, new object[] { pointDict[groupID], part, false });
+
+                                offset += 4; // This is just because we also wrote the length of custom data before writing the custom data
+                                physicalItem.ReadModulPartDataInvoke(additionalData, ref offset, groupID, pointDict);
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (physicalItem.integratedLaser != null && controller != GameManager.ID)
             {
                 physicalItem.integratedLaser.UsesAutoOnOff = false;
             }

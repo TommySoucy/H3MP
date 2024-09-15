@@ -4901,5 +4901,24 @@ namespace H3MP.Networking
                 SendTCPData(players, packet, clientID);
             }
         }
+
+        public static void SetModulWeaponPart(int trackedID, string groupID, string selectedPart, int clientID = 0)
+        {
+            using (Packet packet = new Packet((int)ServerPackets.SetModulWeaponPart))
+            {
+                packet.Write(trackedID);
+                packet.Write(groupID);
+                packet.Write(selectedPart);
+
+                if (clientID == 0)
+                {
+                    SendTCPDataToAll(packet);
+                }
+                else
+                {
+                    SendTCPDataToAll(clientID, packet);
+                }
+            }
+        }
     }
 }

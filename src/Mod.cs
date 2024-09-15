@@ -1416,7 +1416,6 @@ namespace H3MP
             {
                 if (assemblies[i].FullName.Split(',')[0].Equals("H3MP"))
                 {
-                    TODO e: // Add tracking for MW weapons where we keep track of which parts are selected per group, and we should let other mods add their own tracked data to selected parts 
                     AddTrackedType(typeof(TrackedItemData));
                     AddTrackedType(typeof(TrackedSosigData));
                     AddTrackedType(typeof(TrackedEncryptionData));

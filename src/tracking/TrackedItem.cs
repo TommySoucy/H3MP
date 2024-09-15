@@ -3,6 +3,7 @@ using H3MP.Networking;
 using H3MP.Patches;
 using H3MP.Scripts;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -101,6 +102,39 @@ namespace H3MP.Tracking
         /// Event called when we initialize the type of a TrackedItem
         /// </summary>
         public static event OnInitItemTypeDelegate OnInitItemType;
+
+        /// <summary>
+        /// CUSTOMIZATION
+        /// Delegate for the AddModulPartData event
+        /// </summary>
+        /// <param name="buffer">The data buffer</param>
+        /// <param name="groupID">The part's group ID</param>
+        /// <param name="selectedPart">The part's ID</param>
+        /// <param name="trackedItem">The TrackedItem that has this modul part</param>
+        public delegate void AddModulPartDataDelegate(List<byte> buffer, string groupID, string selectedPart, TrackedItem trackedItem);
+
+        /// <summary>
+        /// CUSTOMIZATION
+        /// Event called when we write additional data for a modul part on this TrackedItem
+        /// </summary>
+        public event AddModulPartDataDelegate AddModulPartData;
+
+        /// <summary>
+        /// CUSTOMIZATION
+        /// Delegate for the ReadModulPartData event
+        /// </summary>
+        /// <param name="additionalData">The data we are reading from</param>
+        /// <param name="offset">The offset we are currently reading at in additionalData</param>
+        /// <param name="groupID">The part's group ID</param>
+        /// <param name="pointDict">The dictionary of part attachment points</param>
+        /// <param name="trackedItem">The TrackedItem that has this modul part</param>
+        public delegate void ReadModulPartDataDelegate(byte[] additionalData, ref int offset, string groupID, IDictionary pointDict, TrackedItem trackedItem);
+
+        /// <summary>
+        /// CUSTOMIZATION
+        /// Event called when we read additional data for a modul part on this TrackedItem
+        /// </summary>
+        public event ReadModulPartDataDelegate ReadModulPartData;
 
         public override void Awake()
         {
@@ -857,6 +891,22 @@ namespace H3MP.Tracking
                     GameManager.trackedObjectByDamageable.Add(gasCuboid.Handle.GetComponent<Brut_GasCuboidHandle>(), this);
                     removeTrackedDamageables = RemoveTrackedGasCuboidDamageables;
                 }
+            }
+        }
+
+        public void AddModulPartDataInvoke(List<byte> buffer, string groupID, string selectedPart)
+        {
+            if(AddModulPartData != null)
+            {
+                AddModulPartData(buffer, groupID, selectedPart, this);
+            }
+        }
+
+        public void ReadModulPartDataInvoke(byte[] additionalData, ref int offset, string groupID, IDictionary pointDict)
+        {
+            if(ReadModulPartData != null)
+            {
+                ReadModulPartData(additionalData, ref offset, groupID, pointDict, this);
             }
         }
 
@@ -12839,7 +12889,7 @@ namespace H3MP.Tracking
             {
                 if ((int)bring > 0)
                 {
-                    TODO e: // Some items have detached elements, like lasers, whos point is another gameobject not parented to the laser item. We must handle this, as it should also be secured
+                    TODO: // Some items have detached elements, like lasers, whos point is another gameobject not parented to the laser item. We must handle this, as it should also be secured
                     // Secure parent object
                     // If we have a parent, we do not want to secure ourselves,
                     // we can assume that our parentmost item will be secured instead

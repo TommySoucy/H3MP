@@ -2910,5 +2910,17 @@ namespace H3MP.Networking
                 SendTCPData(packet);
             }
         }
+
+        public static void SetModulWeaponPart(int trackedID, string groupID, string selectedPart)
+        {
+            using (Packet packet = new Packet((int)ClientPackets.setModulWeaponPart))
+            {
+                packet.Write(trackedID);
+                packet.Write(groupID);
+                packet.Write(selectedPart);
+
+                SendTCPData(packet);
+            }
+        }
     }
 }

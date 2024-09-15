@@ -3,9 +3,11 @@ using H3MP.Patches;
 using H3MP.Scripts;
 using H3MP.Tracking;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
+using System.Text;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -5480,6 +5482,91 @@ namespace H3MP.Networking
                 ++OnSosigAlertPatch.skip;
                 GM.CurrentSceneSettings.OnSosigAlert(null, position);
                 --OnSosigAlertPatch.skip;
+            }
+        }
+
+        public static void SetModulWeaponPart(Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+
+            TrackedItemData trackedItemData = Client.objects[trackedID] as TrackedItemData;
+            if (trackedItemData != null)
+            {
+                string groupID = packet.ReadString();
+                string selectedPart = packet.ReadString();
+
+                if (trackedItemData.physical == null) // Update only data
+                {
+                    List<byte> buffer = new List<byte>();
+
+                    int offset = 0;
+                    int partCount = BitConverter.ToInt32(trackedItemData.additionalData, offset);
+                    offset += 4;
+                    for (int j = 0; j < partCount; ++j)
+                    {
+                        int groupIDLength = BitConverter.ToInt32(trackedItemData.additionalData, offset);
+                        offset += 4;
+                        string oldGroupID = Encoding.ASCII.GetString(trackedItemData.additionalData, offset, groupIDLength);
+                        offset += groupIDLength;
+                        int partLength = BitConverter.ToInt32(trackedItemData.additionalData, offset);
+                        offset += 4;
+                        string part = Encoding.ASCII.GetString(trackedItemData.additionalData, offset, partLength);
+                        offset += partLength;
+
+                        buffer.AddRange(BitConverter.GetBytes(groupIDLength));
+                        buffer.AddRange(Encoding.ASCII.GetBytes(oldGroupID));
+                        if (oldGroupID.Equals(groupID))
+                        {
+                            buffer.AddRange(BitConverter.GetBytes(selectedPart.Length));
+                            buffer.AddRange(Encoding.ASCII.GetBytes(selectedPart));
+                        }
+                        else
+                        {
+                            buffer.AddRange(BitConverter.GetBytes(partLength));
+                            buffer.AddRange(Encoding.ASCII.GetBytes(part));
+                        }
+
+                        // Readd custom data
+                        int customDataLength = BitConverter.ToInt32(trackedItemData.additionalData, offset);
+                        for (int k = 0; k < customDataLength; ++k)
+                        {
+                            buffer.Add(trackedItemData.additionalData[k + offset]);
+                        }
+                        offset += customDataLength;
+                        offset += 4;
+                    }
+
+                    trackedItemData.additionalData = buffer.ToArray();
+                }
+                else // Update with physical
+                {
+                    IDictionary pointDict = PatchController.MW_IModularWeapon_get_AllAttachmentPoints.Invoke(trackedItemData.physicalItem.dataObject, null) as IDictionary;
+
+                    // Configure part
+                    ++ModularWeaponPartPatch.skip;
+                    PatchController.MW_IModularWeapon_ConfigureModularWeaponPart.Invoke(trackedItemData.physicalItem.dataObject, new object[] { pointDict[groupID], selectedPart, false });
+                    --ModularWeaponPartPatch.skip;
+
+                    // Update data
+                    List<byte> buffer = new List<byte>();
+                    buffer.AddRange(BitConverter.GetBytes(pointDict.Count));
+                    foreach (DictionaryEntry entry in pointDict)
+                    {
+                        string newGroupID = (string)entry.Key;
+                        string newSlectedPart = (string)PatchController.MW_ModularWeaponPartsAttachmentPoint_SelectedModularWeaponPart.GetValue(entry.Value);
+                        buffer.AddRange(BitConverter.GetBytes(newGroupID.Length));
+                        buffer.AddRange(Encoding.ASCII.GetBytes(newGroupID));
+                        buffer.AddRange(BitConverter.GetBytes(newSlectedPart.Length));
+                        buffer.AddRange(Encoding.ASCII.GetBytes(newSlectedPart));
+
+                        List<byte> tempBuffer = new List<byte>();
+                        trackedItemData.physicalItem.AddModulPartDataInvoke(tempBuffer, newGroupID, newSlectedPart);
+
+                        buffer.AddRange(BitConverter.GetBytes(tempBuffer.Count));
+                        buffer.AddRange(tempBuffer);
+                    }
+                    trackedItemData.additionalData = buffer.ToArray();
+                }
             }
         }
     }

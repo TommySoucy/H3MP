@@ -4,9 +4,11 @@ using H3MP.Scripts;
 using H3MP.Tracking;
 using HarmonyLib;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
+using System.Text;
 using UnityEngine;
 
 namespace H3MP.Patches
@@ -1203,6 +1205,98 @@ namespace H3MP.Patches
             harmony.Patch(sentinelInitOriginal, null, new HarmonyMethod(sentinelInitPostfix));
             harmony.Patch(sentinelAwakeOriginal, new HarmonyMethod(sentinelAwakePrefix));
             harmony.Patch(sentinelFixedUpdateOriginal, new HarmonyMethod(sentinelFixedUpdatePrefix));
+
+            ++patchIndex; // 73
+
+            // ModularWeaponPartPatch
+            MethodInfo modularWeaponPartEnableOriginal = PatchController.MW_ModularWeaponPart_EnablePart;
+            MethodInfo modularWeaponPartEnablePrefix = typeof(ModularWeaponPartPatch).GetMethod("EnablePrefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(modularWeaponPartEnableOriginal, harmony, true);
+            harmony.Patch(modularWeaponPartEnableOriginal, new HarmonyMethod(modularWeaponPartEnablePrefix));
+        }
+    }
+
+
+
+    // Patches ModularWeaponPart
+    class ModularWeaponPartPatch
+    {
+        public static int skip;
+
+        // To track activation to apply stats to weapon
+        // Note that by now, we assume the part's attachment point's selectedPart and modularWeaponPartsAttachmentPoint.ModularPartPoint fields have been set
+        static void EnablePrefix(MonoBehaviour __instance)
+        {
+            if (Mod.managerObject == null || skip > 0)
+            {
+                return;
+            }
+
+            TODO: // This is way too complicated, having ModularWeaponPart just keep a ref to the point it is currently attached to would
+            //       let us skip having to find the point by iterating over all of them, fix it, make pull request
+            //       The problem is that the part doesn't store which group it is a part of 
+            //       But we need this to get its data
+            //       Our next best option is to find which point it is attached to, which stores that data
+
+            // Get the modular weapon this part is attached to
+            MonoBehaviour[] partParentScripts = __instance.GetComponentsInParent<MonoBehaviour>();
+            MonoBehaviour modularWeapon = null;
+            for (int i=0; i < partParentScripts.Length; ++i)
+            {
+                Type[] interfaces = partParentScripts.GetType().GetInterfaces();
+                for(int j=0; j < interfaces.Length; ++j)
+                {
+                    if (interfaces[j] == PatchController.MW_IModularWeapon)
+                    {
+                        modularWeapon = partParentScripts[i];
+                        break;
+                    }
+                }
+            }
+
+            if (modularWeapon != null)
+            {
+                // Find point it is attached to
+                IDictionary pointDict = PatchController.MW_IModularWeapon_get_AllAttachmentPoints.Invoke(modularWeapon, null) as IDictionary;
+                foreach (DictionaryEntry entry in pointDict)
+                {
+                    if((Transform)PatchController.MW_ModularWeaponPartsAttachmentPoint_ModularPartPoint.GetValue(entry.Value) == __instance.transform)
+                    {
+                        // Update local data
+                        string groupID = (string)entry.Key;
+                        string selectedPart = (string)PatchController.MW_ModularWeaponPartsAttachmentPoint_SelectedModularWeaponPart.GetValue(entry.Value);
+                        TrackedItem trackedItem = modularWeapon.GetComponent<TrackedItem>();
+
+                        if(trackedItem != null)
+                        {
+                            List<byte> buffer = new List<byte>();
+                            buffer.AddRange(BitConverter.GetBytes(pointDict.Count));
+                            foreach (DictionaryEntry innerEntry in pointDict)
+                            {
+                                buffer.AddRange(BitConverter.GetBytes(groupID.Length));
+                                buffer.AddRange(Encoding.ASCII.GetBytes(groupID));
+                                buffer.AddRange(BitConverter.GetBytes(selectedPart.Length));
+                                buffer.AddRange(Encoding.ASCII.GetBytes(selectedPart));
+                                trackedItem.AddModulPartDataInvoke(buffer, groupID, selectedPart);
+                            }
+                            trackedItem.itemData.additionalData = buffer.ToArray();
+
+                            // Send to others
+                            if (ThreadManager.host)
+                            {
+                                ServerSend.SetModulWeaponPart(trackedItem.itemData.trackedID, groupID, selectedPart);
+                            }
+                            else
+                            {
+                                ClientSend.SetModulWeaponPart(trackedItem.itemData.trackedID, groupID, selectedPart);
+                            }
+                        }
+
+                        break;
+                    }
+                }
+            }
         }
     }
 

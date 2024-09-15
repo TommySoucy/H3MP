@@ -69,6 +69,18 @@ namespace H3MP.Patches
         public static Type TNHTweaker_TNHTweakerUtils;
         public static MethodInfo TNHTweaker_TNHTweakerUtils_InstantiateFromEquipmentGroup;
 
+        // ModularWorkshop
+        public static int MWAsmIdx = -1;
+        public static Type MW_IModularWeapon;
+        public static MethodInfo MW_IModularWeapon_get_AllAttachmentPoints;
+        public static Type MW_ModularWeaponPartsAttachmentPoint;
+        public static FieldInfo MW_ModularWeaponPartsAttachmentPoint_ModularPartsGroupID;
+        public static FieldInfo MW_ModularWeaponPartsAttachmentPoint_SelectedModularWeaponPart;
+        public static FieldInfo MW_ModularWeaponPartsAttachmentPoint_ModularPartPoint;
+        public static MethodInfo MW_IModularWeapon_ConfigureModularWeaponPart;
+        public static Type MW_ModularWeaponPart;
+        public static MethodInfo MW_ModularWeaponPart_EnablePart;
+
         // Collects fields/types relevant to mod compatibility patches
         private static void GetCompatibilityData()
         {
@@ -119,6 +131,19 @@ namespace H3MP.Patches
                     TNHTweaker_TNHTweaker_PreventOutfitFunctionality = TNHTweaker_TNHTweaker.GetField("PreventOutfitFunctionality", BindingFlags.Public | BindingFlags.Static);
                     TNHTweaker_TNHTweakerUtils = assemblies[TNHTweakerAsmIdx].GetType("TNHTweaker.Utilities.TNHTweakerUtils");
                     TNHTweaker_TNHTweakerUtils_InstantiateFromEquipmentGroup = TNHTweaker_TNHTweaker.GetMethod("InstantiateFromEquipmentGroup", BindingFlags.Public | BindingFlags.Static);
+                }
+                else if (assemblies[i].GetName().Name.Equals("ModularWorkshop"))
+                {
+                    MWAsmIdx = i;
+                    MW_IModularWeapon = assemblies[MWAsmIdx].GetType("ModularWorkshop.IModularWeapon");
+                    MW_IModularWeapon_get_AllAttachmentPoints = MW_IModularWeapon.GetMethod("get_AllAttachmentPoints", BindingFlags.Public | BindingFlags.Instance);
+                    MW_IModularWeapon_ConfigureModularWeaponPart = MW_IModularWeapon.GetMethod("ConfigureModularWeaponPart", BindingFlags.Public | BindingFlags.Instance);
+                    MW_ModularWeaponPartsAttachmentPoint = assemblies[MWAsmIdx].GetType("ModularWorkshop.ModularWeaponPartsAttachmentPoint");
+                    MW_ModularWeaponPartsAttachmentPoint_ModularPartsGroupID = MW_ModularWeaponPartsAttachmentPoint.GetField("ModularPartsGroupID", BindingFlags.Public | BindingFlags.Instance);
+                    MW_ModularWeaponPartsAttachmentPoint_SelectedModularWeaponPart = MW_ModularWeaponPartsAttachmentPoint.GetField("SelectedModularWeaponPart", BindingFlags.Public | BindingFlags.Instance);
+                    MW_ModularWeaponPartsAttachmentPoint_ModularPartPoint = MW_ModularWeaponPartsAttachmentPoint.GetField("ModularPartPoint", BindingFlags.Public | BindingFlags.Instance);
+                    MW_ModularWeaponPart = assemblies[MWAsmIdx].GetType("ModularWorkshop.ModularWeaponPart");
+                    MW_ModularWeaponPart_EnablePart = MW_ModularWeaponPart.GetMethod("EnablePart", BindingFlags.Public | BindingFlags.Instance);
                 }
             }
         }
