@@ -880,7 +880,9 @@ namespace H3MP.Tracking
             }
             else // This is just a pure FVRPhysicalObject, we might want to track some other specific script on this item
             {
-                if(TryGetComponent<UberShatterable>(physObj.gameObject, out UberShatterable uberShatterable))
+                dataObject = physObj;
+
+                if (TryGetComponent<UberShatterable>(physObj.gameObject, out UberShatterable uberShatterable))
                 {
                     updateFunc = UpdateUberShatterable;
                     updateGivenFunc = UpdateGivenUberShatterable;

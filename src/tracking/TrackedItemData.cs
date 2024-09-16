@@ -1,5 +1,4 @@
-﻿using FFmpeg.AutoGen;
-using FistVR;
+﻿using FistVR;
 using H3MP.Networking;
 using H3MP.Patches;
 using System;
@@ -7,7 +6,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
-using Valve.Newtonsoft.Json.Linq;
 
 namespace H3MP.Tracking
 {
@@ -330,33 +328,36 @@ namespace H3MP.Tracking
             }
             else
             {
-                Type[] interfaces = physicalItem.dataObject.GetType().GetInterfaces();
-                if(interfaces != null)
+                if(physicalItem.dataObject != null)
                 {
-                    for (int i = 0; i < interfaces.Length; ++i)
+                    Type[] interfaces = physicalItem.dataObject.GetType().GetInterfaces();
+                    if (interfaces != null)
                     {
-                        if (interfaces[i] == PatchController.MW_IModularWeapon)
+                        for (int i = 0; i < interfaces.Length; ++i)
                         {
-                            IDictionary pointDict = PatchController.MW_IModularWeapon_get_AllAttachmentPoints.Invoke(physicalItem.dataObject, null) as IDictionary;
-                            List<byte> buffer = new List<byte>();
-                            buffer.AddRange(BitConverter.GetBytes(pointDict.Count));
-                            foreach (DictionaryEntry entry in pointDict)
+                            if (interfaces[i] == PatchController.MW_IModularWeapon)
                             {
-                                string groupID = (string)entry.Key;
-                                string selectedPart = (string)PatchController.MW_ModularWeaponPartsAttachmentPoint_SelectedModularWeaponPart.GetValue(entry.Value);
-                                buffer.AddRange(BitConverter.GetBytes(groupID.Length));
-                                buffer.AddRange(Encoding.ASCII.GetBytes(groupID));
-                                buffer.AddRange(BitConverter.GetBytes(selectedPart.Length));
-                                buffer.AddRange(Encoding.ASCII.GetBytes(selectedPart));
+                                IDictionary pointDict = PatchController.MW_IModularWeapon_get_AllAttachmentPoints.Invoke(physicalItem.dataObject, null) as IDictionary;
+                                List<byte> buffer = new List<byte>();
+                                buffer.AddRange(BitConverter.GetBytes(pointDict.Count));
+                                foreach (DictionaryEntry entry in pointDict)
+                                {
+                                    string groupID = (string)entry.Key;
+                                    string selectedPart = (string)PatchController.MW_ModularWeaponPartsAttachmentPoint_SelectedModularWeaponPart.GetValue(entry.Value);
+                                    buffer.AddRange(BitConverter.GetBytes(groupID.Length));
+                                    buffer.AddRange(Encoding.ASCII.GetBytes(groupID));
+                                    buffer.AddRange(BitConverter.GetBytes(selectedPart.Length));
+                                    buffer.AddRange(Encoding.ASCII.GetBytes(selectedPart));
 
-                                List<byte> tempBuffer = new List<byte>();
-                                TrackedItem.AddModulPartDataInvoke(tempBuffer, groupID, selectedPart, pointDict, physicalItem);
+                                    List<byte> tempBuffer = new List<byte>();
+                                    TrackedItem.AddModulPartDataInvoke(tempBuffer, groupID, selectedPart, pointDict, physicalItem);
 
-                                buffer.AddRange(BitConverter.GetBytes(tempBuffer.Count));
-                                buffer.AddRange(tempBuffer);
+                                    buffer.AddRange(BitConverter.GetBytes(tempBuffer.Count));
+                                    buffer.AddRange(tempBuffer);
+                                }
+                                additionalData = buffer.ToArray();
+                                break;
                             }
-                            additionalData = buffer.ToArray();
-                            break;
                         }
                     }
                 }
