@@ -350,7 +350,7 @@ namespace H3MP.Tracking
                                 buffer.AddRange(Encoding.ASCII.GetBytes(selectedPart));
 
                                 List<byte> tempBuffer = new List<byte>();
-                                physicalItem.AddModulPartDataInvoke(tempBuffer, groupID, selectedPart);
+                                TrackedItem.AddModulPartDataInvoke(tempBuffer, groupID, selectedPart, pointDict, physicalItem);
 
                                 buffer.AddRange(BitConverter.GetBytes(tempBuffer.Count));
                                 buffer.AddRange(tempBuffer);
@@ -729,13 +729,16 @@ namespace H3MP.Tracking
                                 string part = Encoding.ASCII.GetString(additionalData, offset, partLength);
                                 offset += partLength;
 
+                                offset += 4; // This is just because we also wrote the length of custom data before writing the custom data
+
+                                TrackedItem.PreConfigureModulPartInvoke(additionalData, offset, groupID, pointDict, physicalItem);
+
                                 // Note: This method (ProcessAdditionalData) is called by Instantiate(), so after the item's Awake()
                                 // It is at Awake that a modular weapon configures its default parts, so by now they should have been configured and 
                                 // making our own call here should be fine
                                 PatchController.MW_IModularWeapon_ConfigureModularWeaponPart.Invoke(physicalItem.dataObject, new object[] { pointDict[groupID], part, false });
 
-                                offset += 4; // This is just because we also wrote the length of custom data before writing the custom data
-                                physicalItem.ReadModulPartDataInvoke(additionalData, ref offset, groupID, pointDict);
+                                TrackedItem.ReadModulPartDataInvoke(additionalData, offset, groupID, pointDict, physicalItem);
                             }
                             break;
                         }

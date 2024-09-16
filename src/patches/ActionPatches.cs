@@ -1278,7 +1278,12 @@ namespace H3MP.Patches
                                 buffer.AddRange(Encoding.ASCII.GetBytes(groupID));
                                 buffer.AddRange(BitConverter.GetBytes(selectedPart.Length));
                                 buffer.AddRange(Encoding.ASCII.GetBytes(selectedPart));
-                                trackedItem.AddModulPartDataInvoke(buffer, groupID, selectedPart);
+
+                                List<byte> tempBuffer = new List<byte>();
+                                TrackedItem.AddModulPartDataInvoke(buffer, groupID, selectedPart, pointDict, trackedItem);
+
+                                buffer.AddRange(BitConverter.GetBytes(tempBuffer.Count));
+                                buffer.AddRange(tempBuffer);
                             }
                             trackedItem.itemData.additionalData = buffer.ToArray();
 

@@ -110,31 +110,49 @@ namespace H3MP.Tracking
         /// <param name="buffer">The data buffer</param>
         /// <param name="groupID">The part's group ID</param>
         /// <param name="selectedPart">The part's ID</param>
+        /// <param name="pointDict">The dictionary of part attachment points</param>
         /// <param name="trackedItem">The TrackedItem that has this modul part</param>
-        public delegate void AddModulPartDataDelegate(List<byte> buffer, string groupID, string selectedPart, TrackedItem trackedItem);
+        public delegate void AddModulPartDataDelegate(List<byte> buffer, string groupID, string selectedPart, IDictionary pointDict, TrackedItem trackedItem);
 
         /// <summary>
         /// CUSTOMIZATION
         /// Event called when we write additional data for a modul part on this TrackedItem
         /// </summary>
-        public event AddModulPartDataDelegate AddModulPartData;
+        public static event AddModulPartDataDelegate AddModulPartData;
 
         /// <summary>
         /// CUSTOMIZATION
         /// Delegate for the ReadModulPartData event
         /// </summary>
         /// <param name="additionalData">The data we are reading from</param>
-        /// <param name="offset">The offset we are currently reading at in additionalData</param>
+        /// <param name="offset">The offset custom data begins at</param>
         /// <param name="groupID">The part's group ID</param>
         /// <param name="pointDict">The dictionary of part attachment points</param>
         /// <param name="trackedItem">The TrackedItem that has this modul part</param>
-        public delegate void ReadModulPartDataDelegate(byte[] additionalData, ref int offset, string groupID, IDictionary pointDict, TrackedItem trackedItem);
+        public delegate void ReadModulPartDataDelegate(byte[] additionalData, int offset, string groupID, IDictionary pointDict, TrackedItem trackedItem);
 
         /// <summary>
         /// CUSTOMIZATION
         /// Event called when we read additional data for a modul part on this TrackedItem
         /// </summary>
-        public event ReadModulPartDataDelegate ReadModulPartData;
+        public static event ReadModulPartDataDelegate ReadModulPartData;
+
+        /// <summary>
+        /// CUSTOMIZATION
+        /// Delegate for the PreConfigureModulPartData event
+        /// </summary>
+        /// <param name="additionalData">The data we will be reading from</param>
+        /// <param name="offset">The offset custom data begins at</param>
+        /// <param name="groupID">The part's group ID</param>
+        /// <param name="pointDict">The dictionary of part attachment points</param>
+        /// <param name="trackedItem">The TrackedItem that has this modul part</param>
+        public delegate void PreConfigureModulPartDataDelegate(byte[] additionalData, int offset, string groupID, IDictionary pointDict, TrackedItem trackedItem);
+
+        /// <summary>
+        /// CUSTOMIZATION
+        /// Event called before we configure the modul part when processing additional data
+        /// </summary>
+        public static event PreConfigureModulPartDataDelegate PreConfigureModulPartData;
 
         public override void Awake()
         {
@@ -894,19 +912,27 @@ namespace H3MP.Tracking
             }
         }
 
-        public void AddModulPartDataInvoke(List<byte> buffer, string groupID, string selectedPart)
+        public static void AddModulPartDataInvoke(List<byte> buffer, string groupID, string selectedPart, IDictionary pointDict, TrackedItem trackedItem)
         {
             if(AddModulPartData != null)
             {
-                AddModulPartData(buffer, groupID, selectedPart, this);
+                AddModulPartData(buffer, groupID, selectedPart, pointDict, trackedItem);
             }
         }
 
-        public void ReadModulPartDataInvoke(byte[] additionalData, ref int offset, string groupID, IDictionary pointDict)
+        public static void ReadModulPartDataInvoke(byte[] additionalData, int offset, string groupID, IDictionary pointDict, TrackedItem trackedItem)
         {
             if(ReadModulPartData != null)
             {
-                ReadModulPartData(additionalData, ref offset, groupID, pointDict, this);
+                ReadModulPartData(additionalData, offset, groupID, pointDict, trackedItem);
+            }
+        }
+
+        public static void PreConfigureModulPartInvoke(byte[] additionalData, int offset, string groupID, IDictionary pointDict, TrackedItem trackedItem)
+        {
+            if(PreConfigureModulPartData != null)
+            {
+                PreConfigureModulPartData(additionalData, offset, groupID, pointDict, trackedItem);
             }
         }
 

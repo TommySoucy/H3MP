@@ -5734,7 +5734,7 @@ namespace H3MP.Networking
                         buffer.AddRange(Encoding.ASCII.GetBytes(newSlectedPart));
 
                         List<byte> tempBuffer = new List<byte>();
-                        trackedItemData.physicalItem.AddModulPartDataInvoke(tempBuffer, newGroupID, newSlectedPart);
+                        TrackedItem.AddModulPartDataInvoke(tempBuffer, newGroupID, newSlectedPart, pointDict, trackedItemData.physicalItem);
 
                         buffer.AddRange(BitConverter.GetBytes(tempBuffer.Count));
                         buffer.AddRange(tempBuffer);
