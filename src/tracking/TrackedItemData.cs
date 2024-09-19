@@ -730,7 +730,8 @@ namespace H3MP.Tracking
                                 string part = Encoding.ASCII.GetString(additionalData, offset, partLength);
                                 offset += partLength;
 
-                                offset += 4; // This is just because we also wrote the length of custom data before writing the custom data
+                                int customDataLength = BitConverter.ToInt32(additionalData, offset);
+                                offset += 4;
 
                                 TrackedItem.PreConfigureModulPartInvoke(additionalData, offset, groupID, pointDict, physicalItem);
 
@@ -740,6 +741,8 @@ namespace H3MP.Tracking
                                 PatchController.MW_IModularWeapon_ConfigureModularWeaponPart.Invoke(physicalItem.dataObject, new object[] { pointDict[groupID], part, false });
 
                                 TrackedItem.ReadModulPartDataInvoke(additionalData, offset, groupID, pointDict, physicalItem);
+
+                                offset += customDataLength;
                             }
                             break;
                         }

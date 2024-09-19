@@ -977,11 +977,11 @@ namespace H3MP.Tracking
             {
                 if (newData != null)
                 {
-                    return updateGivenFunc(newData);
+                    return updateGivenFunc == null ? false : updateGivenFunc(newData);
                 }
                 else
                 {
-                    return updateFunc();
+                    return updateFunc == null ? false : updateFunc();
                 }
             }
 
@@ -1246,7 +1246,9 @@ namespace H3MP.Tracking
             // Place holder
             // All round states are currently being updated through specific events
             // There is no need for updates
+            // Obsolete, this was added because:
             // But this method must exist since tracked round dataObject is set
+            // Which is no longer a problem, but these methods were kept for posterity
             return false;
         }
 
@@ -1255,7 +1257,9 @@ namespace H3MP.Tracking
             // Place holder
             // All round states are currently being updated through specific events
             // There is no need for updates
+            // Obsolete, this was added because:
             // But this method must exist since tracked round dataObject is set
+            // Which is no longer a problem, but these methods were kept for posterity
             return false;
         }
 
