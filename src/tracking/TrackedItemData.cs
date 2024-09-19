@@ -719,7 +719,7 @@ namespace H3MP.Tracking
                             IDictionary pointDict = PatchController.MW_IModularWeapon_get_AllAttachmentPoints.Invoke(physicalItem.dataObject, null) as IDictionary;
                             int partCount = BitConverter.ToInt32(additionalData, offset);
                             offset += 4;
-                            for(int j=0; j < partCount; ++j)
+                            for (int j = 0; j < partCount; ++j) 
                             {
                                 int groupIDLength = BitConverter.ToInt32(additionalData, offset);
                                 offset += 4;
@@ -738,7 +738,9 @@ namespace H3MP.Tracking
                                 // Note: This method (ProcessAdditionalData) is called by Instantiate(), so after the item's Awake()
                                 // It is at Awake that a modular weapon configures its default parts, so by now they should have been configured and 
                                 // making our own call here should be fine
+                                ++ModularWeaponPartPatch.skip;
                                 PatchController.MW_IModularWeapon_ConfigureModularWeaponPart.Invoke(physicalItem.dataObject, new object[] { pointDict[groupID], part, false });
+                                --ModularWeaponPartPatch.skip;
 
                                 TrackedItem.ReadModulPartDataInvoke(additionalData, offset, groupID, pointDict, physicalItem);
 

@@ -1224,7 +1224,7 @@ namespace H3MP.Patches
     {
         public static int skip;
 
-        // To track activation to apply stats to weapon
+        // To track activation to sync across network
         // Note that by now, we assume the part's attachment point's selectedPart and modularWeaponPartsAttachmentPoint.ModularPartPoint fields have been set
         static void EnablePrefix(MonoBehaviour __instance)
         {
@@ -1244,7 +1244,7 @@ namespace H3MP.Patches
             MonoBehaviour modularWeapon = null;
             for (int i=0; i < partParentScripts.Length; ++i)
             {
-                Type[] interfaces = partParentScripts.GetType().GetInterfaces();
+                Type[] interfaces = partParentScripts[i].GetType().GetInterfaces();
                 for(int j=0; j < interfaces.Length; ++j)
                 {
                     if (interfaces[j] == PatchController.MW_IModularWeapon)
