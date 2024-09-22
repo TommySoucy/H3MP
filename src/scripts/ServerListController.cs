@@ -855,7 +855,14 @@ namespace H3MP.Scripts
                     if (hostPortForwardedToggleCheck.activeSelf)
                     {
                         // Must first make sure we forward the port through UPnP if necessary
-                        CreateMappings();
+                        try
+                        {
+                            CreateMappings();
+                        }
+                        catch (Exception ex)
+                        {
+                            Mod.LogError("Failed to create UPnP mappings. Ensure UPnP is supported and enabled in your router: " + ex.Message + "\n" + ex.StackTrace);
+                        }
                     }
                     Mod.OnHostClicked();
                 }
