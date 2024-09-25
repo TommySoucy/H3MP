@@ -1,4 +1,5 @@
-﻿using FistVR;
+﻿using FFmpeg.AutoGen;
+using FistVR;
 using H3MP.Networking;
 using H3MP.Scripts;
 using H3MP.Tracking;
@@ -1266,6 +1267,22 @@ namespace H3MP.Patches
                         // Update local data
                         string groupID = (string)entry.Key;
                         string selectedPart = (string)PatchController.MW_ModularWeaponPartsAttachmentPoint_SelectedModularWeaponPart.GetValue(entry.Value);
+                        Transform modularPartPoint = (Transform)PatchController.MW_ModularWeaponPartsAttachmentPoint_ModularPartPoint.GetValue(entry.Value);
+                        MonoBehaviour[] partScripts = modularPartPoint.GetComponents<MonoBehaviour>();
+                        MonoBehaviour modularWeaponPart = null;
+                        for (int j = 0; j < partScripts.Length; ++j)
+                        {
+                            if (partScripts[j].GetType() == PatchController.MW_ModularWeaponPart)
+                            {
+                                modularWeaponPart = partScripts[j];
+                                break;
+                            }
+                        }
+                        string skinID = null;
+                        if (modularWeaponPart != null)
+                        {
+                            skinID = (string)PatchController.MW_ModularWeaponPart_SelectedModularWeaponPartSkinID.GetValue(modularWeaponPart);
+                        }
                         TrackedItem trackedItem = modularWeapon.GetComponent<TrackedItem>();
 
                         if(trackedItem != null)
@@ -1278,6 +1295,15 @@ namespace H3MP.Patches
                                 buffer.AddRange(Encoding.ASCII.GetBytes(groupID));
                                 buffer.AddRange(BitConverter.GetBytes(selectedPart.Length));
                                 buffer.AddRange(Encoding.ASCII.GetBytes(selectedPart));
+                                if (skinID == null)
+                                {
+                                    buffer.AddRange(BitConverter.GetBytes(0));
+                                }
+                                else
+                                {
+                                    buffer.AddRange(BitConverter.GetBytes(skinID.Length));
+                                    buffer.AddRange(Encoding.ASCII.GetBytes(skinID));
+                                }
 
                                 List<byte> tempBuffer = new List<byte>();
                                 TrackedItem.AddModulPartDataInvoke(buffer, groupID, selectedPart, pointDict, trackedItem);
@@ -1290,11 +1316,11 @@ namespace H3MP.Patches
                             // Send to others
                             if (ThreadManager.host)
                             {
-                                ServerSend.SetModulWeaponPart(trackedItem.itemData.trackedID, groupID, selectedPart);
+                                ServerSend.SetModulWeaponPart(trackedItem.itemData.trackedID, groupID, selectedPart, skinID);
                             }
                             else
                             {
-                                ClientSend.SetModulWeaponPart(trackedItem.itemData.trackedID, groupID, selectedPart);
+                                ClientSend.SetModulWeaponPart(trackedItem.itemData.trackedID, groupID, selectedPart, skinID);
                             }
                         }
 

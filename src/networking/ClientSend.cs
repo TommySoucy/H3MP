@@ -2911,13 +2911,22 @@ namespace H3MP.Networking
             }
         }
 
-        public static void SetModulWeaponPart(int trackedID, string groupID, string selectedPart)
+        public static void SetModulWeaponPart(int trackedID, string groupID, string selectedPart, string skinID)
         {
             using (Packet packet = new Packet((int)ClientPackets.setModulWeaponPart))
             {
                 packet.Write(trackedID);
                 packet.Write(groupID);
                 packet.Write(selectedPart);
+                if(skinID == null)
+                {
+                    packet.Write(false);
+                }
+                else
+                {
+                    packet.Write(true);
+                    packet.Write(skinID);
+                }
 
                 SendTCPData(packet);
             }

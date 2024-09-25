@@ -73,12 +73,14 @@ namespace H3MP.Patches
         public static int MWAsmIdx = -1;
         public static Type MW_IModularWeapon;
         public static MethodInfo MW_IModularWeapon_get_AllAttachmentPoints;
+        public static MethodInfo MW_IModularWeapon_ConfigureModularWeaponPart;
+        public static MethodInfo MW_IModularWeapon_ApplySkin;
         public static Type MW_ModularWeaponPartsAttachmentPoint;
         public static FieldInfo MW_ModularWeaponPartsAttachmentPoint_ModularPartsGroupID;
         public static FieldInfo MW_ModularWeaponPartsAttachmentPoint_SelectedModularWeaponPart;
         public static FieldInfo MW_ModularWeaponPartsAttachmentPoint_ModularPartPoint;
-        public static MethodInfo MW_IModularWeapon_ConfigureModularWeaponPart;
         public static Type MW_ModularWeaponPart;
+        public static FieldInfo MW_ModularWeaponPart_SelectedModularWeaponPartSkinID;
         public static MethodInfo MW_ModularWeaponPart_EnablePart;
 
         // Collects fields/types relevant to mod compatibility patches
@@ -138,11 +140,13 @@ namespace H3MP.Patches
                     MW_IModularWeapon = assemblies[MWAsmIdx].GetType("ModularWorkshop.IModularWeapon");
                     MW_IModularWeapon_get_AllAttachmentPoints = MW_IModularWeapon.GetMethod("get_AllAttachmentPoints", BindingFlags.Public | BindingFlags.Instance);
                     MW_IModularWeapon_ConfigureModularWeaponPart = MW_IModularWeapon.GetMethod("ConfigureModularWeaponPart", BindingFlags.Public | BindingFlags.Instance);
+                    MW_IModularWeapon_ApplySkin = MW_IModularWeapon.GetMethod("ApplySkin", BindingFlags.Public | BindingFlags.Instance);
                     MW_ModularWeaponPartsAttachmentPoint = assemblies[MWAsmIdx].GetType("ModularWorkshop.ModularWeaponPartsAttachmentPoint");
                     MW_ModularWeaponPartsAttachmentPoint_ModularPartsGroupID = MW_ModularWeaponPartsAttachmentPoint.GetField("ModularPartsGroupID", BindingFlags.Public | BindingFlags.Instance);
                     MW_ModularWeaponPartsAttachmentPoint_SelectedModularWeaponPart = MW_ModularWeaponPartsAttachmentPoint.GetField("SelectedModularWeaponPart", BindingFlags.Public | BindingFlags.Instance);
                     MW_ModularWeaponPartsAttachmentPoint_ModularPartPoint = MW_ModularWeaponPartsAttachmentPoint.GetField("ModularPartPoint", BindingFlags.Public | BindingFlags.Instance);
                     MW_ModularWeaponPart = assemblies[MWAsmIdx].GetType("ModularWorkshop.ModularWeaponPart");
+                    MW_ModularWeaponPart_SelectedModularWeaponPartSkinID = MW_ModularWeaponPart.GetField("SelectedModularWeaponPartSkinID", BindingFlags.Public | BindingFlags.Instance);
                     MW_ModularWeaponPart_EnablePart = MW_ModularWeaponPart.GetMethod("EnablePart", BindingFlags.Public | BindingFlags.Instance);
                 }
             }

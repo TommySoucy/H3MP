@@ -5494,6 +5494,11 @@ namespace H3MP.Networking
             {
                 string groupID = packet.ReadString();
                 string selectedPart = packet.ReadString();
+                string skinID = null;
+                if (packet.ReadBool())
+                {
+                    skinID = packet.ReadString();
+                }
 
                 if (trackedItemData.physical == null) // Update only data
                 {
@@ -5512,6 +5517,14 @@ namespace H3MP.Networking
                         offset += 4;
                         string part = Encoding.ASCII.GetString(trackedItemData.additionalData, offset, partLength);
                         offset += partLength;
+                        int skinLength = BitConverter.ToInt32(trackedItemData.additionalData, offset);
+                        offset += 4;
+                        string skin = null;
+                        if (skinLength > 0)
+                        {
+                            skin = Encoding.ASCII.GetString(trackedItemData.additionalData, offset, partLength);
+                            offset += skinLength;
+                        }
 
                         buffer.AddRange(BitConverter.GetBytes(groupIDLength));
                         buffer.AddRange(Encoding.ASCII.GetBytes(oldGroupID));
@@ -5519,11 +5532,21 @@ namespace H3MP.Networking
                         {
                             buffer.AddRange(BitConverter.GetBytes(selectedPart.Length));
                             buffer.AddRange(Encoding.ASCII.GetBytes(selectedPart));
+                            buffer.AddRange(BitConverter.GetBytes(skinID == null ? 0 : skinID.Length));
+                            if (skinID != null)
+                            {
+                                buffer.AddRange(Encoding.ASCII.GetBytes(skinID));
+                            }
                         }
                         else
                         {
                             buffer.AddRange(BitConverter.GetBytes(partLength));
                             buffer.AddRange(Encoding.ASCII.GetBytes(part));
+                            buffer.AddRange(BitConverter.GetBytes(skinLength));
+                            if (skinLength > 0)
+                            {
+                                buffer.AddRange(Encoding.ASCII.GetBytes(skin));
+                            }
                         }
 
                         // Readd custom data
@@ -5545,6 +5568,10 @@ namespace H3MP.Networking
                     // Configure part
                     ++ModularWeaponPartPatch.skip;
                     PatchController.MW_IModularWeapon_ConfigureModularWeaponPart.Invoke(trackedItemData.physicalItem.dataObject, new object[] { pointDict[groupID], selectedPart, false });
+                    if (skinID != null)
+                    {
+                        PatchController.MW_IModularWeapon_ApplySkin.Invoke(trackedItemData.physicalItem.dataObject, new object[] { groupID, skinID });
+                    }
                     --ModularWeaponPartPatch.skip;
 
                     // Update data
@@ -5558,6 +5585,27 @@ namespace H3MP.Networking
                         buffer.AddRange(Encoding.ASCII.GetBytes(newGroupID));
                         buffer.AddRange(BitConverter.GetBytes(newSlectedPart.Length));
                         buffer.AddRange(Encoding.ASCII.GetBytes(newSlectedPart));
+                        Transform modularPartPoint = (Transform)PatchController.MW_ModularWeaponPartsAttachmentPoint_ModularPartPoint.GetValue(entry.Value);
+                        MonoBehaviour[] partScripts = modularPartPoint.GetComponents<MonoBehaviour>();
+                        MonoBehaviour modularWeaponPart = null;
+                        for (int j = 0; j < partScripts.Length; ++j)
+                        {
+                            if (partScripts[j].GetType() == PatchController.MW_ModularWeaponPart)
+                            {
+                                modularWeaponPart = partScripts[j];
+                                break;
+                            }
+                        }
+                        if (modularWeaponPart == null)
+                        {
+                            buffer.AddRange(BitConverter.GetBytes(0));
+                        }
+                        else
+                        {
+                            string newSkinID = (string)PatchController.MW_ModularWeaponPart_SelectedModularWeaponPartSkinID.GetValue(modularWeaponPart);
+                            buffer.AddRange(BitConverter.GetBytes(newSkinID.Length));
+                            buffer.AddRange(Encoding.ASCII.GetBytes(newSkinID));
+                        }
 
                         List<byte> tempBuffer = new List<byte>();
                         TrackedItem.AddModulPartDataInvoke(tempBuffer, newGroupID, newSlectedPart, pointDict, trackedItemData.physicalItem);
