@@ -11,6 +11,7 @@ using System.Reflection;
 using System.Reflection.Emit;
 using System.Text;
 using UnityEngine;
+using static UnityEngine.EventSystems.EventTrigger;
 
 namespace H3MP.Patches
 {
@@ -1215,6 +1216,16 @@ namespace H3MP.Patches
 
             PatchController.Verify(modularWeaponPartEnableOriginal, harmony, true);
             harmony.Patch(modularWeaponPartEnableOriginal, new HarmonyMethod(modularWeaponPartEnablePrefix));
+
+            ++patchIndex; // 73
+
+            // IModularWeaponPatch
+            MethodInfo modularWeaponApplySkinOriginal = PatchController.MW_IModularWeapon_ApplySkin;
+            MethodInfo modularWeaponApplySkinPrefix = typeof(IModularWeaponPatch).GetMethod("ApplySkinPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo modularWeaponApplySkinPostfix = typeof(IModularWeaponPatch).GetMethod("ApplySkinPostfix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(modularWeaponApplySkinOriginal, harmony, true);
+            harmony.Patch(modularWeaponApplySkinOriginal, new HarmonyMethod(modularWeaponApplySkinPrefix), new HarmonyMethod(modularWeaponApplySkinPostfix));
         }
     }
 
@@ -1325,6 +1336,115 @@ namespace H3MP.Patches
                         }
 
                         break;
+                    }
+                }
+            }
+        }
+    }
+
+    // Patches IModularWeapon
+    class IModularWeaponPatch
+    {
+        public static string preSkin;
+
+        // To track application to sync across network
+        static void ApplySkinPrefix(object __instance, string ModularPartsGroupID, string SkinName)
+        {
+            if (Mod.managerObject == null || ModularWeaponPartPatch.skip > 0)
+            {
+                return;
+            }
+
+            preSkin = null;
+
+            IDictionary pointDict = PatchController.MW_IModularWeapon_get_AllAttachmentPoints.Invoke(__instance, null) as IDictionary;
+            object point = pointDict[ModularPartsGroupID];
+            Transform modularPartPoint = (Transform)PatchController.MW_ModularWeaponPartsAttachmentPoint_ModularPartPoint.GetValue(point);
+            MonoBehaviour[] partScripts = modularPartPoint.GetComponents<MonoBehaviour>();
+            MonoBehaviour modularWeaponPart = null;
+            for (int j = 0; j < partScripts.Length; ++j)
+            {
+                if (partScripts[j].GetType() == PatchController.MW_ModularWeaponPart)
+                {
+                    modularWeaponPart = partScripts[j];
+                    break;
+                }
+            }
+            if (modularWeaponPart != null)
+            {
+                preSkin = (string)PatchController.MW_ModularWeaponPart_SelectedModularWeaponPartSkinID.GetValue(modularWeaponPart);
+            }
+        }
+
+        static void ApplySkinPostfix(object __instance, string ModularPartsGroupID, string SkinName)
+        {
+            if (Mod.managerObject == null || ModularWeaponPartPatch.skip > 0)
+            {
+                return;
+            }
+
+            IDictionary pointDict = PatchController.MW_IModularWeapon_get_AllAttachmentPoints.Invoke(__instance, null) as IDictionary;
+            object point = pointDict[ModularPartsGroupID];
+            Transform modularPartPoint = (Transform)PatchController.MW_ModularWeaponPartsAttachmentPoint_ModularPartPoint.GetValue(point);
+            MonoBehaviour[] partScripts = modularPartPoint.GetComponents<MonoBehaviour>();
+            MonoBehaviour modularWeaponPart = null;
+            for (int j = 0; j < partScripts.Length; ++j)
+            {
+                if (partScripts[j].GetType() == PatchController.MW_ModularWeaponPart)
+                {
+                    modularWeaponPart = partScripts[j];
+                    break;
+                }
+            }
+            string skin = null;
+            if (modularWeaponPart != null)
+            {
+                skin = (string)PatchController.MW_ModularWeaponPart_SelectedModularWeaponPartSkinID.GetValue(modularWeaponPart);
+            }
+
+            // Only update and send to others if skin actually changed
+            if((skin != null && preSkin == null) || (skin == null && preSkin != null) || !(skin != null && skin.Equals(preSkin)))
+            {
+                // Update local data
+                string selectedPart = (string)PatchController.MW_ModularWeaponPartsAttachmentPoint_SelectedModularWeaponPart.GetValue(point);
+                TrackedItem trackedItem = ((MonoBehaviour)__instance).GetComponent<TrackedItem>();
+
+                if (trackedItem != null)
+                {
+                    List<byte> buffer = new List<byte>();
+                    buffer.AddRange(BitConverter.GetBytes(pointDict.Count));
+                    foreach (DictionaryEntry innerEntry in pointDict)
+                    {
+                        buffer.AddRange(BitConverter.GetBytes(ModularPartsGroupID.Length));
+                        buffer.AddRange(Encoding.ASCII.GetBytes(ModularPartsGroupID));
+                        buffer.AddRange(BitConverter.GetBytes(selectedPart.Length));
+                        buffer.AddRange(Encoding.ASCII.GetBytes(selectedPart));
+                        if (skin == null)
+                        {
+                            buffer.AddRange(BitConverter.GetBytes(0));
+                        }
+                        else
+                        {
+                            buffer.AddRange(BitConverter.GetBytes(skin.Length));
+                            buffer.AddRange(Encoding.ASCII.GetBytes(skin));
+                        }
+
+                        List<byte> tempBuffer = new List<byte>();
+                        TrackedItem.AddModulPartDataInvoke(buffer, ModularPartsGroupID, selectedPart, pointDict, trackedItem);
+
+                        buffer.AddRange(BitConverter.GetBytes(tempBuffer.Count));
+                        buffer.AddRange(tempBuffer);
+                    }
+                    trackedItem.itemData.additionalData = buffer.ToArray();
+
+                    // Send to others
+                    if (ThreadManager.host)
+                    {
+                        ServerSend.SetModulWeaponPart(trackedItem.itemData.trackedID, ModularPartsGroupID, selectedPart, skin);
+                    }
+                    else
+                    {
+                        ClientSend.SetModulWeaponPart(trackedItem.itemData.trackedID, ModularPartsGroupID, selectedPart, skin);
                     }
                 }
             }
