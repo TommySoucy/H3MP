@@ -989,8 +989,30 @@ namespace H3MP.Patches
     }
 
     // Patches BallisticProjectile.MoveBullet to ignore latest IFVRDamageable if necessary
-    class BallisticProjectileDamageablePatch
+    public class BallisticProjectileDamageablePatch
     {
+        /// <summary>
+        /// CUSTOMIZATION
+        /// Delegate for the OnDamage event
+        /// </summary>
+        /// <param name="fireArm">The firearm that fired this projectile</param>
+        /// <param name="damageable">The damageable we are damaging</param>
+        public delegate void OnDamageDelegate(FVRFireArm fireArm, IFVRDamageable damageable);
+
+        /// <summary>
+        /// CUSTOMIZATION
+        /// Event called when this projectile causes damage
+        /// </summary>
+        public static event OnDamageDelegate OnDamage;
+
+        public static void OnDamageInvoke(FVRFireArm fireArm, IFVRDamageable damageable)
+        {
+            if(OnDamage!= null)
+            {
+                OnDamage(fireArm, damageable);
+            }
+        }
+
         // This will only let Damage() be called on the damageable by a single player
         // We will apply damage if:
         //  Damageable not identifiable across network
@@ -1001,6 +1023,10 @@ namespace H3MP.Patches
             // Skip if not connected or no one to send data to
             if (Mod.managerObject == null || GameManager.playersPresent.Count == 0)
             {
+                if (flag2)
+                {
+                    OnDamageInvoke(tempFA, damageable);
+                }
                 return flag2;
             }
 
@@ -1010,6 +1036,7 @@ namespace H3MP.Patches
                 TrackedObject damageableObject = GameManager.trackedObjectByDamageable.TryGetValue(damageable, out damageableObject) ? damageableObject : null;
                 if(!(damageable is FVRPlayerHitbox) && damageableObject == null)
                 {
+                    OnDamageInvoke(tempFA, damageable);
                     return true; // Damageable object client side (not tracked), apply damage
                 }
                 else // Damageable object tracked, only want to apply damage if firearm controller
@@ -1017,7 +1044,12 @@ namespace H3MP.Patches
                     if (tempFA == null) // Can't identify firearm, let the damage be controlled by the best host
                     {
                         int bestHost = Mod.GetBestPotentialObjectHost(-1);
-                        return bestHost == -1 || bestHost == GameManager.ID;
+                        bool causeDamage = bestHost == -1 || bestHost == GameManager.ID;
+                        if (causeDamage)
+                        {
+                            OnDamageInvoke(tempFA, damageable);
+                        }
+                        return causeDamage;
                     }
                     else // We have a ref to the firearm that fired this projectile
                     {
@@ -1029,7 +1061,12 @@ namespace H3MP.Patches
                         }
                         else
                         {
-                            return trackedItem.data.controller == GameManager.ID;
+                            bool causeDamage = trackedItem.data.controller == GameManager.ID;
+                            if (causeDamage)
+                            {
+                                OnDamageInvoke(tempFA, damageable);
+                            }
+                            return causeDamage;
                         }
                     }
                 }
@@ -1310,10 +1347,55 @@ namespace H3MP.Patches
     }
 
     // Patches Explosion.Explode to ignore latest IFVRDamageable if necessary
-    class ExplosionDamageablePatch
+    public class ExplosionDamageablePatch
     {
+        /// <summary>
+        /// CUSTOMIZATION
+        /// Delegate for the OnAddControllerReference event
+        /// </summary>
+        /// <param name="dest">The object to put the reference on</param>
+        /// <param name="src">The monobehaviour of the object we want to keep a reference to</param>
+        public delegate void OnAddControllerReferenceDelegate(GameObject dest, MonoBehaviour src);
+
+        /// <summary>
+        /// CUSTOMIZATION
+        /// Event called when this projectile causes damage
+        /// </summary>
+        public static event OnAddControllerReferenceDelegate OnAddControllerReference;
+
+        public static void OnAddControllerReferenceInvoke(GameObject dest, MonoBehaviour src)
+        {
+            if (OnAddControllerReference != null)
+            {
+                OnAddControllerReference(dest, src);
+            }
+        }
+        /// <summary>
+        /// CUSTOMIZATION
+        /// Delegate for the OnDamage event
+        /// </summary>
+        /// <param name="mb">The monobehaviour of the object that caused the damage</param>
+        /// <param name="damageable">The damageable</param>
+        public delegate void OnDamageDelegate(MonoBehaviour mb, IFVRDamageable damageable);
+
+        /// <summary>
+        /// CUSTOMIZATION
+        /// Event called when a damager causes damage
+        /// </summary>
+        public static event OnDamageDelegate OnDamage;
+
+        public static void OnDamageInvoke(MonoBehaviour mb, IFVRDamageable damageable)
+        {
+            if (OnDamage != null)
+            {
+                OnDamage(mb, damageable);
+            }
+        }
+
         public static void AddControllerReference(GameObject dest, MonoBehaviour src = null)
         {
+            OnAddControllerReferenceInvoke(dest, src);
+
             // Skip if not connected or no one to send data to
             if (Mod.managerObject == null || GameManager.playersPresent.Count == 0 || dest == null)
             {
@@ -1338,6 +1420,10 @@ namespace H3MP.Patches
             // Skip if not connected or no one to send data to
             if (Mod.managerObject == null || GameManager.playersPresent.Count == 0)
             {
+                if(original != null)
+                {
+                    OnDamageInvoke(mb, original);
+                }
                 return original;
             }
 
@@ -1346,6 +1432,10 @@ namespace H3MP.Patches
                 TrackedObject damageableObject = GameManager.trackedObjectByDamageable.TryGetValue(original, out damageableObject) ? damageableObject : null;
                 if (!(original is FVRPlayerHitbox) && damageableObject == null)
                 {
+                    if (original != null)
+                    {
+                        OnDamageInvoke(mb, original);
+                    }
                     return original; // Damageable object client side (not tracked), apply damage
                 }
                 else // Damageable object tracked, only want to apply damage if damager controller
@@ -1358,18 +1448,54 @@ namespace H3MP.Patches
                         {
                             // Controller of damaging item unknown, lest best postential host control it
                             int bestHost = Mod.GetBestPotentialObjectHost(-1);
-                            return (bestHost == GameManager.ID || bestHost == -1) ? original : null;
+                            bool causeDamage = bestHost == GameManager.ID || bestHost == -1;
+                            if (causeDamage)
+                            {
+                                if(original != null)
+                                {
+                                    OnDamageInvoke(mb, original);
+                                }
+                                return original;
+                            }
+                            else
+                            {
+                                return null;
+                            }
                         }
                         else // We have a ref to the item itself
                         {
                             // We only want to let this item do damage if we control it
-                            return ti.data.controller == GameManager.ID ? original : null;
+                            bool causeDamage = ti.data.controller == GameManager.ID;
+                            if (causeDamage)
+                            {
+                                if (original != null)
+                                {
+                                    OnDamageInvoke(mb, original);
+                                }
+                                return original;
+                            }
+                            else
+                            {
+                                return null;
+                            }
                         }
                     }
                     else // We have a ref to the controller of the item that caused this damage
                     {
                         // We only want to let this item do damage if we control it
-                        return cr.controller == GameManager.ID ? original : null;
+                        bool causeDamage = cr.controller == GameManager.ID;
+                        if (causeDamage)
+                        {
+                            if (original != null)
+                            {
+                                OnDamageInvoke(mb, original);
+                            }
+                            return original;
+                        }
+                        else
+                        {
+                            return null;
+                        }
                     }
                 }
             }
