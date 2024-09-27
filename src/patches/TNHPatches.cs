@@ -3236,7 +3236,7 @@ namespace H3MP.Patches
         static void Prefix(Vector3 p)
         {
             // If we are in a TNH instance hosted by a spectator host but spectator host is not yet in the game
-            if (Mod.managerObject != null || skip > 0)
+            if (Mod.managerObject == null || skip > 0)
             {
                 return;
             }

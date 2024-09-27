@@ -3924,7 +3924,14 @@ namespace H3MP.Tracking
             FireArmRoundType prevRoundType = asOBR.Chamber.RoundType;
             asOBR.Chamber.RoundType = roundType;
             ++ChamberPatch.chamberSkip;
-            asOBR.Chamber.SetRound(roundClass, asOBR.Chamber.transform.position, asOBR.Chamber.transform.rotation);
+            if(AM.DoesClassExistForType(roundClass, roundType))
+            {
+                asOBR.Chamber.SetRound(roundClass, asOBR.Chamber.transform.position, asOBR.Chamber.transform.rotation);
+            }
+            else
+            {
+                asOBR.Chamber.Autochamber(asOBR.Chamber.AutoChamberClass);
+            }
             --ChamberPatch.chamberSkip;
             asOBR.Chamber.RoundType = prevRoundType;
         }
