@@ -353,7 +353,7 @@ namespace H3MP.Tracking
                                     MonoBehaviour modularWeaponPart = null;
                                     for(int j=0; j < partScripts.Length; ++j)
                                     {
-                                        if (partScripts[j].GetType() == PatchController.MW_ModularWeaponPart)
+                                        if (partScripts[j].GetType() == PatchController.MW_ModularWeaponPart || partScripts[j].GetType().IsSubclassOf(PatchController.MW_ModularWeaponPart))
                                         {
                                             modularWeaponPart = partScripts[j];
                                             break;
@@ -756,8 +756,8 @@ namespace H3MP.Tracking
                                 string skinID = null;
                                 if (haveSkin)
                                 {
-                                    skinID = Encoding.ASCII.GetString(additionalData, offset, partLength);
-                                    offset += partLength;
+                                    skinID = Encoding.ASCII.GetString(additionalData, offset, skinLength);
+                                    offset += skinLength;
                                 }
 
                                 int customDataLength = BitConverter.ToInt32(additionalData, offset);

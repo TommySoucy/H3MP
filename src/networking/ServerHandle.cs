@@ -5766,7 +5766,7 @@ namespace H3MP.Networking
                         MonoBehaviour modularWeaponPart = null;
                         for (int j = 0; j < partScripts.Length; ++j)
                         {
-                            if (partScripts[j].GetType() == PatchController.MW_ModularWeaponPart)
+                            if (partScripts[j].GetType() == PatchController.MW_ModularWeaponPart || partScripts[j].GetType().IsSubclassOf(PatchController.MW_ModularWeaponPart))
                             {
                                 modularWeaponPart = partScripts[j];
                                 break;

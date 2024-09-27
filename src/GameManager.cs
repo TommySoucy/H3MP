@@ -1908,7 +1908,7 @@ namespace H3MP
                         OnSceneJoined(scene, sceneAtSceneLoadStart);
                     }
 
-                    // Do our own stuff, this is uaually what a mod would do when OnSceneJoined event is raised
+                    // Do our own stuff, this is usually what a mod would do when OnSceneJoined event is raised
                     TrackedGatlingGunData.firstInScene = true;
 
                     // Process list of objects we want to retrack

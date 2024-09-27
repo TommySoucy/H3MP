@@ -82,6 +82,20 @@ namespace H3MP.Patches
         public static Type MW_ModularWeaponPart;
         public static FieldInfo MW_ModularWeaponPart_SelectedModularWeaponPartSkinID;
         public static MethodInfo MW_ModularWeaponPart_EnablePart;
+        public static Type MW_ModularBoltActionRifle;
+        public static MethodInfo MW_ModularBoltActionRifle_ApplySkin;
+        public static Type MW_ModularBreakActionWeapon;
+        public static MethodInfo MW_ModularBreakActionWeapon_ApplySkin;
+        public static Type MW_ModularClosedBoltWeapon;
+        public static MethodInfo MW_ModularClosedBoltWeapon_ApplySkin;
+        public static Type MW_ModularHandgun;
+        public static MethodInfo MW_ModularHandgun_ApplySkin;
+        public static Type MW_ModularOpenBoltReceiver;
+        public static MethodInfo MW_ModularOpenBoltReceiver_ApplySkin;
+        public static Type MW_ModularRevolver;
+        public static MethodInfo MW_ModularRevolver_ApplySkin;
+        public static Type MW_ModularTubeFedShotgun;
+        public static MethodInfo MW_ModularTubeFedShotgun_ApplySkin;
 
         // Collects fields/types relevant to mod compatibility patches
         private static void GetCompatibilityData()
@@ -148,6 +162,20 @@ namespace H3MP.Patches
                     MW_ModularWeaponPart = assemblies[MWAsmIdx].GetType("ModularWorkshop.ModularWeaponPart");
                     MW_ModularWeaponPart_SelectedModularWeaponPartSkinID = MW_ModularWeaponPart.GetField("SelectedModularWeaponPartSkinID", BindingFlags.Public | BindingFlags.Instance);
                     MW_ModularWeaponPart_EnablePart = MW_ModularWeaponPart.GetMethod("EnablePart", BindingFlags.Public | BindingFlags.Instance);
+                    MW_ModularBoltActionRifle = assemblies[MWAsmIdx].GetType("ModularWorkshop.ModularBoltActionRifle");
+                    MW_ModularBoltActionRifle_ApplySkin = MW_ModularBoltActionRifle.GetMethod("ApplySkin", BindingFlags.Public | BindingFlags.Instance);
+                    MW_ModularBreakActionWeapon = assemblies[MWAsmIdx].GetType("ModularWorkshop.ModularBreakActionWeapon");
+                    MW_ModularBreakActionWeapon_ApplySkin = MW_ModularBreakActionWeapon.GetMethod("ApplySkin", BindingFlags.Public | BindingFlags.Instance);
+                    MW_ModularClosedBoltWeapon = assemblies[MWAsmIdx].GetType("ModularWorkshop.ModularClosedBoltWeapon");
+                    MW_ModularClosedBoltWeapon_ApplySkin = MW_ModularClosedBoltWeapon.GetMethod("ApplySkin", BindingFlags.Public | BindingFlags.Instance);
+                    MW_ModularHandgun = assemblies[MWAsmIdx].GetType("ModularWorkshop.ModularHandgun");
+                    MW_ModularHandgun_ApplySkin = MW_ModularHandgun.GetMethod("ApplySkin", BindingFlags.Public | BindingFlags.Instance);
+                    MW_ModularOpenBoltReceiver = assemblies[MWAsmIdx].GetType("ModularWorkshop.ModularOpenBoltReceiver");
+                    MW_ModularOpenBoltReceiver_ApplySkin = MW_ModularOpenBoltReceiver.GetMethod("ApplySkin", BindingFlags.Public | BindingFlags.Instance);
+                    MW_ModularRevolver = assemblies[MWAsmIdx].GetType("ModularWorkshop.ModularRevolver");
+                    MW_ModularRevolver_ApplySkin = MW_ModularRevolver.GetMethod("ApplySkin", BindingFlags.Public | BindingFlags.Instance);
+                    MW_ModularTubeFedShotgun = assemblies[MWAsmIdx].GetType("ModularWorkshop.ModularTubeFedShotgun");
+                    MW_ModularTubeFedShotgun_ApplySkin = MW_ModularTubeFedShotgun.GetMethod("ApplySkin", BindingFlags.Public | BindingFlags.Instance);
                 }
             }
         }

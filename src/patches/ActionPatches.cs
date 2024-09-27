@@ -1217,15 +1217,33 @@ namespace H3MP.Patches
             PatchController.Verify(modularWeaponPartEnableOriginal, harmony, true);
             harmony.Patch(modularWeaponPartEnableOriginal, new HarmonyMethod(modularWeaponPartEnablePrefix));
 
-            ++patchIndex; // 73
+            ++patchIndex; // 74
 
             // IModularWeaponPatch
-            MethodInfo modularWeaponApplySkinOriginal = PatchController.MW_IModularWeapon_ApplySkin;
+            MethodInfo modularBARApplySkinOriginal = PatchController.MW_ModularBoltActionRifle_ApplySkin;
+            MethodInfo modularBAWApplySkinOriginal = PatchController.MW_ModularBreakActionWeapon_ApplySkin;
+            MethodInfo modularCBWApplySkinOriginal = PatchController.MW_ModularClosedBoltWeapon_ApplySkin;
+            MethodInfo modularHandgunApplySkinOriginal = PatchController.MW_ModularHandgun_ApplySkin;
+            MethodInfo modularOBRApplySkinOriginal = PatchController.MW_ModularOpenBoltReceiver_ApplySkin;
+            MethodInfo modularRevolverApplySkinOriginal = PatchController.MW_ModularRevolver_ApplySkin;
+            MethodInfo modularTFSApplySkinOriginal = PatchController.MW_ModularTubeFedShotgun_ApplySkin;
             MethodInfo modularWeaponApplySkinPrefix = typeof(IModularWeaponPatch).GetMethod("ApplySkinPrefix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo modularWeaponApplySkinPostfix = typeof(IModularWeaponPatch).GetMethod("ApplySkinPostfix", BindingFlags.NonPublic | BindingFlags.Static);
 
-            PatchController.Verify(modularWeaponApplySkinOriginal, harmony, true);
-            harmony.Patch(modularWeaponApplySkinOriginal, new HarmonyMethod(modularWeaponApplySkinPrefix), new HarmonyMethod(modularWeaponApplySkinPostfix));
+            PatchController.Verify(modularBARApplySkinOriginal, harmony, true);
+            PatchController.Verify(modularBAWApplySkinOriginal, harmony, true);
+            PatchController.Verify(modularCBWApplySkinOriginal, harmony, true);
+            PatchController.Verify(modularHandgunApplySkinOriginal, harmony, true);
+            PatchController.Verify(modularOBRApplySkinOriginal, harmony, true);
+            PatchController.Verify(modularRevolverApplySkinOriginal, harmony, true);
+            PatchController.Verify(modularTFSApplySkinOriginal, harmony, true);
+            harmony.Patch(modularBARApplySkinOriginal, new HarmonyMethod(modularWeaponApplySkinPrefix), new HarmonyMethod(modularWeaponApplySkinPostfix));
+            harmony.Patch(modularBAWApplySkinOriginal, new HarmonyMethod(modularWeaponApplySkinPrefix), new HarmonyMethod(modularWeaponApplySkinPostfix));
+            harmony.Patch(modularCBWApplySkinOriginal, new HarmonyMethod(modularWeaponApplySkinPrefix), new HarmonyMethod(modularWeaponApplySkinPostfix));
+            harmony.Patch(modularHandgunApplySkinOriginal, new HarmonyMethod(modularWeaponApplySkinPrefix), new HarmonyMethod(modularWeaponApplySkinPostfix));
+            harmony.Patch(modularOBRApplySkinOriginal, new HarmonyMethod(modularWeaponApplySkinPrefix), new HarmonyMethod(modularWeaponApplySkinPostfix));
+            harmony.Patch(modularRevolverApplySkinOriginal, new HarmonyMethod(modularWeaponApplySkinPrefix), new HarmonyMethod(modularWeaponApplySkinPostfix));
+            harmony.Patch(modularTFSApplySkinOriginal, new HarmonyMethod(modularWeaponApplySkinPrefix), new HarmonyMethod(modularWeaponApplySkinPostfix));
         }
     }
 
@@ -1283,7 +1301,7 @@ namespace H3MP.Patches
                         MonoBehaviour modularWeaponPart = null;
                         for (int j = 0; j < partScripts.Length; ++j)
                         {
-                            if (partScripts[j].GetType() == PatchController.MW_ModularWeaponPart)
+                            if (partScripts[j].GetType() == PatchController.MW_ModularWeaponPart || partScripts[j].GetType().IsSubclassOf(PatchController.MW_ModularWeaponPart))
                             {
                                 modularWeaponPart = partScripts[j];
                                 break;
@@ -1364,7 +1382,7 @@ namespace H3MP.Patches
             MonoBehaviour modularWeaponPart = null;
             for (int j = 0; j < partScripts.Length; ++j)
             {
-                if (partScripts[j].GetType() == PatchController.MW_ModularWeaponPart)
+                if (partScripts[j].GetType() == PatchController.MW_ModularWeaponPart || partScripts[j].GetType().IsSubclassOf(PatchController.MW_ModularWeaponPart))
                 {
                     modularWeaponPart = partScripts[j];
                     break;
@@ -1390,7 +1408,7 @@ namespace H3MP.Patches
             MonoBehaviour modularWeaponPart = null;
             for (int j = 0; j < partScripts.Length; ++j)
             {
-                if (partScripts[j].GetType() == PatchController.MW_ModularWeaponPart)
+                if (partScripts[j].GetType() == PatchController.MW_ModularWeaponPart || partScripts[j].GetType().IsSubclassOf(PatchController.MW_ModularWeaponPart))
                 {
                     modularWeaponPart = partScripts[j];
                     break;
@@ -1403,7 +1421,7 @@ namespace H3MP.Patches
             }
 
             // Only update and send to others if skin actually changed
-            if((skin != null && preSkin == null) || (skin == null && preSkin != null) || !(skin != null && skin.Equals(preSkin)))
+            if ((skin != null && preSkin == null) || (skin == null && preSkin != null) || !(skin != null && skin.Equals(preSkin)))
             {
                 // Update local data
                 string selectedPart = (string)PatchController.MW_ModularWeaponPartsAttachmentPoint_SelectedModularWeaponPart.GetValue(point);
