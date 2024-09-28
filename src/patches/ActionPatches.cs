@@ -8321,15 +8321,15 @@ namespace H3MP.Patches
             float soundTravelDistanceMultByEnvironment = SM.GetSoundTravelDistanceMultByEnvironment(env);
             if (__instance.IsSuppressed())
             {
-                GM.CurrentSceneSettings.OnPerceiveableSound(__instance.AudioClipSet.Loudness_Suppressed, __instance.AudioClipSet.Loudness_Suppressed * soundTravelDistanceMultByEnvironment * 0.5f * globalLoudnessMultiplier, pos, IFF);
+                GM.CurrentSceneSettings.OnPerceiveableSound(__instance.AudioClipSet.Loudness_Suppressed, __instance.AudioClipSet.Loudness_Suppressed * soundTravelDistanceMultByEnvironment * 0.5f * globalLoudnessMultiplier, pos, IFF, GM.CurrentPlayerBody.PlayerEntities[0]);
             }
             else if (__instance.AudioClipSet.UsesLowPressureSet && !round.IsHighPressure)
             {
-                GM.CurrentSceneSettings.OnPerceiveableSound(__instance.AudioClipSet.Loudness_Primary * 0.6f, __instance.AudioClipSet.Loudness_Primary * 0.6f * soundTravelDistanceMultByEnvironment * globalLoudnessMultiplier, pos, IFF);
+                GM.CurrentSceneSettings.OnPerceiveableSound(__instance.AudioClipSet.Loudness_Primary * 0.6f, __instance.AudioClipSet.Loudness_Primary * 0.6f * soundTravelDistanceMultByEnvironment * globalLoudnessMultiplier, pos, IFF, GM.CurrentPlayerBody.PlayerEntities[0]);
             }
             else
             {
-                GM.CurrentSceneSettings.OnPerceiveableSound(__instance.AudioClipSet.Loudness_Primary, __instance.AudioClipSet.Loudness_Primary * soundTravelDistanceMultByEnvironment * globalLoudnessMultiplier, pos, IFF);
+                GM.CurrentSceneSettings.OnPerceiveableSound(__instance.AudioClipSet.Loudness_Primary, __instance.AudioClipSet.Loudness_Primary * soundTravelDistanceMultByEnvironment * globalLoudnessMultiplier, pos, IFF, GM.CurrentPlayerBody.PlayerEntities[0]);
             }
             if (!__instance.IsSuppressed())
             {
@@ -8432,15 +8432,15 @@ namespace H3MP.Patches
             float soundTravelDistanceMultByEnvironment = SM.GetSoundTravelDistanceMultByEnvironment(env);
             if (__instance.IsSuppressed())
             {
-                GM.CurrentSceneSettings.OnPerceiveableSound(__instance.AudioClipSet.Loudness_Suppressed, __instance.AudioClipSet.Loudness_Suppressed * soundTravelDistanceMultByEnvironment * 0.4f, pos, IFF);
+                GM.CurrentSceneSettings.OnPerceiveableSound(__instance.AudioClipSet.Loudness_Suppressed, __instance.AudioClipSet.Loudness_Suppressed * soundTravelDistanceMultByEnvironment * 0.4f, pos, IFF, GM.CurrentPlayerBody.PlayerEntities[0]);
             }
             else if (__instance.AudioClipSet.UsesLowPressureSet && !IsHighPressure)
             {
-                GM.CurrentSceneSettings.OnPerceiveableSound(__instance.AudioClipSet.Loudness_Primary * 0.6f, __instance.AudioClipSet.Loudness_Primary * 0.6f * soundTravelDistanceMultByEnvironment, pos, IFF);
+                GM.CurrentSceneSettings.OnPerceiveableSound(__instance.AudioClipSet.Loudness_Primary * 0.6f, __instance.AudioClipSet.Loudness_Primary * 0.6f * soundTravelDistanceMultByEnvironment, pos, IFF, GM.CurrentPlayerBody.PlayerEntities[0]);
             }
             else
             {
-                GM.CurrentSceneSettings.OnPerceiveableSound(__instance.AudioClipSet.Loudness_Primary, __instance.AudioClipSet.Loudness_Primary * soundTravelDistanceMultByEnvironment, pos, IFF);
+                GM.CurrentSceneSettings.OnPerceiveableSound(__instance.AudioClipSet.Loudness_Primary, __instance.AudioClipSet.Loudness_Primary * soundTravelDistanceMultByEnvironment, pos, IFF, GM.CurrentPlayerBody.PlayerEntities[0]);
             }
             if (!__instance.IsSuppressed())
             {

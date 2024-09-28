@@ -653,6 +653,7 @@ namespace H3MP.Networking
             Write(config.StunMultiplier);
             Write(config.StunTimeMax);
             Write(config.HasABrain);
+            Write(config.HasNightVision);
             Write(config.RegistersPassiveThreats);
             Write(config.CanBeKnockedOut);
             Write(config.MaxUnconsciousTime);
@@ -666,6 +667,11 @@ namespace H3MP.Networking
             Write(config.CanPickup_Ranged);
             Write(config.CanPickup_Melee);
             Write(config.CanPickup_Other);
+            Write(config.MaxThreatingIFFReactionRange_Visual);
+            Write(config.MaxThreatingIFFReactionRange_Sonic);
+            Write(config.AggroSensitivityMultiplier);
+            Write(config.EntityRecognitionSpeedMultiplier);
+            Write(config.CombatTargetIdentificationSpeedMultiplier);
             Write(config.DoesJointBreakKill_Head);
             Write(config.DoesJointBreakKill_Upper);
             Write(config.DoesJointBreakKill_Lower);
@@ -1176,6 +1182,7 @@ namespace H3MP.Networking
             config.StunMultiplier = ReadFloat();
             config.StunTimeMax = ReadFloat();
             config.HasABrain = ReadBool();
+            config.HasNightVision = ReadBool();
             config.RegistersPassiveThreats = ReadBool();
             config.CanBeKnockedOut = ReadBool();
             config.MaxUnconsciousTime = ReadFloat();
@@ -1189,6 +1196,11 @@ namespace H3MP.Networking
             config.CanPickup_Ranged = ReadBool();
             config.CanPickup_Melee = ReadBool();
             config.CanPickup_Other = ReadBool();
+            config.MaxThreatingIFFReactionRange_Visual = ReadFloat();
+            config.MaxThreatingIFFReactionRange_Sonic = ReadFloat();
+            config.AggroSensitivityMultiplier = ReadFloat();
+            config.EntityRecognitionSpeedMultiplier = ReadFloat();
+            config.CombatTargetIdentificationSpeedMultiplier = ReadFloat();
             config.DoesJointBreakKill_Head = ReadBool();
             config.DoesJointBreakKill_Upper = ReadBool();
             config.DoesJointBreakKill_Lower = ReadBool();

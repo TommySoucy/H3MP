@@ -119,7 +119,8 @@
       <HintPath>packages\HarmonyX.2.10.2\lib\net35\0Harmony.dll</HintPath>
     </Reference>
     <Reference Include="Assembly-CSharp, Version=1.2.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>packages\H3VR.GameLibs.0.113.4\lib\net35\Assembly-CSharp.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\Assembly-CSharp.dll</HintPath>
     </Reference>
     <Reference Include="Assembly-CSharp-firstpass, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>packages\H3VR.GameLibs.0.113.4\lib\net35\Assembly-CSharp-firstpass.dll</HintPath>
