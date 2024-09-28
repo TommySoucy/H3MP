@@ -1210,40 +1210,46 @@ namespace H3MP.Patches
 
             ++patchIndex; // 73
 
-            // ModularWeaponPartPatch
-            MethodInfo modularWeaponPartEnableOriginal = PatchController.MW_ModularWeaponPart_EnablePart;
-            MethodInfo modularWeaponPartEnablePrefix = typeof(ModularWeaponPartPatch).GetMethod("EnablePrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            if(PatchController.MWAsmIdx != -1)
+            {
+                // ModularWeaponPartPatch
+                MethodInfo modularWeaponPartEnableOriginal = PatchController.MW_ModularWeaponPart_EnablePart;
+                MethodInfo modularWeaponPartEnablePrefix = typeof(ModularWeaponPartPatch).GetMethod("EnablePrefix", BindingFlags.NonPublic | BindingFlags.Static);
 
-            PatchController.Verify(modularWeaponPartEnableOriginal, harmony, true);
-            harmony.Patch(modularWeaponPartEnableOriginal, new HarmonyMethod(modularWeaponPartEnablePrefix));
+                PatchController.Verify(modularWeaponPartEnableOriginal, harmony, true);
+                harmony.Patch(modularWeaponPartEnableOriginal, new HarmonyMethod(modularWeaponPartEnablePrefix));
+            }
 
             ++patchIndex; // 74
 
-            // IModularWeaponPatch
-            MethodInfo modularBARApplySkinOriginal = PatchController.MW_ModularBoltActionRifle_ApplySkin;
-            MethodInfo modularBAWApplySkinOriginal = PatchController.MW_ModularBreakActionWeapon_ApplySkin;
-            MethodInfo modularCBWApplySkinOriginal = PatchController.MW_ModularClosedBoltWeapon_ApplySkin;
-            MethodInfo modularHandgunApplySkinOriginal = PatchController.MW_ModularHandgun_ApplySkin;
-            MethodInfo modularOBRApplySkinOriginal = PatchController.MW_ModularOpenBoltReceiver_ApplySkin;
-            MethodInfo modularRevolverApplySkinOriginal = PatchController.MW_ModularRevolver_ApplySkin;
-            MethodInfo modularTFSApplySkinOriginal = PatchController.MW_ModularTubeFedShotgun_ApplySkin;
-            MethodInfo modularWeaponApplySkinPrefix = typeof(IModularWeaponPatch).GetMethod("ApplySkinPrefix", BindingFlags.NonPublic | BindingFlags.Static);
-            MethodInfo modularWeaponApplySkinPostfix = typeof(IModularWeaponPatch).GetMethod("ApplySkinPostfix", BindingFlags.NonPublic | BindingFlags.Static);
+            if (PatchController.MWAsmIdx != -1)
+            {
+                // IModularWeaponPatch
+                MethodInfo modularBARApplySkinOriginal = PatchController.MW_ModularBoltActionRifle_ApplySkin;
+                MethodInfo modularBAWApplySkinOriginal = PatchController.MW_ModularBreakActionWeapon_ApplySkin;
+                MethodInfo modularCBWApplySkinOriginal = PatchController.MW_ModularClosedBoltWeapon_ApplySkin;
+                MethodInfo modularHandgunApplySkinOriginal = PatchController.MW_ModularHandgun_ApplySkin;
+                MethodInfo modularOBRApplySkinOriginal = PatchController.MW_ModularOpenBoltReceiver_ApplySkin;
+                MethodInfo modularRevolverApplySkinOriginal = PatchController.MW_ModularRevolver_ApplySkin;
+                MethodInfo modularTFSApplySkinOriginal = PatchController.MW_ModularTubeFedShotgun_ApplySkin;
+                MethodInfo modularWeaponApplySkinPrefix = typeof(IModularWeaponPatch).GetMethod("ApplySkinPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+                MethodInfo modularWeaponApplySkinPostfix = typeof(IModularWeaponPatch).GetMethod("ApplySkinPostfix", BindingFlags.NonPublic | BindingFlags.Static);
 
-            PatchController.Verify(modularBARApplySkinOriginal, harmony, true);
-            PatchController.Verify(modularBAWApplySkinOriginal, harmony, true);
-            PatchController.Verify(modularCBWApplySkinOriginal, harmony, true);
-            PatchController.Verify(modularHandgunApplySkinOriginal, harmony, true);
-            PatchController.Verify(modularOBRApplySkinOriginal, harmony, true);
-            PatchController.Verify(modularRevolverApplySkinOriginal, harmony, true);
-            PatchController.Verify(modularTFSApplySkinOriginal, harmony, true);
-            harmony.Patch(modularBARApplySkinOriginal, new HarmonyMethod(modularWeaponApplySkinPrefix), new HarmonyMethod(modularWeaponApplySkinPostfix));
-            harmony.Patch(modularBAWApplySkinOriginal, new HarmonyMethod(modularWeaponApplySkinPrefix), new HarmonyMethod(modularWeaponApplySkinPostfix));
-            harmony.Patch(modularCBWApplySkinOriginal, new HarmonyMethod(modularWeaponApplySkinPrefix), new HarmonyMethod(modularWeaponApplySkinPostfix));
-            harmony.Patch(modularHandgunApplySkinOriginal, new HarmonyMethod(modularWeaponApplySkinPrefix), new HarmonyMethod(modularWeaponApplySkinPostfix));
-            harmony.Patch(modularOBRApplySkinOriginal, new HarmonyMethod(modularWeaponApplySkinPrefix), new HarmonyMethod(modularWeaponApplySkinPostfix));
-            harmony.Patch(modularRevolverApplySkinOriginal, new HarmonyMethod(modularWeaponApplySkinPrefix), new HarmonyMethod(modularWeaponApplySkinPostfix));
-            harmony.Patch(modularTFSApplySkinOriginal, new HarmonyMethod(modularWeaponApplySkinPrefix), new HarmonyMethod(modularWeaponApplySkinPostfix));
+                PatchController.Verify(modularBARApplySkinOriginal, harmony, true);
+                PatchController.Verify(modularBAWApplySkinOriginal, harmony, true);
+                PatchController.Verify(modularCBWApplySkinOriginal, harmony, true);
+                PatchController.Verify(modularHandgunApplySkinOriginal, harmony, true);
+                PatchController.Verify(modularOBRApplySkinOriginal, harmony, true);
+                PatchController.Verify(modularRevolverApplySkinOriginal, harmony, true);
+                PatchController.Verify(modularTFSApplySkinOriginal, harmony, true);
+                harmony.Patch(modularBARApplySkinOriginal, new HarmonyMethod(modularWeaponApplySkinPrefix), new HarmonyMethod(modularWeaponApplySkinPostfix));
+                harmony.Patch(modularBAWApplySkinOriginal, new HarmonyMethod(modularWeaponApplySkinPrefix), new HarmonyMethod(modularWeaponApplySkinPostfix));
+                harmony.Patch(modularCBWApplySkinOriginal, new HarmonyMethod(modularWeaponApplySkinPrefix), new HarmonyMethod(modularWeaponApplySkinPostfix));
+                harmony.Patch(modularHandgunApplySkinOriginal, new HarmonyMethod(modularWeaponApplySkinPrefix), new HarmonyMethod(modularWeaponApplySkinPostfix));
+                harmony.Patch(modularOBRApplySkinOriginal, new HarmonyMethod(modularWeaponApplySkinPrefix), new HarmonyMethod(modularWeaponApplySkinPostfix));
+                harmony.Patch(modularRevolverApplySkinOriginal, new HarmonyMethod(modularWeaponApplySkinPrefix), new HarmonyMethod(modularWeaponApplySkinPostfix));
+                harmony.Patch(modularTFSApplySkinOriginal, new HarmonyMethod(modularWeaponApplySkinPrefix), new HarmonyMethod(modularWeaponApplySkinPostfix));
+            }
         }
     }
 
