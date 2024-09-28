@@ -457,18 +457,19 @@ namespace H3MP
                                             else
                                             {
                                                 map.Add(prefab.name, o.Key);
+                                                Mod.LogWarning("\tAdded");
                                             }
                                         }
                                     }
-                                    catch (Exception)
+                                    catch (Exception ex)
                                     {
-                                        Mod.LogError("There was an error trying to check if prefab with ID: " + o.Key + " is wearable or adding it to the list");
+                                        Mod.LogError("There was an error trying to check if prefab with ID: " + o.Key + " is wearable or adding it to the list: "+ex.Message+"\n"+ex.StackTrace);
                                         continue;
                                     }
                                 }
                                 Mod.LogInfo("\tGot wearables, writing...");
                                 JObject jDict = JObject.FromObject(map);
-                                File.WriteAllText(H3MPPath + "/Debug/SosigWearableMap.json", jDict.ToString());
+                                File.WriteAllText(H3MPPath + "/SosigWearableMap.json", jDict.ToString());
                                 Mod.LogInfo("\tNew wearables map written");
                                 break;
                             case 7: // Load to TNH lobby
