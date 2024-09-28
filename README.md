@@ -2,7 +2,7 @@
 
 As the title says, this is a mod that adds multiplayer to the virtual reality game **Hotdogs, Horseshoes and Handgrenades**.
 
-## MAIN BUILD - H3 Beta should be set to "None"
+## ALPHA BUILD - H3 Beta should be set to "alpha - Mod Safe"
 
 ## IMPORTANT
 
