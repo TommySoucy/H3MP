@@ -722,12 +722,18 @@ namespace H3MP.Patches
             toInsert.Add(new CodeInstruction(OpCodes.Stloc_S, 7)); // Set flag2
 
             bool applied = false;
+            bool skippedFirst = false;
             for (int i = 0; i < instructionList.Count; ++i)
             {
                 CodeInstruction instruction = instructionList[i];
 
                 if (instruction.opcode == OpCodes.Ldloc_S && instruction.operand.ToString().Contains("(7)"))
                 {
+                    if (!skippedFirst)
+                    {
+                        skippedFirst = true;
+                        continue;
+                    }
                     instructionList.InsertRange(i, toInsert);
                     applied = true;
                     break;

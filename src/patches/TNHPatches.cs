@@ -2091,7 +2091,8 @@ namespace H3MP.Patches
                     float num = Vector3.Distance(position, GM.CurrentPlayerBody.transform.position);
                     if (num > 10f)
                     {
-                        if (fvrphysicalObject is PinnedGrenade 
+                        if (fvrphysicalObject is PinnedGrenade
+                            || !fvrphysicalObject.gameObject.activeSelf
                             || fvrphysicalObject is FVRGrenade 
                             || fvrphysicalObject is FVRCappedGrenade 
                             || fvrphysicalObject is Camcorder 
