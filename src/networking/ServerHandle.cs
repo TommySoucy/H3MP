@@ -5643,22 +5643,22 @@ namespace H3MP.Networking
 
         public static void AlertSosigs(int clientID, Packet packet)
         {
-            string scene = packet.ReadString();
-            int instance = packet.ReadInt();
-            Vector3 position = packet.ReadVector3();
-            if(scene.Equals(GameManager.scene) && instance == GameManager.instance)
-            {
-                SM.PlayCoreSound(FVRPooledAudioType.GenericClose, Mod.sosigAlertAlarm, position);
-                ++OnSosigAlertPatch.skip;
-                GM.CurrentSceneSettings.OnSosigAlert(null, position);
-                --OnSosigAlertPatch.skip;
-            }
-            if (GameManager.playersByInstanceByScene.TryGetValue(scene, out Dictionary<int, List<int>> instances)
-                && instances.TryGetValue(instance, out List<int> players)
-                && players.Count > 1)
-            {
-                ServerSend.AlertSosigs(players, scene, instance, position, clientID);
-            }
+            //string scene = packet.ReadString();
+            //int instance = packet.ReadInt();
+            //Vector3 position = packet.ReadVector3();
+            //if(scene.Equals(GameManager.scene) && instance == GameManager.instance)
+            //{
+            //    SM.PlayCoreSound(FVRPooledAudioType.GenericClose, Mod.sosigAlertAlarm, position);
+            //    ++OnSosigAlertPatch.skip;
+            //    GM.CurrentSceneSettings.OnSosigAlert(null, position);
+            //    --OnSosigAlertPatch.skip;
+            //}
+            //if (GameManager.playersByInstanceByScene.TryGetValue(scene, out Dictionary<int, List<int>> instances)
+            //    && instances.TryGetValue(instance, out List<int> players)
+            //    && players.Count > 1)
+            //{
+            //    ServerSend.AlertSosigs(players, scene, instance, position, clientID);
+            //}
         }
 
         public static void SetModulWeaponPart(int clientID, Packet packet)

@@ -7687,7 +7687,7 @@ namespace H3MP.Patches
             toInsert.Add(new CodeInstruction(OpCodes.Dup)); // Dupe inequality call result on stack (true if connected)
             Label afterGettingTrackedItemLabel = il.DefineLabel();
             toInsert.Add(new CodeInstruction(OpCodes.Brfalse_S, afterGettingTrackedItemLabel)); // If false (not connected) skip trying to get a tracked item
-
+            
             toInsert.Add(new CodeInstruction(OpCodes.Ldsfld, AccessTools.Field(typeof(GameManager), "trackedItemByItem"))); // Load trackedItemByItem
             toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load speedloader instance
             toInsert.Add(new CodeInstruction(OpCodes.Ldloca_S, 3)); // Load trackedItem address
