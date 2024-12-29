@@ -582,8 +582,7 @@ namespace H3MP.Networking
 
         public static int RegisterCustomPacketType(string handlerID, int clientID = 0)
         {
-            int index = -1;
-
+            int index;
             if (Mod.registeredCustomPacketIDs.TryGetValue(handlerID, out index))
             {
                 Mod.LogWarning("Client " + clientID + " requested for " + handlerID + " custom packet handler to be registered but this ID already exists.");
@@ -591,14 +590,12 @@ namespace H3MP.Networking
             else // We don't yet have this handlerID, add it
             {
                 // Get next available handler ID
-                if(Mod.availableCustomPacketIndices.Count > 0)
+                if (Mod.availableCustomPacketIndices.Count > 0)
                 {
                     index = Mod.availableCustomPacketIndices[Mod.availableCustomPacketIndices.Count - 1];
                     Mod.availableCustomPacketIndices.RemoveAt(Mod.availableCustomPacketIndices.Count - 1);
                 }
-
-                // If couldn't find one, need to add more space to handlers array
-                if (index == -1)
+                else // If couldn't find one, need to add more space to handlers array
                 {
                     index = Mod.customPacketHandlers.Length;
                     Mod.CustomPacketHandler[] temp = Mod.customPacketHandlers;
