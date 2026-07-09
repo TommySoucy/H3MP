@@ -1,4 +1,7 @@
 ﻿using FistVR;
+using FistVR.BTrap;
+using FistVR.MG;
+using FMOD;
 using H3MP.Networking;
 using H3MP.Scripts;
 using H3MP.Tracking;
@@ -3566,31 +3569,52 @@ namespace H3MP.Patches
 
             List<CodeInstruction> toInsert0 = new List<CodeInstruction>();
             toInsert0.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load encryption instance
-            toInsert0.Add(new CodeInstruction(OpCodes.Ldloc_S, 66)); // Load damageable
+            toInsert0.Add(new CodeInstruction(OpCodes.Ldloc_S, 21)); // Load damageable
             toInsert0.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(EncryptionDamageablePatch), "GetActualFlag"))); // Call our GetActualFlag
 
-            bool applied = false;
-            bool found = false;
+            List<CodeInstruction> toInsert1 = new List<CodeInstruction>();
+            toInsert1.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load encryption instance
+            toInsert1.Add(new CodeInstruction(OpCodes.Ldloc_S, 89)); // Load damageable
+            toInsert1.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(EncryptionDamageablePatch), "GetActualFlag"))); // Call our GetActualFlag
+
+            bool[] applied = new bool[2] { false, false };
+            int[] found = new int[2] { 0, 0 };
             for (int i = 0; i < instructionList.Count; ++i)
             {
                 CodeInstruction instruction = instructionList[i];
-                if (instruction.opcode == OpCodes.Stloc_S && instruction.operand.ToString().Contains("67"))
+                // Here, 22 is the local var index of the flag
+                if (instruction.opcode == OpCodes.Stloc_S && instruction.operand.ToString().Contains("22"))
                 {
-                    if (found)
+                    if (found[0] == 1)
                     {
                         instructionList.RemoveAt(i - 1);
                         instructionList.InsertRange(i - 1, toInsert0);
-                        applied = true;
-                        break;
+                        applied[0] = true;
+                        i += 4;
                     }
                     else
                     {
-                        found = true;
+                        ++found[0];
+                    }
+                }
+
+                if (instruction.opcode == OpCodes.Stloc_S && instruction.operand.ToString().Contains("90"))
+                {
+                    if (found[1] == 1)
+                    {
+                        instructionList.RemoveAt(i - 1);
+                        instructionList.InsertRange(i - 1, toInsert1);
+                        applied[1] = true;
+                        i += 4;
+                    }
+                    else
+                    {
+                        ++found[1];
                     }
                 }
             }
 
-            if (!applied)
+            if (!applied[0] || !applied[1])
             {
                 Mod.LogError("EncryptionDamageablePatch FixedUpdateTranspiler not applied!");
             }
@@ -3981,6 +4005,10 @@ namespace H3MP.Patches
                     if (dam.Class != FistVR.Damage.DamageClass.Projectile)
                     {
                         return false;
+                    }
+                    if (Vector3.Angle(dam.hitNormal, __instance.transform.forward) <= 90f && __instance.HE_SteelPop != null)
+                    {
+                        __instance.HE_SteelPop.HitEvent();
                     }
                     Vector3 position = dam.point + dam.hitNormal * UnityEngine.Random.Range(0.001f, 0.005f);
                     if (__instance.BulletHolePrefabs.Length > 0 && __instance.m_useHoles)

@@ -2419,9 +2419,9 @@ namespace H3MP.Networking
                         if (Mod.currentTNHUIManager.Levels[i].LevelID.Equals(levelID))
                         {
                             found = true;
-                            Mod.currentTNHUIManager.m_currentLevelIndex = i;
-                            Mod.currentTNHUIManager.CurLevelID = levelID;
-                            Mod.currentTNHUIManager.UpdateLevelSelectDisplayAndLoader();
+                            Mod.currentTNHUIManager._currentLevelIndex = i;
+                            Mod.currentTNHUIManager.CurrentLevel.LevelID = levelID;
+                            Mod.currentTNHUIManager.UpdateLevelSelectUi();
                             Mod.currentTNHUIManager.UpdateTableBasedOnOptions();
                             Mod.currentTNHUIManager.PlayButtonSound(2);
                             Mod.currentTNHSceneLoader.gameObject.SetActive(true);

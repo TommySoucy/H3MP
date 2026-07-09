@@ -42,7 +42,7 @@ namespace H3MP
         // BepinEx
         public const string pluginGuid = "VIP.TommySoucy.H3MP";
         public const string pluginName = "H3MP";
-        public const string pluginVersion = "1.12.0";
+        public const string pluginVersion = "1.13.0";
 
         // Assets
         public static JObject config;
@@ -1261,9 +1261,9 @@ namespace H3MP
                 if (Mod.currentTNHUIManager.Levels[i].LevelID.Equals(instance.levelID))
                 {
                     found = true;
-                    Mod.currentTNHUIManager.m_currentLevelIndex = i;
-                    Mod.currentTNHUIManager.CurLevelID = instance.levelID;
-                    Mod.currentTNHUIManager.UpdateLevelSelectDisplayAndLoader();
+                    Mod.currentTNHUIManager._currentLevelIndex = i;
+                    Mod.currentTNHUIManager.CurrentLevel.LevelID = instance.levelID;
+                    Mod.currentTNHUIManager.UpdateLevelSelectUi();
                     Mod.currentTNHUIManager.UpdateTableBasedOnOptions();
                     Mod.currentTNHSceneLoader.gameObject.SetActive(true);
                     break;
@@ -1716,7 +1716,7 @@ namespace H3MP
                                               (int)GM.TNHOptions.HealthModeSetting, (int)GM.TNHOptions.EquipmentModeSetting, (int)GM.TNHOptions.TargetModeSetting,
                                               (int)GM.TNHOptions.AIDifficultyModifier, (int)GM.TNHOptions.RadarModeModifier, (int)GM.TNHOptions.ItemSpawnerMode,
                                               (int)GM.TNHOptions.BackpackMode, (int)GM.TNHOptions.HealthMult, (int)GM.TNHOptions.SosiggunShakeReloading, (int)GM.TNHOptions.TNHSeed,
-                                              Mod.currentTNHUIManager.CurLevelID);
+                                              Mod.currentTNHUIManager.CurrentLevel.LevelID);
             if (ThreadManager.host)
             {
                 ServerSend.AddTNHInstance(newTNHInstance);
@@ -2502,9 +2502,9 @@ namespace H3MP
                     {
                         found = true;
 
-                        Mod.currentTNHUIManager.m_currentLevelIndex = i;
-                        Mod.currentTNHUIManager.CurLevelID = instance.levelID;
-                        Mod.currentTNHUIManager.UpdateLevelSelectDisplayAndLoader();
+                        Mod.currentTNHUIManager._currentLevelIndex = i;
+                        Mod.currentTNHUIManager.CurrentLevel.LevelID = instance.levelID;
+                        Mod.currentTNHUIManager.UpdateLevelSelectUi();
                         Mod.currentTNHUIManager.UpdateTableBasedOnOptions();
                         Mod.currentTNHUIManager.PlayButtonSound(2);
                         Mod.currentTNHSceneLoader.gameObject.SetActive(true);

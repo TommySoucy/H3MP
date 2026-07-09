@@ -4126,6 +4126,7 @@ namespace H3MP.Patches
             bool applied = false;
             for (int i = 0; i < instructionList.Count; ++i)
             {
+                Sosig s = new Sosig();
                 CodeInstruction instruction = instructionList[i];
                 if ((instruction.opcode == OpCodes.Call || instruction.opcode == OpCodes.Callvirt) && instruction.operand.ToString().Contains("Speak_State"))
                 {
@@ -6230,12 +6231,12 @@ namespace H3MP.Patches
 
             List<CodeInstruction> toInsert0 = new List<CodeInstruction>();
             toInsert0.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load encryption instance
-            toInsert0.Add(new CodeInstruction(OpCodes.Ldloc_0)); // Load i
+            toInsert0.Add(new CodeInstruction(OpCodes.Ldloc_3)); // Load i
             toInsert0.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(EncryptionPatch), "ActivateSubTargGeo"))); // Call our ActivateSubTargGeo method
 
             List<CodeInstruction> toInsert1 = new List<CodeInstruction>();
             toInsert1.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load encryption instance
-            toInsert1.Add(new CodeInstruction(OpCodes.Ldloc_0)); // Load i
+            toInsert1.Add(new CodeInstruction(OpCodes.Ldloc_3)); // Load i
             toInsert1.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(EncryptionPatch), "ActivateSubTarg"))); // Call our ActivateSubTarg method
 
             bool[] applied = new bool[4];
@@ -6524,9 +6525,8 @@ namespace H3MP.Patches
 
             List<CodeInstruction> toInsert = new List<CodeInstruction>();
             toInsert.Add(new CodeInstruction(OpCodes.Ldarg_0)); // Load encryption instance
-            toInsert.Add(new CodeInstruction(OpCodes.Ldloc_1)); // Load j
-            toInsert.Add(new CodeInstruction(OpCodes.Ldloc_2)); // Load the newly instantiated GameObject
-            toInsert.Add(new CodeInstruction(OpCodes.Callvirt, AccessTools.Method(typeof(GameObject), "get_transform"))); // Get transform
+            toInsert.Add(new CodeInstruction(OpCodes.Ldloc_3)); // Load j
+            toInsert.Add(new CodeInstruction(OpCodes.Ldloc_S, 4)); // Load the newly instantiated GameObject
             toInsert.Add(new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(EncryptionPatch), "EncryptionSpawnOnDestroy"))); // Call our method
 
             bool applied = false;
@@ -6534,7 +6534,7 @@ namespace H3MP.Patches
             {
                 CodeInstruction instruction = instructionList[i];
 
-                if (instruction.opcode == OpCodes.Stloc_2)
+                if (instruction.opcode == OpCodes.Stloc_S && instruction.operand.ToString().Contains("4"))
                 {
                     instructionList.InsertRange(i + 1, toInsert);
                     applied = true;
@@ -6550,9 +6550,9 @@ namespace H3MP.Patches
             return instructionList;
         }
 
-        public static void EncryptionSpawnOnDestroy(TNH_EncryptionTarget encryption, int index, Transform t)
+        public static void EncryptionSpawnOnDestroy(TNH_EncryptionTarget encryption, int index, GameObject go)
         {
-            if(Mod.managerObject == null)
+            if (Mod.managerObject == null)
             {
                 return;
             }
@@ -6571,7 +6571,7 @@ namespace H3MP.Patches
                 cascadingDestroyDepth = 2 + encryption.name[strIndex + 8] - 'A';
             }
 
-            GameManager.SyncTrackedObjects(t, true, null);
+            GameManager.SyncTrackedObjects(go.transform, true, null);
 
             cascadingDestroyIndex = 0;
             cascadingDestroyDepth = 0;

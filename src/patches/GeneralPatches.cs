@@ -675,7 +675,7 @@ namespace H3MP.Patches
         }
     }
 
-    // Patches SteamManager.get_Initialized to prevent scoring
+    // Patches TNH_ScoreDisplay.SubmitScoreAndGoToBoard to prevent score submission
     class ScorePatch
     {
         static bool Prefix()

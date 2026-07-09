@@ -405,7 +405,7 @@ namespace H3MP.Networking
             manager.UsesClassicPatrolBehavior = true;
             manager.m_level = -1;
             manager.m_numTokens = 5;
-            manager.m_supplyPoints.Clear();
+            manager.SupplyPoints.Clear();
             manager.m_weaponCases.Clear();
             manager.m_patrolSquads.Clear();
             manager.m_miscEnemies.Clear();

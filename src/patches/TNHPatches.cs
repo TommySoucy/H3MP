@@ -58,10 +58,8 @@ namespace H3MP.Patches
             MethodInfo TNH_UIManagerPatchSosigGunReloadPrefix = typeof(TNH_UIManagerPatch).GetMethod("SosigGunReloadPrefix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo TNH_UIManagerPatchSeedOriginal = typeof(TNH_UIManager).GetMethod("SetOBS_RunSeed", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo TNH_UIManagerPatchSeedPrefix = typeof(TNH_UIManagerPatch).GetMethod("SeedPrefix", BindingFlags.NonPublic | BindingFlags.Static);
-            MethodInfo TNH_UIManagerPatchNextLevelOriginal = typeof(TNH_UIManager).GetMethod("BTN_NextLevel", BindingFlags.Public | BindingFlags.Instance);
-            MethodInfo TNH_UIManagerPatchNextLevelPrefix = typeof(TNH_UIManagerPatch).GetMethod("NextLevelPrefix", BindingFlags.NonPublic | BindingFlags.Static);
-            MethodInfo TNH_UIManagerPatchPrevLevelOriginal = typeof(TNH_UIManager).GetMethod("BTN_PrevLevel", BindingFlags.Public | BindingFlags.Instance);
-            MethodInfo TNH_UIManagerPatchPrevLevelPrefix = typeof(TNH_UIManagerPatch).GetMethod("PrevLevelPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo TNH_UIManagerPatchSelectLevelRelativeOriginal = typeof(TNH_UIManager).GetMethod("SelectLevelRelative", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo TNH_UIManagerPatchSelectLevelRelativePrefix = typeof(TNH_UIManagerPatch).GetMethod("SelectLevelRelativePrefix", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(TNH_UIManagerPatchProgressionOriginal, harmony, false);
             PatchController.Verify(TNH_UIManagerPatchEquipmentOriginal, harmony, false);
@@ -74,8 +72,7 @@ namespace H3MP.Patches
             PatchController.Verify(TNH_UIManagerPatchHealthMultOriginal, harmony, false);
             PatchController.Verify(TNH_UIManagerPatchSosigGunReloadOriginal, harmony, false);
             PatchController.Verify(TNH_UIManagerPatchSeedOriginal, harmony, false);
-            PatchController.Verify(TNH_UIManagerPatchNextLevelOriginal, harmony, false);
-            PatchController.Verify(TNH_UIManagerPatchPrevLevelOriginal, harmony, false);
+            PatchController.Verify(TNH_UIManagerPatchSelectLevelRelativeOriginal, harmony, false);
             harmony.Patch(TNH_UIManagerPatchProgressionOriginal, new HarmonyMethod(TNH_UIManagerPatchProgressionPrefix));
             harmony.Patch(TNH_UIManagerPatchEquipmentOriginal, new HarmonyMethod(TNH_UIManagerPatchEquipmentPrefix));
             harmony.Patch(TNH_UIManagerPatchHealthModeOriginal, new HarmonyMethod(TNH_UIManagerPatchHealthModePrefix));
@@ -87,8 +84,7 @@ namespace H3MP.Patches
             harmony.Patch(TNH_UIManagerPatchHealthMultOriginal, new HarmonyMethod(TNH_UIManagerPatchHealthMultPrefix));
             harmony.Patch(TNH_UIManagerPatchSosigGunReloadOriginal, new HarmonyMethod(TNH_UIManagerPatchSosigGunReloadPrefix));
             harmony.Patch(TNH_UIManagerPatchSeedOriginal, new HarmonyMethod(TNH_UIManagerPatchSeedPrefix));
-            harmony.Patch(TNH_UIManagerPatchNextLevelOriginal, new HarmonyMethod(TNH_UIManagerPatchNextLevelPrefix));
-            harmony.Patch(TNH_UIManagerPatchPrevLevelOriginal, new HarmonyMethod(TNH_UIManagerPatchPrevLevelPrefix));
+            harmony.Patch(TNH_UIManagerPatchSelectLevelRelativeOriginal, new HarmonyMethod(TNH_UIManagerPatchSelectLevelRelativePrefix));
 
             ++patchIndex; // 3
 
@@ -844,7 +840,7 @@ namespace H3MP.Patches
             return true;
         }
 
-        static bool NextLevelPrefix(ref TNH_UIManager __instance, int ___m_currentLevelIndex)
+        static bool SelectLevelRelativePrefix(ref TNH_UIManager __instance, int i)
         {
             if (Mod.managerObject != null)
             {
@@ -857,47 +853,8 @@ namespace H3MP.Patches
                     }
 
                     // Update locally
-                    int nextLevelIndex = ___m_currentLevelIndex + 1;
-                    if (nextLevelIndex >= __instance.Levels.Count)
-                    {
-                        nextLevelIndex = 0;
-                    }
-                    Mod.currentTNHInstance.levelID = __instance.Levels[nextLevelIndex].LevelID;
-
-                    // Send update
-                    if (ThreadManager.host)
-                    {
-                        ServerSend.SetTNHLevelID(Mod.currentTNHInstance.levelID, Mod.currentTNHInstance.instance);
-                    }
-                    else
-                    {
-                        ClientSend.SetTNHLevelID(Mod.currentTNHInstance.levelID, Mod.currentTNHInstance.instance);
-                    }
-                }
-            }
-
-            return true;
-        }
-
-        static bool PrevLevelPrefix(ref TNH_UIManager __instance, int ___m_currentLevelIndex)
-        {
-            if (Mod.managerObject != null)
-            {
-                if (Mod.currentTNHInstance != null)
-                {
-                    // Prevent setting the option if there is already someone playing on this instance
-                    if (Mod.currentTNHInstance.currentlyPlaying.Count > 0)
-                    {
-                        return false;
-                    }
-
-                    // Update locally
-                    int prevLevelIndex = ___m_currentLevelIndex - 1;
-                    if (prevLevelIndex < 0)
-                    {
-                        prevLevelIndex = __instance.Levels.Count - 1;
-                    }
-                    Mod.currentTNHInstance.levelID = __instance.Levels[prevLevelIndex].LevelID;
+                    int newLevelIndex = (__instance._currentLevelIndex + i + __instance.Levels.Count) % __instance.Levels.Count;
+                    Mod.currentTNHInstance.levelID = __instance.Levels[newLevelIndex].LevelID;
 
                     // Send update
                     if (ThreadManager.host)
@@ -998,7 +955,7 @@ namespace H3MP.Patches
                                 }
                             }
 
-                            Mod.currentTNHInstance.manager.DispatchScore();
+                            Mod.currentTNHInstance.manager.DispatchScore(false);
                             Mod.currentTNHInstance.manager.FMODController.SwitchTo(0, 2f, false, false);
                         }
                         // TODO: Future: Implement TNH leave on death option
@@ -1245,7 +1202,7 @@ namespace H3MP.Patches
 
                         Mod.currentTNHInstance.manager.ResetAlertedThisPhase();
                         Mod.currentTNHInstance.manager.ResetPlayerTookDamageThisPhase();
-                        Mod.currentTNHInstance.manager.ResetHasGuardBeenKilledThatWasAltered();
+                        Mod.currentTNHInstance.manager.KillAllPatrols();
 
                         object level = null;
                         if (PatchController.TNHTweakerAsmIdx > -1)
@@ -1275,7 +1232,7 @@ namespace H3MP.Patches
                         Mod.currentTNHInstance.manager.TAHReticle.DeRegisterTrackedType(TAH_ReticleContact.ContactType.Supply);
                         Mod.currentTNHInstance.manager.m_curHoldPoint = Mod.currentTNHInstance.manager.HoldPoints[Mod.currentTNHInstance.curHoldIndex];
                         TNH_Progression.Level curLevel = Mod.currentTNHInstance.manager.m_curLevel;
-                        Mod.currentTNHInstance.manager.HoldPoints[Mod.currentTNHInstance.curHoldIndex].ConfigureAsSystemNode(curLevel.TakeChallenge, curLevel.HoldChallenge, curLevel.NumOverrideTokensForHold);
+                        Mod.currentTNHInstance.manager.HoldPoints[Mod.currentTNHInstance.curHoldIndex].ConfigureAsSystemNode(curLevel.TakeChallenge, curLevel.HoldChallenge, curLevel.NumOverrideTokensForHold, Mod.currentTNHInstance.manager.m_level);
                         Mod.currentTNHInstance.manager.TAHReticle.RegisterTrackedObject(Mod.currentTNHInstance.manager.HoldPoints[Mod.currentTNHInstance.curHoldIndex].SpawnPoint_SystemNode, TAH_ReticleContact.ContactType.Hold);
                         bool spawnToken = true;
                         Mod.currentTNHInstance.manager.m_activeSupplyPointIndicies = Mod.currentTNHInstance.activeSupplyPointIndices;
@@ -1559,7 +1516,7 @@ namespace H3MP.Patches
                     Mod.currentTNHInstance.manager.ItemSpawner.SetActive(true);
                     Mod.currentTNHInstance.manager.ItemSpawner.transform.position = Mod.currentTNHInstance.manager.FinalItemSpawnerPoint.position;
                     Mod.currentTNHInstance.manager.ItemSpawner.transform.rotation = Mod.currentTNHInstance.manager.FinalItemSpawnerPoint.rotation;
-                    Mod.currentTNHInstance.manager.DispatchScore();
+                    Mod.currentTNHInstance.manager.DispatchScore(true);
 
                     return false;
                 }
@@ -1781,7 +1738,7 @@ namespace H3MP.Patches
                 Mod.LogInfo("\tHold " + Mod.currentTNHInstance.curHoldIndex + " ongoing", false);
                 // Set the hold
                 TNH_Progression.Level curLevel = Mod.currentTNHInstance.manager.m_curLevel;
-                Mod.currentTNHInstance.manager.HoldPoints[Mod.currentTNHInstance.curHoldIndex].ConfigureAsSystemNode(curLevel.TakeChallenge, curLevel.HoldChallenge, curLevel.NumOverrideTokensForHold);
+                Mod.currentTNHInstance.manager.HoldPoints[Mod.currentTNHInstance.curHoldIndex].ConfigureAsSystemNode(curLevel.TakeChallenge, curLevel.HoldChallenge, curLevel.NumOverrideTokensForHold, Mod.currentTNHInstance.manager.m_level);
                 ++TNH_HoldPointPatch.beginHoldSendSkip;
                 Mod.currentTNHInstance.manager.HoldPoints[Mod.currentTNHInstance.curHoldIndex].m_systemNode.m_hasActivated = true;
                 Mod.currentTNHInstance.manager.HoldPoints[Mod.currentTNHInstance.curHoldIndex].m_systemNode.m_hasInitiatedHold = true;
@@ -1836,7 +1793,7 @@ namespace H3MP.Patches
                 Mod.LogInfo("\tNo hold ongoing", false);
                 // Set the hold
                 TNH_Progression.Level curLevel = Mod.currentTNHInstance.manager.m_curLevel;
-                Mod.currentTNHInstance.manager.HoldPoints[Mod.currentTNHInstance.curHoldIndex].ConfigureAsSystemNode(curLevel.TakeChallenge, curLevel.HoldChallenge, curLevel.NumOverrideTokensForHold);
+                Mod.currentTNHInstance.manager.HoldPoints[Mod.currentTNHInstance.curHoldIndex].ConfigureAsSystemNode(curLevel.TakeChallenge, curLevel.HoldChallenge, curLevel.NumOverrideTokensForHold, Mod.currentTNHInstance.manager.m_level);
 
                 Mod.currentTNHInstance.manager.TAHReticle.RegisterTrackedObject(Mod.currentTNHInstance.manager.HoldPoints[Mod.currentTNHInstance.curHoldIndex].SpawnPoint_SystemNode, TAH_ReticleContact.ContactType.Hold);
 
@@ -1975,9 +1932,12 @@ namespace H3MP.Patches
             // with which they can spawn their own starting equipment
             if (!Mod.currentTNHInstance.spawnedStartEquip && Mod.TNHStartEquipButton == null)
             {
-                Mod.LogInfo("\tSpawning init start button", false);
-                Mod.TNHStartEquipButton = GameObject.Instantiate(Mod.TNHStartEquipButtonPrefab, GM.CurrentPlayerBody.Head);
-                Mod.TNHStartEquipButton.transform.GetChild(0).GetComponent<FVRPointableButton>().Button.onClick.AddListener(Mod.OnTNHSpawnStartEquipClicked);
+                if (Mod.currentTNHInstance.manager.GameMode == TNHSetting_GameMode.Classic || Mod.currentTNHInstance.manager.GameMode == TNHSetting_GameMode.Rampart || Mod.currentTNHInstance.manager.GameMode == TNHSetting_GameMode.Blitz)
+                {
+                    Mod.LogInfo("\tSpawning init start button", false);
+                    Mod.TNHStartEquipButton = GameObject.Instantiate(Mod.TNHStartEquipButtonPrefab, GM.CurrentPlayerBody.Head);
+                    Mod.TNHStartEquipButton.transform.GetChild(0).GetComponent<FVRPointableButton>().Button.onClick.AddListener(Mod.OnTNHSpawnStartEquipClicked);
+                }
             }
         }
 
@@ -2298,18 +2258,14 @@ namespace H3MP.Patches
                     {
                         Mod.LogInfo("\t\tSkipped, prepping", false);
                         // Score
-                        if (!Mod.currentTNHInstance.manager.HasGuardBeenKilledThatWasAltered())
+                        if (Mod.currentTNHInstance.manager.ShouldGetGuardBonus())
                         {
-                            Mod.currentTNHInstance.manager.IncrementScoringStat(TNH_Manager.ScoringEvent.TakeHoldPointTakenClean, 1);
+                            float num = Mathf.Clamp(Mod.currentTNHInstance.manager.GetGuardKillTimeDelta(), 5f, 25f);
+                            int num2 = Mathf.Clamp(20 - (Mathf.RoundToInt(num) - 5), 0, 20);
+                            Mod.currentTNHInstance.manager.IncrementScoringStat(TNH_Manager.ScoringEvent.TakeGuardClearSpeedBonus, 1);
                         }
-                        if (!Mod.currentTNHInstance.manager.HasPlayerAlertedSecurityThisPhase())
-                        {
-                            Mod.currentTNHInstance.manager.IncrementScoringStat(TNH_Manager.ScoringEvent.TakeCompleteNoAlert, 1);
-                        }
-                        if (!Mod.currentTNHInstance.manager.HasPlayerTakenDamageThisPhase())
-                        {
-                            Mod.currentTNHInstance.manager.IncrementScoringStat(TNH_Manager.ScoringEvent.TakeCompleteNoDamage, 1);
-                        }
+                        int num3 = Mathf.RoundToInt(Mathf.Clamp(100f - 100f * Mod.currentTNHInstance.manager.PlayerTakenDamagePercentageThisPhase(), 0f, 100f));
+                        Mod.currentTNHInstance.manager.IncrementScoringStat(TNH_Manager.ScoringEvent.TakePhaseHealthBonus, num3);
 
                         // Deletion burst
                         ___m_activeSosigs.Clear();
@@ -2318,7 +2274,7 @@ namespace H3MP.Patches
                         Mod.currentTNHInstance.manager.ClearGuards();
                         Mod.currentTNHInstance.manager.ResetAlertedThisPhase();
                         Mod.currentTNHInstance.manager.ResetPlayerTookDamageThisPhase();
-                        Mod.currentTNHInstance.manager.ResetHasGuardBeenKilledThatWasAltered();
+                        Mod.currentTNHInstance.manager.ResetGuardKillTimes();
 
                         // DeleteAllActiveEntities
                         ___m_activeTargets.Clear();
@@ -2526,9 +2482,9 @@ namespace H3MP.Patches
                     ___m_state = TNH_HoldPoint.HoldState.Transition;
                     ___m_tickDownTransition = 5f;
                     __instance.LowerAllBarriers();
-                    if (!__instance.m_hasBeenDamagedThisPhase)
+                    if (__instance.m_damageTakenThisHold == 0)
                     {
-                        Mod.currentTNHInstance.manager.IncrementScoringStat(TNH_Manager.ScoringEvent.HoldWaveCompleteNoDamage, 1);
+                        Mod.currentTNHInstance.manager.IncrementScoringStat(TNH_Manager.ScoringEvent.TakePhaseHealthBonus, 1);
                     }
                     ___m_systemNode.SetNodeMode(TNH_HoldPointSystemNode.SystemNodeMode.Hacking);
 
