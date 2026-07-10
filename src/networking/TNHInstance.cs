@@ -37,9 +37,12 @@ namespace H3MP.Networking
 
         // Settings
         public bool letPeopleJoin;
+        public int gameModeSetting;
         public int progressionTypeSetting;
         public int healthModeSetting;
         public int equipmentModeSetting;
+        public int equipmentSeedModeSetting;
+        public int equipmentSeedSetting;
         public int targetModeSetting;
         public int AIDifficultyModifier = 1; // AI Diff and radar mode defaults are at index 1
         public int radarModeModifier = 1;
@@ -60,9 +63,10 @@ namespace H3MP.Networking
         }
 
         public TNHInstance(int instance, int hostID, bool letPeopleJoin,
-                                int progressionTypeSetting, int healthModeSetting, int equipmentModeSetting,
-                                int targetModeSetting, int AIDifficultyModifier, int radarModeModifier,
-                                int itemSpawnerMode, int backpackMode, int healthMult, int sosiggunShakeReloading, int TNHSeed, string levelID)
+                                int gameModeSetting, int progressionTypeSetting, int healthModeSetting, 
+                                int equipmentModeSetting, int equipmentSeedModeSetting, int equipmentSeedSetting, 
+                                int targetModeSetting, int AIDifficultyModifier, int radarModeModifier, int itemSpawnerMode, 
+                                int backpackMode, int healthMult, int sosiggunShakeReloading, int TNHSeed, string levelID)
         {
             this.instance = instance;
             playerIDs = new List<int>();
@@ -72,9 +76,12 @@ namespace H3MP.Networking
             dead = new List<int>();
 
             this.letPeopleJoin = letPeopleJoin;
+            this.gameModeSetting = gameModeSetting;
             this.progressionTypeSetting = progressionTypeSetting;
             this.healthModeSetting = healthModeSetting;
             this.equipmentModeSetting = equipmentModeSetting;
+            this.equipmentSeedModeSetting = equipmentSeedModeSetting;
+            this.equipmentSeedSetting = equipmentSeedSetting;
             this.targetModeSetting = targetModeSetting;
             this.AIDifficultyModifier = AIDifficultyModifier;
             this.radarModeModifier = radarModeModifier;

@@ -204,17 +204,21 @@ namespace H3MP.Networking
         }
 
         public static void AddTNHInstance(int hostID, bool letPeopleJoin,
-                                          int progressionTypeSetting, int healthModeSetting, int equipmentModeSetting,
-                                          int targetModeSetting, int AIDifficultyModifier, int radarModeModifier,
-                                          int itemSpawnerMode, int backpackMode, int healthMult, int sosiggunShakeReloading, int TNHSeed, string levelID)
+                                            int gameModeSetting, int progressionTypeSetting, int healthModeSetting, 
+                                            int equipmentModeSetting, int equipmentSeedModeSetting, int equipmentSeedSetting, 
+                                            int targetModeSetting, int AIDifficultyModifier, int radarModeModifier, int itemSpawnerMode, 
+                                            int backpackMode, int healthMult, int sosiggunShakeReloading, int TNHSeed, string levelID)
         {
             using(Packet packet = new Packet((int)ClientPackets.addTNHInstance))
             {
                 packet.Write(hostID);
                 packet.Write(letPeopleJoin);
+                packet.Write(gameModeSetting);
                 packet.Write(progressionTypeSetting);
                 packet.Write(healthModeSetting);
                 packet.Write(equipmentModeSetting);
+                packet.Write(equipmentSeedModeSetting);
+                packet.Write(equipmentSeedSetting);
                 packet.Write(targetModeSetting);
                 packet.Write(AIDifficultyModifier);
                 packet.Write(radarModeModifier);
@@ -1284,6 +1288,17 @@ namespace H3MP.Networking
             }
         }
 
+        public static void SetTNHGameMode(int i, int instance)
+        {
+            using (Packet packet = new Packet((int)ServerPackets.setTNHGameMode))
+            {
+                packet.Write(i);
+                packet.Write(instance);
+
+                SendTCPData(packet);
+            }
+        }
+
         public static void SetTNHProgression(int i, int instance)
         {
             using (Packet packet = new Packet((int)ClientPackets.setTNHProgression))
@@ -1298,6 +1313,28 @@ namespace H3MP.Networking
         public static void SetTNHEquipment(int i, int instance)
         {
             using (Packet packet = new Packet((int)ClientPackets.setTNHEquipment))
+            {
+                packet.Write(i);
+                packet.Write(instance);
+
+                SendTCPData(packet);
+            }
+        }
+
+        public static void SetTNHEquipmentSeedMode(int i, int instance)
+        {
+            using (Packet packet = new Packet((int)ServerPackets.setTNHEquipmentSeedMode))
+            {
+                packet.Write(i);
+                packet.Write(instance);
+
+                SendTCPData(packet);
+            }
+        }
+
+        public static void SetTNHEquipmentSeed(int i, int instance)
+        {
+            using (Packet packet = new Packet((int)ServerPackets.setTNHEquipmentSeed))
             {
                 packet.Write(i);
                 packet.Write(instance);

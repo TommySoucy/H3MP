@@ -36,10 +36,17 @@ namespace H3MP.Patches
             ++patchIndex; // 2
 
             // TNH_UIManagerPatch
+            MethodInfo TNH_UIManagerPatchGameModeOriginal = typeof(TNH_UIManager).GetMethod("SetOBS_GameMode", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo TNH_UIManagerPatchGameModePrefix = typeof(TNH_UIManagerPatch).GetMethod("GameModePrefix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo TNH_UIManagerPatchProgressionOriginal = typeof(TNH_UIManager).GetMethod("SetOBS_Progression", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo TNH_UIManagerPatchProgressionPrefix = typeof(TNH_UIManagerPatch).GetMethod("ProgressionPrefix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo TNH_UIManagerPatchEquipmentOriginal = typeof(TNH_UIManager).GetMethod("SetOBS_EquipmentMode", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo TNH_UIManagerPatchEquipmentPrefix = typeof(TNH_UIManagerPatch).GetMethod("EquipmentPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo TNH_UIManagerPatchEquipmentSeedModeOriginal = typeof(TNH_UIManager).GetMethod("SetOBS_EquipmentSeedMode", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo TNH_UIManagerPatchEquipmentSeedModePrefix = typeof(TNH_UIManagerPatch).GetMethod("EquipmentSeedModePrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo TNH_UIManagerPatchEquipmentSeedOriginalA = typeof(TNH_UIManager).GetMethod("ModifyDigitAtPlace", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo TNH_UIManagerPatchEquipmentSeedOriginalB = typeof(TNH_UIManager).GetMethod("BTN_ResetEquipmentSeed", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo TNH_UIManagerPatchEquipmentSeedPrefix = typeof(TNH_UIManagerPatch).GetMethod("EquipmentSeedPrefix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo TNH_UIManagerPatchHealthModeOriginal = typeof(TNH_UIManager).GetMethod("SetOBS_HealthMode", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo TNH_UIManagerPatchHealthModePrefix = typeof(TNH_UIManagerPatch).GetMethod("HealthModePrefix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo TNH_UIManagerPatchTargetModeOriginal = typeof(TNH_UIManager).GetMethod("SetOBS_TargetMode", BindingFlags.Public | BindingFlags.Instance);
@@ -61,8 +68,12 @@ namespace H3MP.Patches
             MethodInfo TNH_UIManagerPatchSelectLevelRelativeOriginal = typeof(TNH_UIManager).GetMethod("SelectLevelRelative", BindingFlags.Public | BindingFlags.Instance);
             MethodInfo TNH_UIManagerPatchSelectLevelRelativePrefix = typeof(TNH_UIManagerPatch).GetMethod("SelectLevelRelativePrefix", BindingFlags.NonPublic | BindingFlags.Static);
 
+            PatchController.Verify(TNH_UIManagerPatchGameModeOriginal, harmony, false);
             PatchController.Verify(TNH_UIManagerPatchProgressionOriginal, harmony, false);
             PatchController.Verify(TNH_UIManagerPatchEquipmentOriginal, harmony, false);
+            PatchController.Verify(TNH_UIManagerPatchEquipmentSeedModeOriginal, harmony, false);
+            PatchController.Verify(TNH_UIManagerPatchEquipmentSeedOriginalA, harmony, false);
+            PatchController.Verify(TNH_UIManagerPatchEquipmentSeedOriginalB, harmony, false);
             PatchController.Verify(TNH_UIManagerPatchHealthModeOriginal, harmony, false);
             PatchController.Verify(TNH_UIManagerPatchTargetModeOriginal, harmony, false);
             PatchController.Verify(TNH_UIManagerPatchAIDifficultyOriginal, harmony, false);
@@ -73,8 +84,12 @@ namespace H3MP.Patches
             PatchController.Verify(TNH_UIManagerPatchSosigGunReloadOriginal, harmony, false);
             PatchController.Verify(TNH_UIManagerPatchSeedOriginal, harmony, false);
             PatchController.Verify(TNH_UIManagerPatchSelectLevelRelativeOriginal, harmony, false);
+            harmony.Patch(TNH_UIManagerPatchGameModeOriginal, new HarmonyMethod(TNH_UIManagerPatchGameModePrefix));
             harmony.Patch(TNH_UIManagerPatchProgressionOriginal, new HarmonyMethod(TNH_UIManagerPatchProgressionPrefix));
             harmony.Patch(TNH_UIManagerPatchEquipmentOriginal, new HarmonyMethod(TNH_UIManagerPatchEquipmentPrefix));
+            harmony.Patch(TNH_UIManagerPatchEquipmentSeedModeOriginal, new HarmonyMethod(TNH_UIManagerPatchEquipmentSeedModePrefix));
+            harmony.Patch(TNH_UIManagerPatchEquipmentSeedOriginalA, new HarmonyMethod(TNH_UIManagerPatchEquipmentSeedPrefix));
+            harmony.Patch(TNH_UIManagerPatchEquipmentSeedOriginalB, new HarmonyMethod(TNH_UIManagerPatchEquipmentSeedPrefix));
             harmony.Patch(TNH_UIManagerPatchHealthModeOriginal, new HarmonyMethod(TNH_UIManagerPatchHealthModePrefix));
             harmony.Patch(TNH_UIManagerPatchTargetModeOriginal, new HarmonyMethod(TNH_UIManagerPatchTargetModePrefix));
             harmony.Patch(TNH_UIManagerPatchAIDifficultyOriginal, new HarmonyMethod(TNH_UIManagerPatchAIDifficultyPrefix));
@@ -455,6 +470,36 @@ namespace H3MP.Patches
         public static int sosigGunReloadSkip;
         public static int seedSkip;
 
+        static bool GameModePrefix(int i)
+        {
+            if (Mod.managerObject != null)
+            {
+                if (Mod.currentTNHInstance != null)
+                {
+                    // Prevent setting the option if there is already someone playing on this instance
+                    if (Mod.currentTNHInstance.currentlyPlaying.Count > 0)
+                    {
+                        return false;
+                    }
+
+                    // Update locally
+                    Mod.currentTNHInstance.gameModeSetting = i;
+
+                    // Send update
+                    if (ThreadManager.host)
+                    {
+                        ServerSend.SetTNHGameMode(i, Mod.currentTNHInstance.instance);
+                    }
+                    else
+                    {
+                        ClientSend.SetTNHGameMode(i, Mod.currentTNHInstance.instance);
+                    }
+                }
+            }
+
+            return true;
+        }
+
         static bool ProgressionPrefix(int i)
         {
             if (progressionSkip > 0)
@@ -518,6 +563,66 @@ namespace H3MP.Patches
                     else
                     {
                         ClientSend.SetTNHEquipment(i, Mod.currentTNHInstance.instance);
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        static bool EquipmentSeedModePrefix(int i)
+        {
+            if (Mod.managerObject != null)
+            {
+                if (Mod.currentTNHInstance != null)
+                {
+                    // Prevent setting the option if there is already someone playing on this instance
+                    if (Mod.currentTNHInstance.currentlyPlaying.Count > 0)
+                    {
+                        return false;
+                    }
+
+                    // Update locally
+                    Mod.currentTNHInstance.equipmentSeedModeSetting = i;
+
+                    // Send update
+                    if (ThreadManager.host)
+                    {
+                        ServerSend.SetTNHEquipmentSeedMode(i, Mod.currentTNHInstance.instance);
+                    }
+                    else
+                    {
+                        ClientSend.SetTNHEquipmentSeedMode(i, Mod.currentTNHInstance.instance);
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        static bool EquipmentSeedPrefix(int i)
+        {
+            if (Mod.managerObject != null)
+            {
+                if (Mod.currentTNHInstance != null)
+                {
+                    // Prevent setting the option if there is already someone playing on this instance
+                    if (Mod.currentTNHInstance.currentlyPlaying.Count > 0)
+                    {
+                        return false;
+                    }
+
+                    // Update locally
+                    Mod.currentTNHInstance.equipmentSeedSetting = i;
+
+                    // Send update
+                    if (ThreadManager.host)
+                    {
+                        ServerSend.SetTNHEquipmentSeed(i, Mod.currentTNHInstance.instance);
+                    }
+                    else
+                    {
+                        ClientSend.SetTNHEquipmentSeed(i, Mod.currentTNHInstance.instance);
                     }
                 }
             }

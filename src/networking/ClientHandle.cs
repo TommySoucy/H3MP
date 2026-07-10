@@ -2214,6 +2214,20 @@ namespace H3MP.Networking
             }
         }
 
+        public static void SetTNHGameMode(Packet packet) 
+        {
+            int i = packet.ReadInt();
+            int instance = packet.ReadInt();
+
+            GameManager.TNHInstances[instance].gameModeSetting = i;
+
+            if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == instance && Mod.currentTNHUIManager != null)
+            {
+                Mod.currentTNHUIManager.OBS_GameMode.SetSelectedButton(i);
+                Mod.currentTNHUIManager.SetOBS_GameMode(i);
+            }
+        }
+
         public static void SetTNHProgression(Packet packet)
         {
             int i = packet.ReadInt();
@@ -2245,6 +2259,34 @@ namespace H3MP.Networking
                 Mod.currentTNHUIManager.SetOBS_EquipmentMode(i);
                 GM.TNHOptions.EquipmentModeSetting = (TNHSetting_EquipmentMode)i;
                 --TNH_UIManagerPatch.equipmentSkip;
+            }
+        }
+
+        public static void SetTNHEquipmentSeedMode(Packet packet) 
+        {
+            int i = packet.ReadInt();
+            int instance = packet.ReadInt();
+
+            GameManager.TNHInstances[instance].equipmentSeedModeSetting = i;
+
+            if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == instance && Mod.currentTNHUIManager != null)
+            {
+                Mod.currentTNHUIManager.OBS_EquipmentSeed.SetSelectedButton(i);
+                Mod.currentTNHUIManager.SetOBS_EquipmentSeedMode(i);
+            }
+        }
+
+        public static void SetTNHEquipmentSeed(Packet packet) 
+        {
+            int i = packet.ReadInt();
+            int instance = packet.ReadInt();
+
+            GameManager.TNHInstances[instance].equipmentSeedSetting = i;
+
+            if (Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == instance && Mod.currentTNHUIManager != null)
+            {
+                GM.TNHOptions.EquipmentSeed = i;
+                Mod.currentTNHUIManager.UpdateTableBasedOnOptions();
             }
         }
 

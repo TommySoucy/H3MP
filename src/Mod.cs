@@ -1231,10 +1231,15 @@ namespace H3MP
 
         public static void InitTNHUIManager(TNHInstance instance)
         {
+            Mod.currentTNHUIManager.OBS_GameMode.SetSelectedButton(instance.gameModeSetting);
+            GM.TNHOptions.GameModeSetting = (TNHSetting_GameMode)instance.gameModeSetting;
             Mod.currentTNHUIManager.OBS_Progression.SetSelectedButton(instance.progressionTypeSetting);
             GM.TNHOptions.ProgressionTypeSetting = (TNHSetting_ProgressionType)instance.progressionTypeSetting;
             Mod.currentTNHUIManager.OBS_EquipmentMode.SetSelectedButton(instance.equipmentModeSetting);
             GM.TNHOptions.EquipmentModeSetting = (TNHSetting_EquipmentMode)instance.equipmentModeSetting;
+            Mod.currentTNHUIManager.OBS_EquipmentSeed.SetSelectedButton(instance.equipmentSeedModeSetting);
+            GM.TNHOptions.EquipmentSeedMode = (TNHSetting_EquipmentSeedMode)instance.equipmentSeedModeSetting;
+            GM.TNHOptions.EquipmentSeed = instance.equipmentSeedSetting;
             Mod.currentTNHUIManager.OBS_HealthMode.SetSelectedButton(instance.healthModeSetting);
             GM.TNHOptions.HealthModeSetting = (TNHSetting_HealthMode)instance.healthModeSetting;
             Mod.currentTNHUIManager.OBS_TargetMode.SetSelectedButton(instance.targetModeSetting);
@@ -1712,8 +1717,8 @@ namespace H3MP
 
             setLatestInstance = true;
 
-            TNHInstance newTNHInstance = GameManager.AddNewTNHInstance(GameManager.ID, TNHMenuLPJ, (int)GM.TNHOptions.ProgressionTypeSetting,
-                                              (int)GM.TNHOptions.HealthModeSetting, (int)GM.TNHOptions.EquipmentModeSetting, (int)GM.TNHOptions.TargetModeSetting,
+            TNHInstance newTNHInstance = GameManager.AddNewTNHInstance(GameManager.ID, TNHMenuLPJ, (int)GM.TNHOptions.GameModeSetting, (int)GM.TNHOptions.ProgressionTypeSetting,
+                                              (int)GM.TNHOptions.HealthModeSetting, (int)GM.TNHOptions.EquipmentModeSetting, (int)GM.TNHOptions.EquipmentSeedMode, GM.TNHOptions.EquipmentSeed, (int)GM.TNHOptions.TargetModeSetting,
                                               (int)GM.TNHOptions.AIDifficultyModifier, (int)GM.TNHOptions.RadarModeModifier, (int)GM.TNHOptions.ItemSpawnerMode,
                                               (int)GM.TNHOptions.BackpackMode, (int)GM.TNHOptions.HealthMult, (int)GM.TNHOptions.SosiggunShakeReloading, (int)GM.TNHOptions.TNHSeed,
                                               Mod.currentTNHUIManager.CurrentLevel.LevelID);

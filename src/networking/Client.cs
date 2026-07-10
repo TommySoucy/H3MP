@@ -662,6 +662,9 @@ namespace H3MP.Networking
                 ClientHandle.SentinelInit,
                 ClientHandle.AlertSosigs,
                 ClientHandle.SetModulWeaponPart,
+                ClientHandle.SetTNHGameMode,
+                ClientHandle.SetTNHEquipmentSeedMode,
+                ClientHandle.SetTNHEquipmentSeed
             };
 
             // All vanilla scenes can be synced by default

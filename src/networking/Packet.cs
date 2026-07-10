@@ -217,7 +217,10 @@ namespace H3MP.Networking
         encryptionShieldRot = 204,
         sentinelInit = 205,
         alertSosigs = 206,
-        SetModulWeaponPart = 207
+        SetModulWeaponPart = 207,
+        setTNHGameMode = 208,
+        setTNHEquipmentSeedMode = 209,
+        setTNHEquipmentSeed = 210
     }
 
     /// <summary>Sent from client to server.</summary>
@@ -421,7 +424,10 @@ namespace H3MP.Networking
         encryptionShieldRot = 195,
         sentinelInit = 196,
         alertSosigs = 197,
-        setModulWeaponPart = 198
+        setModulWeaponPart = 198,
+        setTNHGameMode = 199,
+        setTNHEquipmentSeedMode = 200,
+        setTNHEquipmentSeed = 201
     }
 
     public class Packet : IDisposable
@@ -776,9 +782,12 @@ namespace H3MP.Networking
         {
             Write(instance.instance);
             Write(instance.letPeopleJoin);
+            Write(instance.gameModeSetting);
             Write(instance.progressionTypeSetting);
             Write(instance.healthModeSetting);
             Write(instance.equipmentModeSetting);
+            Write(instance.equipmentSeedModeSetting);
+            Write(instance.equipmentSeedSetting);
             Write(instance.targetModeSetting);
             Write(instance.AIDifficultyModifier);
             Write(instance.radarModeModifier);
@@ -1322,10 +1331,13 @@ namespace H3MP.Networking
         {
             int instanceID = ReadInt();
             bool letPeopleJoin = ReadBool();
+            int gameModeSetting = ReadInt();
             int progressionTypeSetting = ReadInt();
             int healthModeSetting = ReadInt();
             int equipmentModeSetting = ReadInt();
-            int targetModeSetting = ReadInt();
+            int equipmentSeedModeSetting = ReadInt();
+            int equipmentSeedSetting = ReadInt();
+            int targetModeSetting = ReadInt(); 
             int AIDifficultyModifier = ReadInt();
             int radarModeModifier = ReadInt();
             int itemSpawnerMode = ReadInt();
@@ -1337,9 +1349,10 @@ namespace H3MP.Networking
             int playerCount = ReadInt();
             int hostID = ReadInt();
             TNHInstance instance = new TNHInstance(instanceID, hostID, letPeopleJoin,
-                                                             progressionTypeSetting, healthModeSetting, equipmentModeSetting,
-                                                             targetModeSetting, AIDifficultyModifier, radarModeModifier,
-                                                             itemSpawnerMode, backpackMode, healthMult, sosiggunShakeReloading, TNHSeed, levelID);
+                                                            gameModeSetting, progressionTypeSetting, healthModeSetting,
+                                                            equipmentModeSetting, equipmentSeedModeSetting, equipmentSeedSetting,
+                                                            targetModeSetting, AIDifficultyModifier, radarModeModifier, itemSpawnerMode,
+                                                            backpackMode, healthMult, sosiggunShakeReloading, TNHSeed, levelID);
             for (int i = 1; i < playerCount; ++i) 
             {
                 int newPlayerID = ReadInt();
