@@ -2,10 +2,11 @@
 
 As the title says, this is a mod that adds multiplayer to the virtual reality game **Hotdogs, Horseshoes and Handgrenades**.
 
-## ALPHA BUILD - H3 Beta should be set to "alpha - Mod Safe"
+## ALPHA BUILD - H3 Beta should be set to "None"
 
 ## IMPORTANT
 
+### - TNH broken since H3 Update 1.0
 - See incompatibilities section below for a list of known incompatible mods and modes.
 - Only report bugs if you don't use any of the mods from the incompatibilities list.
 - Report bugs in the H3VR homebrew discord server (Look it up on google) and always send **_full_** output logs.
