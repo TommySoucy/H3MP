@@ -876,19 +876,25 @@ namespace H3MP.Scripts
             NatDiscoverer discoverer = new NatDiscoverer();
             CancellationTokenSource cts = new CancellationTokenSource();
             cts.CancelAfter(10000);
+            Mod.LogInfo("Discovering UPnP devices...");
             System.Threading.Tasks.Task<NatDevice> deviceTask = discoverer.DiscoverDeviceAsync(PortMapper.Upnp, cts);
             deviceTask.Wait();
             NatDevice device = deviceTask.Result;
-
-            // Mappings with lifetime 0 are permanent
-            System.Threading.Tasks.Task mapTask = device.CreatePortMapAsync(new Mapping(Protocol.Tcp, port, port, 0, "H3MP - UPnP TCP mapping"));
-            mapTask.Wait();
-            mapTask = device.CreatePortMapAsync(new Mapping(Protocol.Udp, port, port, 0, "H3MP - UPnP UDP mapping"));
-            mapTask.Wait();
+            Mod.LogInfo("Device found: " + (device == null ? "null" : device.ToString()));
+            Mod.LogInfo("Trying to get device external IP...");
             System.Threading.Tasks.Task<IPAddress> IPTask = device.GetExternalIPAsync();
             IPTask.Wait();
             IPAddress IP = IPTask.Result;
-            Mod.LogInfo("Mappings created on device: "+IP);
+            Mod.LogInfo("Creating mappings on device: " + IP);
+
+            // Mappings with lifetime 0 are permanent
+            Mod.LogInfo("Creating TCP mapping...");
+            System.Threading.Tasks.Task mapTask = device.CreatePortMapAsync(new Mapping(Protocol.Tcp, port, port, 0, "H3MP - UPnP TCP mapping"));
+            mapTask.Wait();
+            Mod.LogInfo("TCP mapping created. Creating UDP mapping...");
+            mapTask = device.CreatePortMapAsync(new Mapping(Protocol.Udp, port, port, 0, "H3MP - UPnP UDP mapping"));
+            mapTask.Wait();
+            Mod.LogInfo("Mappings created");
         }
 
         private void PlayerAdded(PlayerManager player)

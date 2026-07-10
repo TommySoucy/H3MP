@@ -42,7 +42,7 @@ namespace H3MP
         // BepinEx
         public const string pluginGuid = "VIP.TommySoucy.H3MP";
         public const string pluginName = "H3MP";
-        public const string pluginVersion = "1.13.0";
+        public const string pluginVersion = "1.13.2";
 
         // Assets
         public static JObject config;
@@ -1278,6 +1278,7 @@ namespace H3MP
 
         private void LoadAssets()
         {
+            Mod.LogInfo("Loading assets...");
             AssetBundle assetBundle = AssetBundle.LoadFromFile(H3MPPath + "/H3MP.ab");
 
             TNHMenuPrefab = assetBundle.LoadAsset<GameObject>("TNHMenu");
