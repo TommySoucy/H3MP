@@ -51,7 +51,7 @@ namespace H3MP.Networking
         public static Dictionary<uint, TrackedObjectData> waitingLocalObjects = new Dictionary<uint, TrackedObjectData>();
         public static IAsyncResult connectResult;
 
-        public int tickRate = 20;
+
         public Timer tickTimer = new Timer();
         
         /// <summary>
@@ -96,7 +96,6 @@ namespace H3MP.Networking
 
         public void SetTickRate(int tickRate)
         {
-            this.tickRate = tickRate;
             tickTimer.Elapsed += Tick;
             tickTimer.Interval = 1000f / tickRate;
             tickTimer.AutoReset = true;
