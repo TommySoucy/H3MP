@@ -556,6 +556,9 @@ namespace H3MP.Networking
                 ServerHandle.SentinelInit,
                 ServerHandle.AlertSosigs,
                 ServerHandle.SetModulWeaponPart,
+                ServerHandle.SetTNHGameMode,
+                ServerHandle.SetTNHEquipmentSeedMode,
+                ServerHandle.SetTNHEquipmentSeed
             };
 
             objects = new TrackedObjectData[100];

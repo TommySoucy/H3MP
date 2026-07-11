@@ -238,9 +238,12 @@ namespace H3MP.Networking
         {
             int hostID = packet.ReadInt();
             bool letPeopleJoin = packet.ReadBool();
+            int gameModeSetting = packet.ReadInt();
             int progressionTypeSetting = packet.ReadInt();
             int healthModeSetting = packet.ReadInt();
             int equipmentModeSetting = packet.ReadInt();
+            int equipmentSeedModeSetting = packet.ReadInt();
+            int equipmentSeedSetting = packet.ReadInt();
             int targetModeSetting = packet.ReadInt();
             int AIDifficultyModifier = packet.ReadInt();
             int radarModeModifier = packet.ReadInt();
@@ -253,9 +256,10 @@ namespace H3MP.Networking
 
             // Send to all clients
             ServerSend.AddTNHInstance(GameManager.AddNewTNHInstance(hostID, letPeopleJoin,
-                                                                              progressionTypeSetting, healthModeSetting, equipmentModeSetting,
-                                                                              targetModeSetting, AIDifficultyModifier, radarModeModifier, itemSpawnerMode, backpackMode,
-                                                                              healthMult, sosiggunShakeReloading, TNHSeed, levelID));
+                                                                            gameModeSetting, progressionTypeSetting, healthModeSetting,
+                                                                            equipmentModeSetting, equipmentSeedModeSetting, equipmentSeedSetting,
+                                                                            targetModeSetting, AIDifficultyModifier, radarModeModifier, itemSpawnerMode,
+                                                                            backpackMode, healthMult, sosiggunShakeReloading, TNHSeed, levelID));
         }
 
         public static void AddInstance(int clientID, Packet packet)
@@ -2396,6 +2400,22 @@ namespace H3MP.Networking
             }
         }
 
+        public static void SetTNHGameMode(int clientID, Packet packet)
+        {
+            int i = packet.ReadInt();
+            int instance = packet.ReadInt();
+            
+            GameManager.TNHInstances[instance].gameModeSetting = i;
+            
+            if(Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == instance && Mod.currentTNHUIManager != null)
+            {
+                Mod.currentTNHUIManager.OBS_GameMode.SetSelectedButton(i);
+                Mod.currentTNHUIManager.SetOBS_GameMode(i);
+            }
+
+            ServerSend.SetTNHGameMode(i, instance, clientID);
+        }
+
         public static void SetTNHProgression(int clientID, Packet packet)
         {
             int i = packet.ReadInt();
@@ -2432,6 +2452,38 @@ namespace H3MP.Networking
             }
 
             ServerSend.SetTNHEquipment(i, instance, clientID);
+        }
+
+        public static void SetTNHEquipmentSeedMode(int clientID, Packet packet)
+        {
+            int i = packet.ReadInt();
+            int instance = packet.ReadInt();
+            
+            GameManager.TNHInstances[instance].equipmentSeedModeSetting = i;
+            
+            if(Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == instance && Mod.currentTNHUIManager != null)
+            {
+                Mod.currentTNHUIManager.OBS_EquipmentSeed.SetSelectedButton(i);
+                Mod.currentTNHUIManager.SetOBS_EquipmentSeedMode(i);
+            }
+
+            ServerSend.SetTNHEquipmentSeedMode(i, instance, clientID);
+        }
+
+        public static void SetTNHEquipmentSeed(int clientID, Packet packet)
+        {
+            int i = packet.ReadInt();
+            int instance = packet.ReadInt();
+            
+            GameManager.TNHInstances[instance].equipmentSeedSetting = i;
+            
+            if(Mod.currentTNHInstance != null && Mod.currentTNHInstance.instance == instance && Mod.currentTNHUIManager != null)
+            {
+                GM.TNHOptions.EquipmentSeed = i;
+                Mod.currentTNHUIManager.UpdateTableBasedOnOptions();
+            }
+
+            ServerSend.SetTNHEquipmentSeed(i, instance, clientID);
         }
 
         public static void SetTNHHealthMode(int clientID, Packet packet)

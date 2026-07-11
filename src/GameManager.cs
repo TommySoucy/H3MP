@@ -1137,9 +1137,10 @@ namespace H3MP
         }
 
         public static TNHInstance AddNewTNHInstance(int hostID, bool letPeopleJoin,
-                                                    int progressionTypeSetting, int healthModeSetting, int equipmentModeSetting,
-                                                    int targetModeSetting, int AIDifficultyModifier, int radarModeModifier,
-                                                    int itemSpawnerMode, int backpackMode, int healthMult, int sosiggunShakeReloading, int TNHSeed, string levelID)
+                                                    int gameModeSetting, int progressionTypeSetting, int healthModeSetting, 
+                                                    int equipmentModeSetting, int equipmentSeedModeSetting, int equipmentSeedSetting, 
+                                                    int targetModeSetting, int AIDifficultyModifier, int radarModeModifier, int itemSpawnerMode, 
+                                                    int backpackMode, int healthMult, int sosiggunShakeReloading, int TNHSeed, string levelID)
         {
             if (ThreadManager.host)
             {
@@ -1149,9 +1150,10 @@ namespace H3MP
                     ++freeInstance;
                 }
                 TNHInstance newInstance = new TNHInstance(freeInstance, hostID, letPeopleJoin,
-                                                            progressionTypeSetting, healthModeSetting, equipmentModeSetting,
-                                                            targetModeSetting, AIDifficultyModifier, radarModeModifier,
-                                                            itemSpawnerMode, backpackMode, healthMult, sosiggunShakeReloading, TNHSeed, levelID);
+                                                            gameModeSetting, progressionTypeSetting, healthModeSetting,
+                                                            equipmentModeSetting, equipmentSeedModeSetting, equipmentSeedSetting,
+                                                            targetModeSetting, AIDifficultyModifier, radarModeModifier, itemSpawnerMode,
+                                                            backpackMode, healthMult, sosiggunShakeReloading, TNHSeed, levelID);
                 TNHInstances.Add(freeInstance, newInstance);
 
                 if ((newInstance.letPeopleJoin || newInstance.currentlyPlaying.Count == 0) && Mod.TNHInstanceList != null && Mod.joinTNHInstances != null && !Mod.joinTNHInstances.ContainsKey(freeInstance))
@@ -1177,9 +1179,10 @@ namespace H3MP
             else
             {
                 ClientSend.AddTNHInstance(hostID, letPeopleJoin,
-                                          progressionTypeSetting, healthModeSetting, equipmentModeSetting,
-                                          targetModeSetting, AIDifficultyModifier, radarModeModifier,
-                                          itemSpawnerMode, backpackMode, healthMult, sosiggunShakeReloading, TNHSeed, levelID);
+                                            gameModeSetting, progressionTypeSetting, healthModeSetting,
+                                            equipmentModeSetting, equipmentSeedModeSetting, equipmentSeedSetting,
+                                            targetModeSetting, AIDifficultyModifier, radarModeModifier, itemSpawnerMode,
+                                            backpackMode, healthMult, sosiggunShakeReloading, TNHSeed, levelID);
 
                 return null;
             }

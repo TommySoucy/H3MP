@@ -2307,6 +2307,24 @@ namespace H3MP.Networking
             }
         }
 
+        public static void SetTNHGameMode(int i, int instance, int clientID = 0)
+        {
+            using (Packet packet = new Packet((int)ServerPackets.setTNHGameMode))
+            {
+                packet.Write(i);
+                packet.Write(instance);
+
+                if(clientID == 0)
+                {
+                    SendTCPDataToAll(packet);
+                }
+                else
+                {
+                    SendTCPDataToAll(clientID, packet);
+                }
+            }
+        }
+
         public static void SetTNHProgression(int i, int instance, int clientID = 0)
         {
             using (Packet packet = new Packet((int)ServerPackets.setTNHProgression))
@@ -2328,6 +2346,42 @@ namespace H3MP.Networking
         public static void SetTNHEquipment(int i, int instance, int clientID = 0)
         {
             using (Packet packet = new Packet((int)ServerPackets.setTNHEquipment))
+            {
+                packet.Write(i);
+                packet.Write(instance);
+
+                if(clientID == 0)
+                {
+                    SendTCPDataToAll(packet);
+                }
+                else
+                {
+                    SendTCPDataToAll(clientID, packet);
+                }
+            }
+        }
+
+        public static void SetTNHEquipmentSeedMode(int i, int instance, int clientID = 0)
+        {
+            using (Packet packet = new Packet((int)ServerPackets.setTNHEquipmentSeedMode))
+            {
+                packet.Write(i);
+                packet.Write(instance);
+
+                if(clientID == 0)
+                {
+                    SendTCPDataToAll(packet);
+                }
+                else
+                {
+                    SendTCPDataToAll(clientID, packet);
+                }
+            }
+        }
+
+        public static void SetTNHEquipmentSeed(int i, int instance, int clientID = 0)
+        {
+            using (Packet packet = new Packet((int)ServerPackets.setTNHEquipmentSeed))
             {
                 packet.Write(i);
                 packet.Write(instance);
