@@ -42,7 +42,7 @@ namespace H3MP
         // BepinEx
         public const string pluginGuid = "VIP.TommySoucy.H3MP";
         public const string pluginName = "H3MP";
-        public const string pluginVersion = "1.13.3";
+        public const string pluginVersion = "1.14.0";
 
         // Assets
         public static JObject config;
@@ -133,7 +133,7 @@ namespace H3MP
         public static Dictionary<int, GameObject> joinTNHInstances;
         public static Dictionary<int, GameObject> currentTNHInstancePlayers;
         public static TNH_UIManager currentTNHUIManager;
-        public static SceneLoader currentTNHSceneLoader;
+        public static TNH_LevelLoader currentTNHSceneLoader;
         public static bool waitingForTNHHost;
         public static int TNHHostedInstance;
         public static GameObject TNHStartEquipButton;
@@ -746,6 +746,9 @@ namespace H3MP
                                     }
                                 }
                                 break;
+                            case 38: // Load into TNH
+                                Mod.currentTNHSceneLoader.Load();
+                                break;
                         }
                     }
                 }
@@ -1177,7 +1180,7 @@ namespace H3MP
 
             // Get ref to the UI Manager
             Mod.currentTNHUIManager = GameObject.FindObjectOfType<TNH_UIManager>();
-            Mod.currentTNHSceneLoader = GameObject.FindObjectOfType<SceneLoader>();
+            Mod.currentTNHSceneLoader = GameObject.FindObjectOfType<TNH_LevelLoader>();
 
             // If already in a TNH instance, which could be the case if we are coming back from being in game
             if (currentTNHInstance != null)
@@ -2069,6 +2072,9 @@ namespace H3MP
                     TNH_Manager M = GM.TNH_Manager;
                     TNH_CharacterDef C = M.C;
                     Vector3 projectedForward = Vector3.ProjectOnPlane(GM.CurrentPlayerBody.Head.forward, Vector3.up);
+
+                    TODO: // Rampart gamemode sets gamebounds to supplypoint upon spawning start equip here
+                          // Review rampart and check if possible in MP
                     if (M.ItemSpawnerMode == TNH_ItemSpawnerMode.On)
                     {
                         M.ItemSpawner.transform.position = GM.CurrentPlayerBody.Head.position + projectedForward.normalized * 2;

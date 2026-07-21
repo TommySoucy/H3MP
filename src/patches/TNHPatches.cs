@@ -200,6 +200,7 @@ namespace H3MP.Patches
             else
             {
                 MethodInfo TNHSupplyPointPatchSpawnTakeEnemyGroupOriginal = typeof(TNH_SupplyPoint).GetMethod("SpawnTakeEnemyGroup", BindingFlags.NonPublic | BindingFlags.Instance);
+                MethodInfo TNHSupplyPointPatchSpawnTakeEnemyGroupMoveNext = PatchController.EnumeratorMoveNext(TNHSupplyPointPatchSpawnTakeEnemyGroupOriginal);
                 MethodInfo TNHSupplyPointPatchSpawnDefensesOriginal = typeof(TNH_SupplyPoint).GetMethod("SpawnDefenses", BindingFlags.NonPublic | BindingFlags.Instance);
                 MethodInfo TNHSupplyPointPatchSpawnBoxesOriginal = typeof(TNH_SupplyPoint).GetMethod("SpawnBoxes", BindingFlags.NonPublic | BindingFlags.Instance);
                 PatchController.Verify(TNHSupplyPointPatchSpawnTakeEnemyGroupOriginal, harmony, false);
@@ -211,7 +212,7 @@ namespace H3MP.Patches
                 MethodInfo TNHSupplyPointPatchSpawnDefensesPostfix = typeof(TNH_SupplyPointPatch).GetMethod("SpawnDefensesPostfix", BindingFlags.NonPublic | BindingFlags.Static);
                 MethodInfo TNHSupplyPointPatchSpawnBoxesPrefix = typeof(TNH_SupplyPointPatch).GetMethod("SpawnBoxesPrefix", BindingFlags.NonPublic | BindingFlags.Static);
                 MethodInfo TNHSupplyPointPatchSpawnBoxesPostfix = typeof(TNH_SupplyPointPatch).GetMethod("SpawnBoxesPostfix", BindingFlags.NonPublic | BindingFlags.Static);
-                harmony.Patch(TNHSupplyPointPatchSpawnTakeEnemyGroupOriginal, new HarmonyMethod(TNHSupplyPointPatchSpawnTakeEnemyGroupPrefix), new HarmonyMethod(TNHSupplyPointPatchSpawnTakeEnemyGroupPostfix));
+                harmony.Patch(TNHSupplyPointPatchSpawnTakeEnemyGroupMoveNext, new HarmonyMethod(TNHSupplyPointPatchSpawnTakeEnemyGroupPrefix), new HarmonyMethod(TNHSupplyPointPatchSpawnTakeEnemyGroupPostfix));
                 harmony.Patch(TNHSupplyPointPatchSpawnDefensesOriginal, new HarmonyMethod(TNHSupplyPointPatchSpawnDefensesPrefix), new HarmonyMethod(TNHSupplyPointPatchSpawnDefensesPostfix));
                 harmony.Patch(TNHSupplyPointPatchSpawnBoxesOriginal, new HarmonyMethod(TNHSupplyPointPatchSpawnBoxesPrefix), new HarmonyMethod(TNHSupplyPointPatchSpawnBoxesPostfix));
             }
@@ -240,6 +241,7 @@ namespace H3MP.Patches
             // TNH_HoldPointPatch
             MethodInfo TNH_HoldPointPatchSpawnTargetGroupOriginal = null;
             MethodInfo TNH_HoldPointPatchSpawnTakeEnemyGroupOriginal = null;
+            MethodInfo TNH_HoldPointPatchSpawnTakeEnemyGroupMoveNext = null;
             MethodInfo TNH_HoldPointPatchSpawnHoldEnemyGroupOriginal = null;
             MethodInfo TNH_HoldPointPatchSpawnTurretsOriginal = null;
             if (PatchController.TNHTweakerAsmIdx > -1)
@@ -253,6 +255,7 @@ namespace H3MP.Patches
             {
                 TNH_HoldPointPatchSpawnTargetGroupOriginal = typeof(TNH_HoldPoint).GetMethod("SpawnTargetGroup", BindingFlags.NonPublic | BindingFlags.Instance);
                 TNH_HoldPointPatchSpawnTakeEnemyGroupOriginal = typeof(TNH_HoldPoint).GetMethod("SpawnTakeEnemyGroup", BindingFlags.NonPublic | BindingFlags.Instance);
+                TNH_HoldPointPatchSpawnTakeEnemyGroupMoveNext = PatchController.EnumeratorMoveNext(TNH_HoldPointPatchSpawnTakeEnemyGroupOriginal);
                 TNH_HoldPointPatchSpawnHoldEnemyGroupOriginal = typeof(TNH_HoldPoint).GetMethod("SpawnHoldEnemyGroup", BindingFlags.NonPublic | BindingFlags.Instance);
                 TNH_HoldPointPatchSpawnTurretsOriginal = typeof(TNH_HoldPoint).GetMethod("SpawnTurrets", BindingFlags.NonPublic | BindingFlags.Instance);
             }
@@ -287,8 +290,8 @@ namespace H3MP.Patches
             MethodInfo TNH_HoldPointPatchCompleteHoldOriginal = typeof(TNH_HoldPoint).GetMethod("CompleteHold", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo TNH_HoldPointPatchCompleteHoldPrefix = typeof(TNH_HoldPointPatch).GetMethod("CompleteHoldPrefix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo TNH_HoldPointPatchCompleteHoldPostfix = typeof(TNH_HoldPointPatch).GetMethod("CompleteHoldPostfix", BindingFlags.NonPublic | BindingFlags.Static);
-            MethodInfo TNH_HoldPointPatchSpawnEnemyGroupPrefix = typeof(TNH_HoldPointPatch).GetMethod("SpawnHoldEnemyGroupPrefix", BindingFlags.NonPublic | BindingFlags.Static);
-            MethodInfo TNH_HoldPointPatchSpawnHoldEnemyGroupPrefix = typeof(TNH_HoldPointPatch).GetMethod("SpawnEnemyGroupPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo TNH_HoldPointPatchSpawnEnemyGroupPrefix = typeof(TNH_HoldPointPatch).GetMethod("SpawnEnemyGroupPrefix", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo TNH_HoldPointPatchSpawnHoldEnemyGroupPrefix = typeof(TNH_HoldPointPatch).GetMethod("SpawnHoldEnemyGroupPrefix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo TNH_HoldPointPatchSpawnEnemyGroupPostfix = typeof(TNH_HoldPointPatch).GetMethod("SpawnEnemyGroupPostfix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo TNH_HoldPointPatchSpawnTurretsPrefix = typeof(TNH_HoldPointPatch).GetMethod("SpawnTurretsPrefix", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo TNH_HoldPointPatchSpawnTurretsPostfix = typeof(TNH_HoldPointPatch).GetMethod("SpawnTurretsPostfix", BindingFlags.NonPublic | BindingFlags.Static);
@@ -344,7 +347,7 @@ namespace H3MP.Patches
             harmony.Patch(TNH_HoldPointPatchBeginPhaseOriginal, null, new HarmonyMethod(TNH_HoldPointPatchBeginPhasePostfix));
             harmony.Patch(TNH_HoldPointPatchShutDownHoldPointOriginal, new HarmonyMethod(TNH_HoldPointPatchShutDownHoldPointPrefix));
             harmony.Patch(TNH_HoldPointPatchCompleteHoldOriginal, new HarmonyMethod(TNH_HoldPointPatchCompleteHoldPrefix), new HarmonyMethod(TNH_HoldPointPatchCompleteHoldPostfix));
-            harmony.Patch(TNH_HoldPointPatchSpawnTakeEnemyGroupOriginal, new HarmonyMethod(TNH_HoldPointPatchSpawnEnemyGroupPrefix), new HarmonyMethod(TNH_HoldPointPatchSpawnEnemyGroupPostfix));
+            harmony.Patch(TNH_HoldPointPatchSpawnTakeEnemyGroupMoveNext, new HarmonyMethod(TNH_HoldPointPatchSpawnEnemyGroupPrefix), new HarmonyMethod(TNH_HoldPointPatchSpawnEnemyGroupPostfix));
             harmony.Patch(TNH_HoldPointPatchSpawnHoldEnemyGroupOriginal, new HarmonyMethod(TNH_HoldPointPatchSpawnHoldEnemyGroupPrefix), new HarmonyMethod(TNH_HoldPointPatchSpawnEnemyGroupPostfix));
             harmony.Patch(TNH_HoldPointPatchSpawnTurretsOriginal, new HarmonyMethod(TNH_HoldPointPatchSpawnTurretsPrefix), new HarmonyMethod(TNH_HoldPointPatchSpawnTurretsPostfix));
             //harmony.Patch(TNH_HoldPointPatchDeletionBurstOriginal, new HarmonyMethod(TNH_HoldPointPatchDeletionBurstPrefix));
@@ -1512,7 +1515,7 @@ namespace H3MP.Patches
                         supplyPoint.m_panels.Clear();
                     }
                     Mod.currentTNHInstance.manager.EnqueueLine(TNH_VoiceLineID.AI_ReturningToInterface);
-                    GM.CurrentMovementManager.TeleportToPoint(GM.CurrentSceneSettings.DeathResetPoint.position, true);
+                    GM.CurrentMovementManager.TeleportToPoint(GM.CurrentSceneSettings.DeathResetPoint.position, false);
                     Mod.currentTNHInstance.manager.ItemSpawner.SetActive(true);
                     Mod.currentTNHInstance.manager.ItemSpawner.transform.position = Mod.currentTNHInstance.manager.FinalItemSpawnerPoint.position;
                     Mod.currentTNHInstance.manager.ItemSpawner.transform.rotation = Mod.currentTNHInstance.manager.FinalItemSpawnerPoint.rotation;
@@ -2054,6 +2057,8 @@ namespace H3MP.Patches
                         if (fvrphysicalObject is PinnedGrenade
                             || !fvrphysicalObject.gameObject.activeSelf
                             || fvrphysicalObject is FVRGrenade 
+                            || fvrphysicalObject.IsKinematicLocked 
+                            || fvrphysicalObject.IsPivotLocked
                             || fvrphysicalObject is FVRCappedGrenade 
                             || fvrphysicalObject is Camcorder 
                             || fvrphysicalObject is SLAM 
@@ -2103,6 +2108,7 @@ namespace H3MP.Patches
             {
                 try
                 {
+                    TODO: // Dependent on blitz gamemode, where we use "systemcore" and "expose" it, need to test that process and sync ssytem code stuff for blitz gamemode
                     switch (Mod.currentTNHInstance.holdState)
                     {
                         case TNH_HoldPoint.HoldState.Beginning:
@@ -2304,7 +2310,7 @@ namespace H3MP.Patches
         {
             if (Mod.managerObject != null && Mod.currentTNHInstance != null && Mod.currentTNHInstance.controller == GameManager.ID)
             {
-                Mod.LogInfo("BeginPhasePostfix and we cotnrol, sending", false);
+                Mod.LogInfo("BeginPhasePostfix and we control, sending", false);
                 Mod.currentTNHInstance.holdState = TNH_HoldPoint.HoldState.Beginning;
 
                 if (ThreadManager.host)
@@ -2482,10 +2488,6 @@ namespace H3MP.Patches
                     ___m_state = TNH_HoldPoint.HoldState.Transition;
                     ___m_tickDownTransition = 5f;
                     __instance.LowerAllBarriers();
-                    if (__instance.m_damageTakenThisHold == 0)
-                    {
-                        Mod.currentTNHInstance.manager.IncrementScoringStat(TNH_Manager.ScoringEvent.TakePhaseHealthBonus, 1);
-                    }
                     ___m_systemNode.SetNodeMode(TNH_HoldPointSystemNode.SystemNodeMode.Hacking);
 
                     return false;
@@ -2522,7 +2524,7 @@ namespace H3MP.Patches
                 }
                 else
                 {
-                    Mod.LogInfo("\tWe are not controller, deletign warp ins", false);
+                    Mod.LogInfo("\tWe are not controller, deleting warp ins", false);
                     // Delete all active warpins here because IdentifyEncryption calls SpawnTargetGroup which usually calls delete warpins
                     // but the call will be blocked by non controllers, just do it here for convenience
                     __instance.DeleteAllActiveWarpIns();
@@ -2583,6 +2585,7 @@ namespace H3MP.Patches
                 ___m_activeSosigs.Clear();
                 ___m_activeTurrets.Clear();
                 __instance.LowerAllBarriers();
+                __instance.ClearLights();
 
                 return false;
             }
@@ -2722,7 +2725,8 @@ namespace H3MP.Patches
 
         static bool SpawnTakeEnemyGroupPrefix(TNH_SupplyPoint __instance)
         {
-            supplyPointInstance = __instance;
+            FieldInfo field = AccessTools.Field(__instance.GetType(), "$this");
+            supplyPointInstance = (TNH_SupplyPoint)field.GetValue(__instance);
             if (Mod.managerObject == null || Mod.currentTNHInstance == null)
             {
                 return true;
@@ -2730,12 +2734,13 @@ namespace H3MP.Patches
             else if ((TNH_ManagerPatch.inDelayedInit && Mod.currentTNHInstance.initializer == GameManager.ID) ||
                     (Mod.currentTNHInstance.controller == GameManager.ID && !TNH_ManagerPatch.inDelayedInit))
             {
-                Mod.LogInfo("SpawnTakeEnemyGroupPrefix and we init or control", false);
+                Mod.LogInfo("SpawnTakeEnemyGroupPrefix and we init or control, trying to find supply point "+ (supplyPointInstance == null ? "null": supplyPointInstance.name), false);
                 inSpawnTakeEnemyGroup = true;
                 supplyPointIndex = -1;
                 for (int i = 0; i < GM.TNH_Manager.SupplyPoints.Count; ++i)
                 {
-                    if (__instance == GM.TNH_Manager.SupplyPoints[i])
+                    Mod.LogInfo("\t Checking supply point " + (GM.TNH_Manager.SupplyPoints[i] == null ? "null":GM.TNH_Manager.SupplyPoints[i].name), false);
+                    if (supplyPointInstance == GM.TNH_Manager.SupplyPoints[i])
                     {
                         supplyPointIndex = i;
                         break;
@@ -2749,6 +2754,7 @@ namespace H3MP.Patches
 
         static void SpawnTakeEnemyGroupPostfix()
         {
+            Mod.LogInfo("SpawnTakeEnemyGroupPostfix", false);
             supplyPointInstance = null;
             inSpawnTakeEnemyGroup = false;
         }
@@ -2883,6 +2889,34 @@ namespace H3MP.Patches
                                         else
                                         {
                                             TrackedItem.unknownCrateHolding.Add(trackedItem.data.localWaitingIndex, 0);
+                                        }
+                                    }
+                                }
+                            }
+                            else if(uberShatterable.m_usesTNHLoot)
+                            {
+                                TrackedItem trackedItem = __instance.m_spawnBoxes[i].GetComponent<TrackedItem>();
+                                if (trackedItem != null)
+                                {
+                                    trackedItem.itemData.additionalData[39] = 1;
+
+                                    if (ThreadManager.host)
+                                    {
+                                        ServerSend.ShatterableCrateSetUsesLoot(trackedItem.data.trackedID);
+                                    }
+                                    else if (trackedItem.data.trackedID != -1)
+                                    {
+                                        ClientSend.ShatterableCrateSetUsesLoot(trackedItem.data.trackedID);
+                                    }
+                                    else
+                                    {
+                                        if (TrackedItem.unknownCrateHolding.TryGetValue(trackedItem.data.localWaitingIndex, out byte current) && current == 1)
+                                        {
+                                            TrackedItem.unknownCrateHolding[trackedItem.data.localWaitingIndex] = 2;
+                                        }
+                                        else
+                                        {
+                                            TrackedItem.unknownCrateHolding.Add(trackedItem.data.localWaitingIndex, 2);
                                         }
                                     }
                                 }

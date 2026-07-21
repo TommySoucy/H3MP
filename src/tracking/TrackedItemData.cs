@@ -189,7 +189,7 @@ namespace H3MP.Tracking
             TNH_ShatterableCrate crate = physical.GetComponent<TNH_ShatterableCrate>();
             if (crate != null)
             {
-                additionalData = new byte[5];
+                additionalData = new byte[6];
 
                 additionalData[0] = TNH_SupplyPointPatch.inSpawnBoxes ? (byte)1 : (byte)0;
                 if (TNH_SupplyPointPatch.inSpawnBoxes)
@@ -199,6 +199,7 @@ namespace H3MP.Tracking
 
                 additionalData[3] = crate.m_isHoldingHealth ? (byte)1 : (byte)0;
                 additionalData[4] = crate.m_isHoldingToken ? (byte)1 : (byte)0;
+                additionalData[5] = crate.m_usesLoot ? (byte)1 : (byte)0;
             }
             else if (physicalItem.physicalItem is GrappleThrowable)
             {
@@ -234,9 +235,10 @@ namespace H3MP.Tracking
                 35: Supply point index short
                 37: Contains health bool
                 38: Contains token bool
+                39: Uses loot bool
                  */
                 UberShatterable uberShatterable = physicalItem.dataObject as UberShatterable;
-                additionalData = new byte[39];
+                additionalData = new byte[40];
                 additionalData[0] = uberShatterable.m_hasShattered ? (byte)1 : (byte)0;
                 additionalData[1] = 0; // Do not have destruction data
                 additionalData[34] = TNH_SupplyPointPatch.inSpawnBoxes ? (byte)1 : (byte)0;
@@ -246,6 +248,10 @@ namespace H3MP.Tracking
                 }
                 if(TNH_SupplyPointPatch.supplyPointInstance != null)
                 {
+                    if (uberShatterable.m_usesTNHLoot)
+                    {
+                        additionalData[39] = 1;
+                    }
                     for (int i = 0; i < uberShatterable.SpawnOnShatter.Count; ++i)
                     {
                         if (uberShatterable.SpawnOnShatter[i] == TNH_SupplyPointPatch.supplyPointInstance.M.ResourceLib.Prefab_HealthMinor)
@@ -1037,8 +1043,9 @@ namespace H3MP.Tracking
 
             if (localTrackedID != -1 && TrackedItem.unknownCrateHolding.TryGetValue(localWaitingIndex, out byte option))
             {
-                bool health = option == 0 || option == 2;
-                bool token = option == 1 || option == 2;
+                bool health = option == 0;
+                bool token = option == 1;
+                bool loot = option == 2;
                 if (ThreadManager.host)
                 {
                     if (health)
@@ -1048,6 +1055,10 @@ namespace H3MP.Tracking
                     if (token)
                     {
                         ServerSend.ShatterableCrateSetHoldingToken(trackedID);
+                    }
+                    if (loot)
+                    {
+                        ServerSend.ShatterableCrateSetUsesLoot(trackedID);
                     }
                 }
                 else
@@ -1059,6 +1070,10 @@ namespace H3MP.Tracking
                     if (token)
                     {
                         ClientSend.ShatterableCrateSetHoldingToken(trackedID);
+                    }
+                    if (loot)
+                    {
+                        ClientSend.ShatterableCrateSetUsesLoot(trackedID);
                     }
                 }
 

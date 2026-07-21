@@ -2732,6 +2732,23 @@ namespace H3MP.Networking
             }
         }
 
+        public static void ShatterableCrateSetUsesLoot(int trackedID, int clientID = 0)
+        {
+            using (Packet packet = new Packet((int)ServerPackets.shatterableCrateSetUsesLoot))
+            {
+                packet.Write(trackedID);
+
+                if (clientID == 0)
+                {
+                    SendTCPDataToAll(packet);
+                }
+                else
+                {
+                    SendTCPDataToAll(clientID, packet);
+                }
+            }
+        }
+
         public static void ShatterableCrateDamage(int trackedID, Damage d)
         {
             using (Packet packet = new Packet((int)ServerPackets.shatterableCrateDamage))

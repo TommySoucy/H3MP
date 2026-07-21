@@ -2944,7 +2944,7 @@ namespace H3MP.Networking
             if (Server.objects[trackedID] != null)
             {
                 TrackedItemData trackedItemData = Server.objects[trackedID] as TrackedItemData;
-                if (trackedItemData.additionalData.Length == 39)
+                if (trackedItemData.additionalData.Length == 40)
                 {
                     trackedItemData.additionalData[37] = 1;
 
@@ -2986,7 +2986,7 @@ namespace H3MP.Networking
             if (Server.objects[trackedID] != null)
             {
                 TrackedItemData trackedItemData = Server.objects[trackedID] as TrackedItemData;
-                if (trackedItemData.additionalData.Length == 39)
+                if (trackedItemData.additionalData.Length == 40)
                 {
                     trackedItemData.additionalData[38] = 1;
 
@@ -3019,6 +3019,46 @@ namespace H3MP.Networking
             }
 
             ServerSend.ShatterableCrateSetHoldingToken(trackedID, clientID);
+        }
+
+        public static void ShatterableCrateSetUsesLoot(int clientID, Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+
+            if (Server.objects[trackedID] != null)
+            {
+                TrackedItemData trackedItemData = Server.objects[trackedID] as TrackedItemData;
+                if (trackedItemData.additionalData.Length == 40)
+                {
+                    trackedItemData.additionalData[39] = 1;
+
+                    if (trackedItemData.physical != null)
+                    {
+                        UberShatterable uberShatterable = trackedItemData.physicalItem.dataObject as UberShatterable;
+                        if (uberShatterable != null && GM.TNH_Manager != null)
+                        {
+                            uberShatterable.SpawnOnShatter.Clear();
+                            uberShatterable.SpawnOnShatter.Add(GM.TNH_Manager.ResourceLib.Prefab_Crate_Full);
+                            uberShatterable.SpawnOnShatterPoints.Add(uberShatterable.transform);
+                            uberShatterable.SpawnOnShatterRotTypes.Add(UberShatterable.SpawnOnShatterRotationType.StrikeDir);
+                            uberShatterable.SetUsesLoot();
+                        }
+                    }
+                }
+                else
+                {
+                    trackedItemData.additionalData[5] = 1;
+
+                    if (trackedItemData.physical != null)
+                    {
+                        ++TNH_ShatterableCrateSetHoldingTokenPatch.skip;
+                        trackedItemData.physical.GetComponent<TNH_ShatterableCrate>().SetUsesLoot(GM.TNH_Manager);
+                        --TNH_ShatterableCrateSetHoldingTokenPatch.skip;
+                    }
+                }
+            }
+
+            ServerSend.ShatterableCrateSetUsesLoot(trackedID, clientID);
         }
 
         public static void ShatterableCrateDamage(int clientID, Packet packet)
@@ -3954,7 +3994,7 @@ namespace H3MP.Networking
 
                     if(Mod.currentTNHInstance == TNHInstance && Mod.waitingForTNHGameStart)
                     {
-                        Mod.currentTNHSceneLoader.LoadMG();
+                        Mod.currentTNHSceneLoader.Load();
                     }
                 }
                 else
@@ -4776,7 +4816,7 @@ namespace H3MP.Networking
                         Mod.currentTNHInstance != null && Mod.currentTNHInstance.playerIDs.Count > 0 &&
                         Mod.currentTNHInstance.playerIDs[0] == GameManager.ID && Mod.currentTNHSceneLoader != null)
                     {
-                        Mod.currentTNHSceneLoader.LoadMG();
+                        Mod.currentTNHSceneLoader.Load();
                     }
                 }
                 else

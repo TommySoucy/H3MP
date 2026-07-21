@@ -556,6 +556,7 @@ namespace H3MP.Networking
                 ServerHandle.SentinelInit,
                 ServerHandle.AlertSosigs,
                 ServerHandle.SetModulWeaponPart,
+                ServerHandle.ShatterableCrateSetUsesLoot,
             };
 
             objects = new TrackedObjectData[100];

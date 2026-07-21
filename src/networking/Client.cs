@@ -661,6 +661,7 @@ namespace H3MP.Networking
                 ClientHandle.SentinelInit,
                 ClientHandle.AlertSosigs,
                 ClientHandle.SetModulWeaponPart,
+                ClientHandle.ShatterableCrateSetUsesLoot,
             };
 
             // All vanilla scenes can be synced by default

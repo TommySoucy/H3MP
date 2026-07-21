@@ -713,6 +713,7 @@ namespace H3MP.Tracking
             //trackedSosigData.data[1] = TNH_HoldPointPatch.inSpawnTurrets ? (byte)1 : (byte)0;
             data[2] = TNH_SupplyPointPatch.inSpawnTakeEnemyGroup ? (byte)1 : (byte)0;
             BitConverter.GetBytes((short)TNH_SupplyPointPatch.supplyPointIndex).CopyTo(data, 3);
+            Mod.LogInfo("Sosig in supply point spawn take enemy group: " + TNH_SupplyPointPatch.inSpawnTakeEnemyGroup+", with supply point index: " + TNH_SupplyPointPatch.supplyPointIndex);
             //trackedSosigData.data[3] = TNH_SupplyPointPatch.inSpawnDefenses ? (byte)1 : (byte)0;
             data[5] = TNH_ManagerPatch.inGenerateSentryPatrol ? (byte)1 : (byte)0;
             data[6] = TNH_ManagerPatch.inGeneratePatrol ? (byte)1 : (byte)0;

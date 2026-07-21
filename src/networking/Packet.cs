@@ -217,7 +217,8 @@ namespace H3MP.Networking
         encryptionShieldRot = 204,
         sentinelInit = 205,
         alertSosigs = 206,
-        SetModulWeaponPart = 207
+        SetModulWeaponPart = 207,
+        shatterableCrateSetUsesLoot = 208
     }
 
     /// <summary>Sent from client to server.</summary>
@@ -421,7 +422,8 @@ namespace H3MP.Networking
         encryptionShieldRot = 195,
         sentinelInit = 196,
         alertSosigs = 197,
-        setModulWeaponPart = 198
+        setModulWeaponPart = 198,
+        shatterableCrateSetUsesLoot = 199
     }
 
     public class Packet : IDisposable

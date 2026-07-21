@@ -1380,7 +1380,7 @@ namespace H3MP
                 else
                 {
                     Mod.currentTNHUIManager = GameObject.FindObjectOfType<TNH_UIManager>();
-                    Mod.currentTNHSceneLoader = GameObject.FindObjectOfType<SceneLoader>();
+                    Mod.currentTNHSceneLoader = GameObject.FindObjectOfType<TNH_LevelLoader>();
                     if (Mod.currentTNHUIManager != null)
                     {
                         Mod.InitTNHUIManager(TNHInstances[instance]);

@@ -1635,6 +1635,16 @@ namespace H3MP.Networking
             }
         }
 
+        public static void ShatterableCrateSetUsesLoot(int trackedID)
+        {
+            using (Packet packet = new Packet((int)ClientPackets.shatterableCrateSetUsesLoot))
+            {
+                packet.Write(trackedID);
+
+                SendTCPData(packet);
+            }
+        }
+
         public static void ShatterableCrateDamage(int trackedID, Damage d)
         {
             using (Packet packet = new Packet((int)ClientPackets.shatterableCrateDamage))

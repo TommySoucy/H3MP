@@ -2700,9 +2700,9 @@ namespace H3MP.Networking
                 TrackedItemData trackedItem = Client.objects[trackedID] as TrackedItemData;
                 if (trackedItem != null)
                 {
-                    if (trackedItem.additionalData.Length == 39)
+                    if (trackedItem.additionalData.Length == 40)
                     {
-                        trackedItem.additionalData[38] = 1;
+                        trackedItem.additionalData[37] = 1;
 
                         if (trackedItem.physical != null)
                         {
@@ -2743,7 +2743,7 @@ namespace H3MP.Networking
                 TrackedItemData trackedItem = Client.objects[trackedID] as TrackedItemData;
                 if (trackedItem != null)
                 {
-                    if (trackedItem.additionalData.Length == 39)
+                    if (trackedItem.additionalData.Length == 40)
                     {
                         trackedItem.additionalData[38] = 1;
 
@@ -2770,6 +2770,47 @@ namespace H3MP.Networking
                         {
                             ++TNH_ShatterableCrateSetHoldingTokenPatch.skip;
                             trackedItem.physicalItem.GetComponent<TNH_ShatterableCrate>().SetHoldingToken(GM.TNH_Manager);
+                            --TNH_ShatterableCrateSetHoldingTokenPatch.skip;
+                        }
+                    }
+                }
+            }
+        }
+
+        public static void ShatterableCrateSetUsesLoot(Packet packet)
+        {
+            int trackedID = packet.ReadInt();
+
+            if (Client.objects.Length > trackedID)
+            {
+                TrackedItemData trackedItem = Client.objects[trackedID] as TrackedItemData;
+                if (trackedItem != null)
+                {
+                    if (trackedItem.additionalData.Length == 40)
+                    {
+                        trackedItem.additionalData[39] = 1;
+
+                        if (trackedItem.physical != null)
+                        {
+                            UberShatterable uberShatterable = trackedItem.physicalItem.dataObject as UberShatterable;
+                            if (uberShatterable != null && GM.TNH_Manager != null)
+                            {
+                                uberShatterable.SpawnOnShatter.Clear();
+                                uberShatterable.SpawnOnShatter.Add(GM.TNH_Manager.ResourceLib.Prefab_Crate_Full);
+                                uberShatterable.SpawnOnShatterPoints.Add(uberShatterable.transform);
+                                uberShatterable.SpawnOnShatterRotTypes.Add(UberShatterable.SpawnOnShatterRotationType.StrikeDir);
+                                uberShatterable.SetUsesLoot();
+                            }
+                        }
+                    }
+                    else
+                    {
+                        trackedItem.additionalData[5] = 1;
+
+                        if (trackedItem.physicalItem != null)
+                        {
+                            ++TNH_ShatterableCrateSetHoldingTokenPatch.skip;
+                            trackedItem.physicalItem.GetComponent<TNH_ShatterableCrate>().SetUsesLoot(GM.TNH_Manager);
                             --TNH_ShatterableCrateSetHoldingTokenPatch.skip;
                         }
                     }
@@ -3820,7 +3861,7 @@ namespace H3MP.Networking
 
                     if (Mod.currentTNHInstance == TNHInstance && Mod.waitingForTNHGameStart)
                     {
-                        Mod.currentTNHSceneLoader.LoadMG();
+                        Mod.currentTNHSceneLoader.Load();
                     }
                 }
             }
@@ -4585,7 +4626,7 @@ namespace H3MP.Networking
                 Mod.currentTNHInstance != null && Mod.currentTNHInstance.playerIDs.Count > 0 &&
                 Mod.currentTNHInstance.playerIDs[0] == GameManager.ID && Mod.currentTNHSceneLoader != null)
             {
-                Mod.currentTNHSceneLoader.LoadMG();
+                Mod.currentTNHSceneLoader.Load();
             }
         }
 
