@@ -1978,6 +1978,7 @@ namespace H3MP.Networking
                 if (trackedSosig != null)
                 {
                     trackedSosig.currentOrder = currentOrder;
+                    Mod.LogInfo("ClientHandle.SosigSetCurrentOrder switching order: " + currentOrder);
                     switch (currentOrder)
                     {
                         case Sosig.SosigOrder.GuardPoint:

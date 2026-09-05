@@ -144,6 +144,24 @@ namespace H3MP.Patches
 
             PatchController.Verify(constructVolumeSpawnConstructsOriginal, harmony, true);
             harmony.Patch(constructVolumeSpawnConstructsOriginal, new HarmonyMethod(constructVolumeSpawnConstructsPrefix), new HarmonyMethod(constructVolumeSpawnConstructsPostfix));
+
+            ++patchIndex; // 12
+
+            // BBQRangePatch
+            MethodInfo spawnInitAttendeesOriginal = typeof(BBQRangeManager).GetMethod("SpawnInitialAttendees", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo spawnInitAnimalsOriginal = typeof(BBQRangeManager).GetMethod("SpawnInitialAnimals", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo carManagerOriginal = typeof(BBQRangeManager).GetMethod("CarManager", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo animalManagerOriginal = typeof(BBQRangeManager).GetMethod("AnimalManager", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo BBQRangeSpawnPreventionPrefix = typeof(BBQRangePatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(spawnInitAttendeesOriginal, harmony, true);
+            PatchController.Verify(spawnInitAnimalsOriginal, harmony, true);
+            PatchController.Verify(carManagerOriginal, harmony, true);
+            PatchController.Verify(animalManagerOriginal, harmony, true);
+            harmony.Patch(spawnInitAttendeesOriginal, new HarmonyMethod(BBQRangeSpawnPreventionPrefix));
+            harmony.Patch(spawnInitAnimalsOriginal, new HarmonyMethod(BBQRangeSpawnPreventionPrefix));
+            harmony.Patch(carManagerOriginal, new HarmonyMethod(BBQRangeSpawnPreventionPrefix));
+            harmony.Patch(animalManagerOriginal, new HarmonyMethod(BBQRangeSpawnPreventionPrefix));
         }
     }
 
@@ -787,6 +805,16 @@ namespace H3MP.Patches
         static void Postfix()
         {
             inInitConstructVolume = false;
+        }
+    }
+
+    // Patches BBQRangeManager to prevent instantiation of sosigs and animals if not first in scene/instance
+    class BBQRangePatch
+    {
+        static bool Prefix()
+        {
+            // Return true if we are not connected or if we are the first player in scene/instance
+            return Mod.managerObject == null || GameManager.firstPlayerInSceneInstance;
         }
     }
 }

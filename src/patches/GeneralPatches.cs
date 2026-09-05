@@ -1,4 +1,5 @@
 ﻿using FistVR;
+using FistVR.Ugc;
 using H3MP.Networking;
 using H3MP.Scripts;
 using H3MP.Tracking;
@@ -135,6 +136,30 @@ namespace H3MP.Patches
 
             PatchController.Verify(submitOriginal, harmony, false);
             harmony.Patch(submitOriginal, new HarmonyMethod(submitPrefix));
+
+            ++patchIndex; // 12
+
+            // SteamManagerPatch
+            MethodInfo awakeOriginal = typeof(SteamManager).GetMethod("Awake", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo updateOriginal = typeof(SteamManager).GetMethod("Update", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo enableOriginal = typeof(SteamManager).GetMethod("OnEnable", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo destroyOriginal = typeof(SteamManager).GetMethod("OnDestroy", BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo workshopOriginal = typeof(UgcManager).GetMethod("Initialize", BindingFlags.Public | BindingFlags.Static);
+            MethodInfo sceneSyncOriginal = typeof(FVRSceneSettings).GetMethod("SteamSyncNow", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo steamManagerPrefix = typeof(SteamManagerPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
+
+            PatchController.Verify(awakeOriginal, harmony, false);
+            PatchController.Verify(updateOriginal, harmony, false);
+            PatchController.Verify(enableOriginal, harmony, false);
+            PatchController.Verify(destroyOriginal, harmony, false);
+            PatchController.Verify(workshopOriginal, harmony, false);
+            PatchController.Verify(sceneSyncOriginal, harmony, false);
+            harmony.Patch(awakeOriginal, new HarmonyMethod(steamManagerPrefix));
+            harmony.Patch(updateOriginal, new HarmonyMethod(steamManagerPrefix));
+            harmony.Patch(enableOriginal, new HarmonyMethod(steamManagerPrefix));
+            harmony.Patch(destroyOriginal, new HarmonyMethod(steamManagerPrefix));
+            harmony.Patch(workshopOriginal, new HarmonyMethod(steamManagerPrefix));
+            harmony.Patch(sceneSyncOriginal, new HarmonyMethod(steamManagerPrefix));
 
             //// TeleportToPointPatch
             //MethodInfo teleportToPointPatchOriginal = typeof(FVRMovementManager).GetMethod("TeleportToPoint", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(Vector3), typeof(bool) }, null);
@@ -681,6 +706,19 @@ namespace H3MP.Patches
         static bool Prefix()
         {
             return false;
+        }
+    }
+
+    // Patches SteamManager to prevent steam initialization
+    class SteamManagerPatch
+    {
+        static bool Prefix()
+        {
+#if DEBUG
+            return false;
+#else
+            return true;
+#endif
         }
     }
 

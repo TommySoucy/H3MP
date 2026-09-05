@@ -2264,14 +2264,8 @@ namespace H3MP.Patches
                     {
                         Mod.LogInfo("\t\tSkipped, prepping", false);
                         // Score
-                        if (Mod.currentTNHInstance.manager.ShouldGetGuardBonus())
-                        {
-                            float num = Mathf.Clamp(Mod.currentTNHInstance.manager.GetGuardKillTimeDelta(), 5f, 25f);
-                            int num2 = Mathf.Clamp(20 - (Mathf.RoundToInt(num) - 5), 0, 20);
-                            Mod.currentTNHInstance.manager.IncrementScoringStat(TNH_Manager.ScoringEvent.TakeGuardClearSpeedBonus, 1);
-                        }
-                        int num3 = Mathf.RoundToInt(Mathf.Clamp(100f - 100f * Mod.currentTNHInstance.manager.PlayerTakenDamagePercentageThisPhase(), 0f, 100f));
-                        Mod.currentTNHInstance.manager.IncrementScoringStat(TNH_Manager.ScoringEvent.TakePhaseHealthBonus, num3);
+                        int num = Mathf.RoundToInt(Mathf.Clamp(100f - 100f * Mod.currentTNHInstance.manager.PlayerTakenDamagePercentageThisPhase(), 0f, 100f));
+                        Mod.currentTNHInstance.manager.IncrementScoringStat(TNH_Manager.ScoringEvent.TakePhaseHealthBonus, num);
 
                         // Deletion burst
                         ___m_activeSosigs.Clear();
@@ -2478,7 +2472,6 @@ namespace H3MP.Patches
                     Mod.LogInfo("\tWe are not controller, using data", false);
                     // Deletion burst
                     ___m_activeSosigs.Clear();
-                    Mod.currentTNHInstance.manager.m_miscEnemies.Clear();
 
                     SM.PlayCoreSound(FVRPooledAudioType.GenericLongRange, __instance.AUDEvent_HoldWave, __instance.transform.position);
                     UnityEngine.Object.Instantiate<GameObject>(__instance.VFX_HoldWave, ___m_systemNode.NodeCenter.position, ___m_systemNode.NodeCenter.rotation);

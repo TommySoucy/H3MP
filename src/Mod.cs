@@ -42,7 +42,7 @@ namespace H3MP
         // BepinEx
         public const string pluginGuid = "VIP.TommySoucy.H3MP";
         public const string pluginName = "H3MP";
-        public const string pluginVersion = "1.14.0";
+        public const string pluginVersion = "1.14.1";
 
         // Assets
         public static JObject config;
@@ -748,6 +748,16 @@ namespace H3MP
                                 break;
                             case 38: // Load into TNH
                                 Mod.currentTNHSceneLoader.Load();
+                                break;
+                            case 39: // Dump all scene names in console
+                                for(int i=0; i<SceneManager.sceneCountInBuildSettings; ++i)
+                                {
+                                    Mod.LogInfo("Scene " + i + ": " + System.IO.Path.GetFileNameWithoutExtension(SceneUtility.GetScenePathByBuildIndex(i)));
+                                }
+                                break;
+                            case 40: // Load to BBQ Range
+                                Mod.LogInfo("\tDebug: Load to BBQ Range");
+                                SteamVR_LoadLevel.Begin("BBQRange", false, 0.5f, 0f, 0f, 0f, 1f);
                                 break;
                         }
                     }
