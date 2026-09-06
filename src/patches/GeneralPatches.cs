@@ -4,6 +4,7 @@ using H3MP.Networking;
 using H3MP.Scripts;
 using H3MP.Tracking;
 using HarmonyLib;
+using Steamworks;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -146,6 +147,14 @@ namespace H3MP.Patches
             MethodInfo destroyOriginal = typeof(SteamManager).GetMethod("OnDestroy", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo workshopOriginal = typeof(UgcManager).GetMethod("Initialize", BindingFlags.Public | BindingFlags.Static);
             MethodInfo sceneSyncOriginal = typeof(FVRSceneSettings).GetMethod("SteamSyncNow", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo steamSetStatIntOriginal = typeof(SteamUserStats).GetMethod("SetStat", BindingFlags.Public | BindingFlags.Static, null, CallingConventions.Any, new Type[] { typeof(string), typeof(int) }, null);
+            MethodInfo steamSetAchievementOriginal = typeof(SteamUserStats).GetMethod("SetAchievement", BindingFlags.Public | BindingFlags.Static);
+            MethodInfo steamStoreStatsOriginal = typeof(SteamUserStats).GetMethod("StoreStats", BindingFlags.Public | BindingFlags.Static);
+            MethodInfo steamFindOrCreateLeaderboardOriginal = typeof(SteamUserStats).GetMethod("FindOrCreateLeaderboard", BindingFlags.Public | BindingFlags.Static);
+            MethodInfo steamFindLeaderboardOriginal = typeof(SteamUserStats).GetMethod("FindLeaderboard", BindingFlags.Public | BindingFlags.Static);
+            MethodInfo steamDownloadLeaderboardEntriesOriginal = typeof(SteamUserStats).GetMethod("DownloadLeaderboardEntries", BindingFlags.Public | BindingFlags.Static);
+            MethodInfo steamGetDownloadedLeaderboardEntryOriginal = typeof(SteamUserStats).GetMethod("GetDownloadedLeaderboardEntry", BindingFlags.Public | BindingFlags.Static);
+            MethodInfo steamUploadLeaderboardScoreOriginal = typeof(SteamUserStats).GetMethod("UploadLeaderboardScore", BindingFlags.Public | BindingFlags.Static);
             MethodInfo steamManagerPrefix = typeof(SteamManagerPatch).GetMethod("Prefix", BindingFlags.NonPublic | BindingFlags.Static);
 
             PatchController.Verify(awakeOriginal, harmony, false);
@@ -154,12 +163,28 @@ namespace H3MP.Patches
             PatchController.Verify(destroyOriginal, harmony, false);
             PatchController.Verify(workshopOriginal, harmony, false);
             PatchController.Verify(sceneSyncOriginal, harmony, false);
+            PatchController.Verify(steamSetStatIntOriginal, harmony, false);
+            PatchController.Verify(steamSetAchievementOriginal, harmony, false);
+            PatchController.Verify(steamStoreStatsOriginal, harmony, false);
+            PatchController.Verify(steamFindOrCreateLeaderboardOriginal, harmony, false);
+            PatchController.Verify(steamFindLeaderboardOriginal, harmony, false);
+            PatchController.Verify(steamDownloadLeaderboardEntriesOriginal, harmony, false);
+            PatchController.Verify(steamGetDownloadedLeaderboardEntryOriginal, harmony, false);
+            PatchController.Verify(steamUploadLeaderboardScoreOriginal, harmony, false);
             harmony.Patch(awakeOriginal, new HarmonyMethod(steamManagerPrefix));
             harmony.Patch(updateOriginal, new HarmonyMethod(steamManagerPrefix));
             harmony.Patch(enableOriginal, new HarmonyMethod(steamManagerPrefix));
             harmony.Patch(destroyOriginal, new HarmonyMethod(steamManagerPrefix));
             harmony.Patch(workshopOriginal, new HarmonyMethod(steamManagerPrefix));
             harmony.Patch(sceneSyncOriginal, new HarmonyMethod(steamManagerPrefix));
+            harmony.Patch(steamSetStatIntOriginal, new HarmonyMethod(steamManagerPrefix));
+            harmony.Patch(steamSetAchievementOriginal, new HarmonyMethod(steamManagerPrefix));
+            harmony.Patch(steamStoreStatsOriginal, new HarmonyMethod(steamManagerPrefix));
+            harmony.Patch(steamFindOrCreateLeaderboardOriginal, new HarmonyMethod(steamManagerPrefix));
+            harmony.Patch(steamFindLeaderboardOriginal, new HarmonyMethod(steamManagerPrefix));
+            harmony.Patch(steamDownloadLeaderboardEntriesOriginal, new HarmonyMethod(steamManagerPrefix));
+            harmony.Patch(steamGetDownloadedLeaderboardEntryOriginal, new HarmonyMethod(steamManagerPrefix));
+            harmony.Patch(steamUploadLeaderboardScoreOriginal, new HarmonyMethod(steamManagerPrefix));
 
             //// TeleportToPointPatch
             //MethodInfo teleportToPointPatchOriginal = typeof(FVRMovementManager).GetMethod("TeleportToPoint", BindingFlags.Public | BindingFlags.Instance, null, CallingConventions.Any, new Type[] { typeof(Vector3), typeof(bool) }, null);
